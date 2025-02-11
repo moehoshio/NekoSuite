@@ -1,0 +1,518 @@
+# wish 祈愿系统
+# 逻辑概述： 键入入口命令后，开始分发处理费用。 如果不需要收费或已完成，则透过 /go_wish 请求服务端。
+# 由服务端完成 奖励抽取与次数记录。 完成后，回到游戏的祈愿回调 如 /run_wish_normal
+# 回调开始处理和发放奖励，分发到 give命令， 如 give_wish_normal 发放最终奖励。
+
+# 安全性提醒： 除入口命令，其余所有命令均应有模块限制，如必须来源于其他命令 `FROM_ANOTHER_COMMAND`，以免玩家可以直接略过收费或次數限制。
+# 插件版本：MYCommand 5.7
+
+# 祈愿的错误消息
+err_text_wish:
+  command: /err_text_wish
+  type:
+  - RUN_COMMAND
+  runcmd:
+  - $Script$%if%$arg1==invalid_user_name
+  - $text$&c 无效的用户名!
+  - $Script$%elseif%$arg1==invalid_wish_type
+  - $text$&c 无效的祈愿类型!
+  - $Script$%elseif%$arg1==invalid_wish_value
+  - $text$&c 无效的祈愿次数!&7, 输入 1 or 10 进行单次或十次祈愿
+  - $Script$%elseif%$arg1==invalid_action
+  - $text$&c 无效操作!
+  - $Script$%elseif%$arg1==operation_frequent
+  - $text$&c 操作频繁!
+  - $Script$%elseif%$arg1==operation_frequent_daily
+  - $text$&c 今天已经祈愿过了哦, 明天再来吧~
+  - $Script$%else$
+  - $text$&c 未知错误!
+  permission-required: false 
+
+
+# 查詢祈願次數並将祈愿次数保存到变数。参数：
+# $arg1 : 查询的卡池
+get_wish_value_for_save:
+ command: /get_wish_value_save
+ execute_mode: FROM_ANOTHER_COMMAND 
+ type: CALL_URL
+ url: http://neko.moe/wish/index.php?action=query&user=$player&type=$arg1
+ get_output : true
+ save_output_as : wish_value
+ permission-required: false 
+ 
+
+# 执行祈愿的路由入口，应当在收取费用后才执行。参数：
+# $arg1 : 祈愿的卡池
+# $arg2 : 祈愿次数
+# 理论上每日祈愿不应由它处理? 好吧，它能够请求每日祈愿了。
+go_wish:
+ command: /go_wish
+ execute_mode: FROM_ANOTHER_COMMAND 
+ type: CALL_URL
+ url: http://neko.moe/wish/index.php?action=wish&user=$player&type=$arg1&wish=$arg2
+ get_output : true
+ get_run_command: $output
+ permission-required: false 
+
+
+
+# 普通祈愿，收取单次抽奖费用，只有收取成功才执行
+go_wish_normal_cost_1:
+ command: /go_wish_normal_cost_1
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - /go_wish normal 1
+ cost: 30
+ permission-required: false 
+
+# 普通祈愿，收取十次抽奖费用，只有收取成功才执行
+go_wish_normal_cost_10:
+ command: /go_wish_normal_cost_10
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - /go_wish normal 10
+ cost: 270
+ permission-required: false 
+
+# 情人节祈愿，单次
+go_wish_valentine_cost_1:
+ command: /go_wish_valentine_cost_1
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - /go_wish valentine 1
+ cost: 50
+ permission-required: false 
+
+# 情人节祈愿，十次
+go_wish_valentine_cost_10:
+ command: /go_wish_valentine_cost_10
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - /go_wish valentine 10
+ cost: 450
+ permission-required: false 
+
+
+# 分发处理费用，并检查祈愿次数是否正确
+# 不在wish直接if分发则是为了/wish的简洁性
+go_wish_normal:
+ command: /go_wish_normal
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==1
+ - /go_wish_normal_cost_1
+ - $Script$%elseif%$arg1==10
+ - /go_wish_normal_cost_10
+ - $Script$%else%
+ - $text$&c 错误的祈愿次数!
+ permission-required: false 
+ cooldown: 1
+
+go_wish_valentine:
+ command: /go_wish_valentine
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==1
+ - /go_wish_valentine_cost_1
+ - $Script$%elseif%$arg1==10
+ - /go_wish_valentine_cost_10
+ - $Script$%else%
+ - $text$&c 错误的祈愿次数!
+ permission-required: false 
+ cooldown: 1
+
+
+# 祈愿
+wish:
+ command: /wish
+ type:
+ - RUN_COMMAND
+ runcmd:
+#  进行抽奖
+ - $Script$%if%$arg1==daily
+ - /go_wish daily 1
+ - $Script$%if%$arg1==normal
+ - /go_wish_normal $arg2
+ - $Script$%if%$arg1==valentine
+ - /go_wish_valentine $arg2
+
+# 查询卡池
+ - $Script$%if%$arg1==infonormal
+ - /wish_info_normal
+ - $Script$%if%$arg1==infodaily
+ - /wish_info_daily
+ - $Script$%if%$arg1==infovalentine
+ - /wish_info_valentine
+
+# 默认信息
+ - $Script$%else%
+ - $text$ 
+ - $text$ &e&l祈愿
+ - $rawtext$ &71.&c&o daily&7(每日祈愿);&5daily 每日祈愿;/wish info daily <and> &72.&b&o normal&7(普通祈愿);&bnormal &7普通祈愿;/wish info normal <and>  &73.&d&o valentine&7(情人节祈愿);&dvalentine &7情人节祈愿;/wish info valentine
+ - "$rawtext$ &7点击或输入/wish info(信息) (祈愿池)  了解详情;&7如: &b/wish info normal &7了解常驻池详情;/wish info normal"
+ - "$rawtext$ &7祈愿方式: /wish (祈愿池) (祈愿次数);&7如:&b/wish normal 10 &7常驻池祈愿10次;/wish normal 10"
+ register: true 
+ permission-required: false  
+ tab_completer:
+  1:
+  - info
+  - normal
+  - daily
+  - valentine
+  2:
+  # info key
+  - normal<pos_1=info>
+  - daily<pos_1=info>
+  - valentine<pos_1=info>
+  # wish value
+  - 1<pos_1=normal>
+  - 10<pos_1=normal>
+  - 1<pos_1=valentine>
+  - 10<pos_1=valentine>  
+
+
+# 查询普通池，祈愿值与卡池资讯
+wish_info_normal:
+ command: /wish_info_normal
+ type:
+ - RUN_COMMAND
+ runcmd: 
+ - /get_wish_value_save normal
+ - $delay$
+ - $text$
+ - "$text$  &b&l常驻池&7(normal)   &7(许愿值:$PlayerData%wish_value%)"
+ - $text$ &2奖励 &7* (&d数量&7/&d时间&7) (&9概率&7)   没有数量默认&d1  &7*&dx&7代表永久
+ - $text$
+ - $text$ &7铁锭*5(20), 金锭*3(16), 钻石*1(10), &9下界合金碎片&7(&55&7)
+ - $text$ &7经验*20(20), 经验*100(10) P点*5(10) &c力量Ⅲ&7*180s(&55&7) &9雨云粒子&7*&dx&7(&51&7) 
+ - "$rawtext$ &e麒麟霸炎铠&7(&d0.5&7);&e麒麟霸炎铠<newline>&c火焰保护X<newline>&4荆棘5<newline>&7耐久3"
+ - $text$ 
+ - $text$ &7许愿花费30金币 十连九折, 许愿值满300 必出金色物品
+ delaytimer: 10
+ delaytimer_format: TICKS
+ permission-required: false 
+
+# 查询情人节限定，祈愿值与卡池资讯
+wish_info_valentine:
+ command: /wish_info_valentine
+ type:
+ - RUN_COMMAND
+ runcmd: 
+ - /get_wish_value_save valentine
+ - $delay$
+ - $text$ 
+ - "$text$  &d&l情人节限定&7(Valentine)   &7(祈愿值:$PlayerData%wish_value%)"
+ - $text$  &a奖励 &7* (&5数量&7/&5时间&7) (&9概率&7)   没有数量默认&31 
+ - $text$
+ - $text$ &7海晶沙砾*5(20), 石英*5(20), 鲜花饼*3(10), &d附魔金苹果&7(&95&7)
+ - $text$ &7经验*20(20), 石英*10(10), &5粉樱花树苗&7(&95&7) &5紫水晶风铃&7(&93&7)
+ - "$rawtext$ &d生命恢复Ⅱ&7*180s(&93&7) <and> &6无双赤羽弓&7(&e0.5&7);&6无双赤羽弓<newline>&e力量X<newline>&2经验修补<newline>&c火矢<newline>&5无限<newline>赤羽之矢，破空無雙。"
+ - $text$ 
+ - $text$ &7许愿花费50金币 十连九折, 许愿值满300 必出金色物品
+ - $text$ &7限时卡池持续30天 结束后许愿值不清零
+ delaytimer: 10
+ delaytimer_format: TICKS
+ permission-required: false 
+
+
+# 查询每日祈愿，祈愿值与卡池资讯
+wish_info_daily:
+ command: /wish_info_daily
+ type:
+ - RUN_COMMAND
+ runcmd: 
+ - /get_wish_value_save daily
+ - $delay$
+ - $text$
+ - "$text$  &b&l每日祈愿&7(Daily)   &7(祈愿值:$PlayerData%wish_value%)"
+ - $text$  &a奖励 &7* (&5数量&7/&5时间&7) (&9概率&7)
+ - $text$
+ - $text$ &7金币*5(25), 金币*10(20), 经验*20(20), &3随机药水效果&7*&a180s&7(20)
+ - $text$ &7经验*&6100&7(10), P点*5(10),  金币&6*30&7(8), 金币&5*50&7(3) 金币&d*100&7(&61&7)
+ - $text$
+ - $text$ &6金币*360&7(0.3), 金币*&5600&7(0.2), 金币*&a1200&7(0.1)，金币*&c3600&7(&60.05&7)
+ - $rawtext$ 金币*&e1w&7(&60.01&7) <and>&e随机神装&7(&b0.01&7);&7神装列表:<newline>&6无双赤羽弓<newline>&b碧波云泉剑<newline>&4麒麟霸炎铠
+ - $text$ 
+ - $text$ &7每日可免费祈愿一次 0时刷新 长期有效, 累计100次必得随机神装
+ delaytimer: 10
+ delaytimer_format: TICKS
+ permission-required: false 
+
+
+
+# 祈愿回调，同时发放物品。参数：
+# arg1 : 祈愿次数
+# arg2 - $arg11 祈愿得到的物品
+run_wish_normal:
+ command: /run_wish_normal
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==1
+ - /give_wish_normal $arg2
+ - $Script$%elseif%$arg1==10
+ - $text$&7 10连抽中..
+ - $delay$/give_wish_normal $arg2
+ - $delay$/give_wish_normal $arg3
+ - $delay$/give_wish_normal $arg4
+ - $delay$/give_wish_normal $arg5
+ - $delay$/give_wish_normal $arg6
+ - $delay$/give_wish_normal $arg7
+ - $delay$/give_wish_normal $arg8
+ - $delay$/give_wish_normal $arg9
+ - $delay$/give_wish_normal $arg10
+ - $delay$/give_wish_normal $arg11
+ - $Script$%else$
+ - $text$&c 错误的祈愿次数 请联络管理员
+ delaytimer: 2
+ delaytimer_format: TICKS
+ permission-required: false 
+
+# 情人节祈愿回调，同时发放物品。参数：
+# arg1 : 祈愿次数
+# arg2 - $arg11 祈愿得到的物品
+run_wish_valentine:
+ command: /run_wish_valentine
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==1
+ - /give_wish_valentine $arg2
+ - $Script$%elseif%$arg1==10
+ - $text$&7 10连抽中..
+ - $delay$/give_wish_valentine $arg2
+ - $delay$/give_wish_valentine $arg3
+ - $delay$/give_wish_valentine $arg4
+ - $delay$/give_wish_valentine $arg5
+ - $delay$/give_wish_valentine $arg6
+ - $delay$/give_wish_valentine $arg7
+ - $delay$/give_wish_valentine $arg8
+ - $delay$/give_wish_valentine $arg9
+ - $delay$/give_wish_valentine $arg10
+ - $delay$/give_wish_valentine $arg11
+ - $Script$%else$
+ - $text$&c 错误的祈愿次数 请联络管理员
+ delaytimer: 2
+ delaytimer_format: TICKS
+ permission-required: false 
+
+# 這不應該被使用
+run_wish_daily:
+ command: /run_wish_daily
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $text$ &c 这应该是一个错误？联络管理员以解决该问题
+ permission-required: false 
+
+
+# 每日祈愿，奖励发放
+give_wish_daily:
+ command: /give_wish_daily
+ execute_mode: FROM_ANOTHER_COMMAND
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==bal5
+ - $text$&7祈愿获取 5 金币
+ - $RUN_CONSOLE$essentials:eco give $player 5
+
+ - $Script$%if%$arg1==bal10
+ - $text$&7祈愿获取 10 金币
+ - $RUN_CONSOLE$essentials:eco give $player 10
+
+ - $Script$%if%$arg1==bal30
+ - $text$&7祈愿获取 30 金币
+ - $RUN_CONSOLE$essentials:eco give $player 30
+
+ - $Script$%if%$arg1==bal50
+ - $text$&7祈愿获取 50 金币
+ - $RUN_CONSOLE$essentials:eco give $player 50
+
+ - $Script$%if%$arg1==bal100
+ - $text$&7祈愿获取 100 金币
+ - $RUN_CONSOLE$essentials:eco give $player 100 
+
+ - $Script$%if%$arg1==bal360
+ - $text$&7祈愿获取 360 金币
+ - $RUN_CONSOLE$essentials:eco give $player 360
+
+ - $Script$%if%$arg1==bal600
+ - $text$&7祈愿获取 600 金币
+ - $RUN_CONSOLE$essentials:eco give $player 600
+
+ - $Script$%if%$arg1==bal1200
+ - $text$&7祈愿获取 1200 金币
+ - $RUN_CONSOLE$essentials:eco give $player 1200
+
+ - $Script$%if%$arg1==bal3600
+ - $text$&7祈愿获取 3600 金币
+ - $RUN_CONSOLE$essentials:eco give $player 3600
+
+ - $Script$%if%$arg1==bal1w
+ - $text$&7祈愿获取 1w 金币!
+ - $RUN_CONSOLE$essentials:eco give $player 10000
+
+ - $Script$%if%$arg1==exp20
+ - $text$&7祈愿获取 20 经验
+ - $RUN_CONSOLE$essentials:exp give $player 20
+
+ - $Script$%if%$arg1==exp100
+ - $text$&7祈愿获取 100 经验
+ - $RUN_CONSOLE$essentials:exp give $player 100
+
+ - $Script$%if%$arg1==ppoint5
+ - $text$&7祈愿获得了 p点 *5
+ - $RUN_CONSOLE$minecraft:give $player touhou_little_maid:power_point 5
+
+ - $Script$%if%$arg1==potion
+ - $text$&7祈愿获得了 随机药水效果 *180s
+ - $RUN_CONSOLE$minecraft:effect give $player $arg2 180 2
+
+ - $Script$%if%$arg1==CloudspringAzureBlade
+ - $RUN_CONSOLE$minecraft:give $player minecraft:bow{display:{Name:'{"color":"#FFA500","text":"无双赤羽弓"}',Lore:['{"text":"赤羽之矢，破空無雙"}', '{"text":"力量 X","color":"#696969"}', '{"text":"火矢","color":"#696969"}', '{"text":"无限","color":"#696969"}','{"text":"修补","color":"#696969"}']},Enchantments:[{id:"minecraft:power",lvl:10},{id:"minecraft:mending",lvl:1},{id:"minecraft:flame",lvl:1},{id:"minecraft:infinity",lvl:1}],HideFlags:1} 1
+ - $rawtext$ &7 恭喜您许愿获得了 &b碧波云泉剑;劍光映碧波 出鞘起雲泉<newline>&9锋利X<newline>&3击退5<newline>&7耐久3 &7!
+ - $RUN_CONSOLE$broadcast 恭喜玩家 &e $player &a 获得 &b 碧波云泉剑 &a! 
+
+ - $Script$%if%$arg1==UnrivaledCrimsonFeatherBow
+ - $RUN_CONSOLE$minecraft:give $player minecraft:bow{display:{Name:'{"color":"#FFA500","text":"无双赤羽弓"}',Lore:['{"text":"赤羽之矢，破空無雙"}', '{"text":"力量 X","color":"#696969"}', '{"text":"火矢","color":"#696969"}', '{"text":"无限","color":"#696969"}','{"text":"修补","color":"#696969"}']},Enchantments:[{id:"minecraft:power",lvl:10},{id:"minecraft:mending",lvl:1},{id:"minecraft:flame",lvl:1},{id:"minecraft:infinity",lvl:1}],HideFlags:1} 1
+ - "$rawtext$&7 恭喜您许愿获得了 <and> &6无双赤羽弓&7!;&6无双赤羽弓<newline>&e力量X<newline>&2经验修补<newline>&c火矢<newline>&5无限" 
+ - $RUN_CONSOLE$broadcast 恭喜玩家 &e $player &a 在每日祈愿中获得&6 无双赤羽弓 &a!
+
+ - $Script$%if%$arg1==KirinOverlordBlazingArmor
+ - $RUN_CONSOLE$minecraft:give $player minecraft:golden_chestplate{display:{Name:'{"color":"#F08080","text":"麒麟霸炎铠"}',Lore:['"麒麟踏炎，鎧耀霸世"']},Enchantments:[{id:"minecraft:fire_protection",lvl:10},{id:"minecraft:thorns",lvl:5},{id:"minecraft:unbreaking",lvl:3}]} 1
+ - $rawtext$&7 恭喜您许愿获得了 &c麒麟霸炎铠&7 !;&e麒麟霸炎铠<newline>&c火焰保护X<newline>&4荆棘5<newline>&7耐久3"
+ - $RUN_CONSOLE$broadcast 恭喜玩家 &e $player &a在每日祈愿中获得 &c 麒麟霸炎铠 &a!
+ 
+ - $Script$%else%
+ - $text$&c 无效的发放id! 这应该是个错误?
+ regex_pattern : "^[\u4E00-\u9FA5A-Za-z0-9_&._\\- \\/\\+\\:]+" 
+ permission-required: false   
+ 
+
+# 情人节卡池，奖励发放
+give_wish_valentine:
+ command: /give_wish_valentine
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==prismarine_crystals5
+ - $RUN_CONSOLE$minecraft:give $player minecraft:prismarine_crystals 5
+ - $text$&7 许愿获得了 海晶沙砾*5
+ - $Script$%if%$arg1==quartz5
+ - $RUN_CONSOLE$minecraft:give $player minecraft:quartz 5
+ - $text$&7 许愿获得了 石英*5
+ - $Script$%if%$arg1==flower_pie3
+ - $RUN_CONSOLE$minecraft:give $player lightmeals:flower_pie 3
+ - $text$&7 许愿获得了 鲜花饼*3  
+ - $Script$%if%$arg1==enchanted_golden_apple
+ - $RUN_CONSOLE$minecraft:give $player minecraft:enchanted_golden_apple 1
+ - $text$&7 许愿获得了 附魔金苹果*1  
+ - $Script$%if%$arg1==exp20
+ - $RUN_CONSOLE$essentials:xp give $player 20
+ - $text$&7 许愿获得了 20经验 
+ - $Script$%if%$arg1==quartz10
+ - $RUN_CONSOLE$minecraft:give $player minecraft:quartz 10
+ - $text$&7 许愿获得了 石英*10
+ - $Script$%if%$arg1==pink_cherry_sapling
+ - $RUN_CONSOLE$minecraft:give $player biomesoplenty:pink_cherry_sapling 1
+ - $text$&7 许愿获得了 粉色樱花树树苗*1
+ - $Script$%if%$arg1==amethyst_chimes
+ - $RUN_CONSOLE$minecraft:give $player chimes:amethyst_chimes 1
+ - $text$&7 许愿获得了 紫水晶风铃*1
+ - $Script$%if%$arg1==potion_revive
+ - $RUN_CONSOLE$minecraft:give $player minecraft:potion{CustomPotionEffects:[{Id:10,Duration:3600,Amplifier:1}],display:{Name:"{\"text\":\"再生药水\"}"}} 1
+ - $text$&7 许愿获得了 生命恢复Ⅱ*180s 药水
+ - $Script$%if%$arg1==UnrivaledCrimsonFeatherBow_guarantee
+ - $text$ &7许愿已满&d300&7次 必得&6橙色&7物品
+ - $Script$%if%$arg1==UnrivaledCrimsonFeatherBow_guarantee<or>$arg1==UnrivaledCrimsonFeatherBow
+ - $RUN_CONSOLE$minecraft:give $player minecraft:bow{display:{Name:'{"color":"#FFA500","text":"无双赤羽弓"}',Lore:['{"text":"赤羽之矢，破空無雙"}', '{"text":"力量 X","color":"#696969"}', '{"text":"火矢","color":"#696969"}', '{"text":"无限","color":"#696969"}','{"text":"修补","color":"#696969"}']},Enchantments:[{id:"minecraft:power",lvl:10},{id:"minecraft:mending",lvl:1},{id:"minecraft:flame",lvl:1},{id:"minecraft:infinity",lvl:1}],HideFlags:1} 1
+ - "$rawtext$&7 恭喜您许愿获得了 <and> &6无双赤羽弓&7!;&6无双赤羽弓<newline>&e力量X<newline>&2经验修补<newline>&c火矢<newline>&5无限" 
+ - $RUN_CONSOLE$broadcast 恭喜玩家 &e $player &a 在情人节祈愿中获得&6 无双赤羽弓 &a!
+ - $Script$%else%
+ - $text$&c 无效的发放id! 这应该是个错误?
+ permission-required: false   
+
+# 普通卡池，奖励发放
+give_wish_normal:
+ command: /give_wish_normal
+ execute_mode: FROM_ANOTHER_COMMAND  
+ type:
+ - RUN_COMMAND
+ runcmd:
+ - $Script$%if%$arg1==iron_ingot5
+ - $RUN_CONSOLE$give $player ironingot 5
+ - $text$&7 许愿获得了 铁锭*5
+ - $Script$%if%$arg1==gold_ingot3
+ - $RUN_CONSOLE$give $player goldingot 3
+ - $text$&7 许愿获得了 金锭*3
+ - $Script$%if%$arg1==diamond
+ - $RUN_CONSOLE$give $player diamond 1
+ - $text$&7 许愿获得了 钻石*1
+ - $Script$%if%$arg1==netherite_scrap
+ - $RUN_CONSOLE$minecraft:give $player minecraft:netherite_scrap 1
+ - $text$&7 许愿获得了 下届合金碎片*1 
+ - $Script$%if%$arg1==exp20
+ - $RUN_CONSOLE$essentials:xp give $player 20
+ - $text$&7 许愿获得了 20经验
+ - $Script$%if%$arg1==exp100
+ - $RUN_CONSOLE$essentials:xp give $player 100
+ - $text$&7 许愿获得了 100经验 
+ - $Script$%if%$arg1==rain_clouds
+ - $RUN_CONSOLE$manuaddp $player neko.li.01
+ - $text$&7 许愿获得了 雨云粒子效果 (透过/pp gui打开使用)
+ - $Script$%if%$arg1==potion_power
+ - $RUN_CONSOLE$minecraft:give $player minecraft:potion{CustomPotionEffects:[{Id:5,Duration:3600,Amplifier:2}],display:{Name:"{\"text\":\"力量药水\"}"}} 1
+ - $text$&7 许愿获得了 力量Ⅲ 药水
+ - $Script$%if%$arg1==p_point5
+ - $RUN_CONSOLE$minecraft:give $player touhou_little_maid:power_point 5
+ - $text$&7 许愿获得了 p点 *5
+ - $Script$%if%$arg1==KirinOverlordBlazingArmor_guarantee
+ - $text$ &7许愿已满&d300&7次 必得&6橙色&7物品
+ - $Script$%if%$arg1==KirinOverlordBlazingArmor_guarantee<or>$arg1==KirinOverlordBlazingArmor
+ - $RUN_CONSOLE$minecraft:give $player minecraft:golden_chestplate{display:{Name:'{"color":"#F08080","text":"麒麟霸炎铠"}',Lore:['"麒麟踏炎，鎧耀霸世"']},Enchantments:[{id:"minecraft:fire_protection",lvl:10},{id:"minecraft:thorns",lvl:5},{id:"minecraft:unbreaking",lvl:3}]} 1
+ - $text$&7 恭喜您许愿获得了 &c 麒麟霸炎铠&7!
+ - $RUN_CONSOLE$broadcast 恭喜玩家 &e $player &a 获得 &c 麒麟霸炎铠 &a!
+ - $Script$%else%
+ - $text$&c 无效的发放id! 这应该是个错误?
+ permission-required: false  
+
+
+# 建立别名，从而不必在wish中判断
+neko_alias_wish_info_normal:
+ command: /wish info normal
+ type: ALIAS
+ alias: /wish_info_normal
+ permission-required: false 
+
+neko_alias_wish_info_valentine:
+ command: /wish info valentine
+ type: ALIAS
+ alias: /wish_info_valentine
+ permission-required: false 
+
+neko_alias_wish_info_daily:
+ command: /wish info daily
+ type: ALIAS
+ alias: /wish_info_daily
+ permission-required: false 
+
+
+
+# 神装模板
+#  - "$rawtext$ &e碧波云泉剑&7(&d1&7);&e碧波云泉剑 <newline>&9锋利X<newline>&3击退5<newline>&7耐久3 <and> &e麒麟霸炎铠&7(&d1&7);&e麒麟霸炎铠<newline>&c火焰保护X<newline>&4荆棘5<newline>&7耐久3"
+# #{display:{Name:'{"color":"#A9A9A9","text":"一段被冰封的日记页"}',Lore:['"一段被冰封的日记页..."'],Lore:['"上面似乎记录着一些很久远的事件..."'],Lore:['"上面记录着一种很奇怪的文字"']},No:[{No:"1"},{Name:"被冰封的日记页"}]}
