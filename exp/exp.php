@@ -90,9 +90,9 @@ switch ($action) {
         break;
     case 'info':
         $raw = (file_exists($user_file))? file_get_contents($user_file) : 0;
-        if (!empty(OUTRAW)){
-            if ( !empty(ITEM) && array_key_exists(ITEM, ITEMS)) {
-                $config = ITEMS[ITEM];
+        if (!empty($outraw) && $outraw == 'yes') {
+            if ( !empty($item) && array_key_exists($item, ITEMS)) {
+                $config = ITEMS[$item];
                 $log_path = "$item_path/{$config['log_file']}";
                 $log = (file_exists($log_path))? file_get_contents($log_path) : 0;
                 die($log);
@@ -103,11 +103,11 @@ switch ($action) {
         echo "/run_exp_msg info $raw";
         break;
     case 'exchange':
-        if (!array_key_exists(ITEM, ITEMS)) {
+        if (!array_key_exists($item, ITEMS)) {
             display_error("invalid_params");
         }
 
-        $config = ITEMS[ITEM];
+        $config = ITEMS[$item];
         $log_path = "$item_path/{$config['log_file']}";
 
         $raw = (file_exists($user_file))? file_get_contents($user_file) : 0;
@@ -144,7 +144,7 @@ switch ($action) {
         }
         $new = $raw - $config['cost'];
         file_put_contents($user_file, $new);
-        echo "/exp_exchange " . ITEM ." {$config['cost']} $new";    
+        echo "/exp_exchange " . $item ." {$config['cost']} $new";
         break;
     default:
         display_error("invalid_action");

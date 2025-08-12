@@ -1,0 +1,56 @@
+
+# 祈愿值
+wish_counts:
+    GlimmeringPrayer: 1
+    StarryMirage: 199 # 下一次祈愿必定获得保底
+    OathOfTheRedRose: 600 # 后面三次祈愿必定获得保底（保底以减法生效，可多次触发）
+
+# 祈愿周期
+limit_mode_records:
+    GlimmeringPrayer:
+        current_period_start: 2025-08-02T00:00:00+09:00
+        current_period_end: 2025-08-03T00:00:00+09:00
+        used_count: 1
+        last_refresh_time: 2025-08-02T07:12:52.5458519+09:00
+    StarryMirage:
+        current_period_start: 2025-08-02T00:00:00+09:00
+        current_period_end: 2025-08-03T00:00:00+09:00
+        used_count: 50
+        last_refresh_time: 2025-08-02T07:11:42.3297322+09:00
+
+# 祈愿统计
+wish_stats:
+    total_wishes:
+        GlimmeringPrayer: 1
+        StarryMirage: 60
+    guarantee_count:
+        StarryMirage: 1
+
+# 祈愿券
+wish_tickets: {}
+
+# 历史记录
+wish_history:
+    - pool: StarryMirage
+      count: 10
+      items:
+          - newMaidSmartSlab
+          - end_rod4
+          - exp50
+          - p_point6
+          - newMaidSmartSlab
+          - p_point6
+          - projectileProtectBauble
+          - p_point6
+          - p_point6
+          - card.1.6
+      cost: 800
+      timestamp: 2025-08-02T07:11:42.3302811+09:00
+    - pool: GlimmeringPrayer
+      count: 1
+      items:
+          - bal10
+      cost: 0
+      timestamp: 2025-08-02T07:12:52.5468832+09:00
+created_at: "2025-08-02T07:11:42+09:00"
+updated_at: "2025-08-02T07:12:52+09:00"

@@ -1,4 +1,3 @@
-
 err_text_exp:
   command: /err_text_exp
   type:
@@ -76,7 +75,7 @@ get_xp_for_save:
   command: /get_xp_for_save
   execute_mode: FROM_ANOTHER_COMMAND 
   type: CALL_URL
-  url: http://neko.moe/exp.php?user=$player&action=info&raw=true
+  url: http://neko.moe/exp.php?user=$player&action=info&outraw=yes
   get_output : true
   save_output_as : system_account_exp
   permission-required: false 
@@ -86,7 +85,7 @@ get_xp_data_limit_for_apple_save:
   command: /get_xp_data_limit_for_apple_save
   execute_mode: FROM_ANOTHER_COMMAND 
   type: CALL_URL
-  url: http://neko.moe/exp.php?user=$player&action=info&item=enchantedGoldenApple3&raw=true
+  url: http://neko.moe/exp.php?user=$player&action=info&item=enchantedGoldenApple3&outraw=yes
   get_output : true
   save_output_as : exp_limit_for_apple
   permission-required: false 
@@ -95,10 +94,35 @@ get_xp_data_limit_for_CloudspringAzureBlade_save:
   command: /get_xp_data_limit_for_CloudspringAzureBlade_save
   execute_mode: FROM_ANOTHER_COMMAND 
   type: CALL_URL
-  url: http://neko.moe/exp.php?user=$player&action=info&item=CloudspringAzureBlade&raw=true
+  url: http://neko.moe/exp.php?user=$player&action=info&item=CloudspringAzureBlade&outraw=yes
   get_output : true
   save_output_as : exp_limit_for_CloudspringAzureBlade
   permission-required: false 
+
+# 執行兌換並刷新數據
+do_exp_exchange:
+  command: /do_exp_exchange
+  type:
+  - RUN_COMMAND
+  runcmd:
+  - /go_xp_exchange $arg1
+  - $delay$/refresh_exp_value
+  delaytimer: 5
+  delaytimer_format: TICKS
+  permission-required: false
+  execute_mode: FROM_ANOTHER_COMMAND
+
+# 刷新經驗數據
+refresh_exp_value:
+  command: /refresh_exp_value
+  type:
+  - RUN_COMMAND
+  runcmd:
+  - /get_xp_for_save
+  - /get_xp_data_limit_for_CloudspringAzureBlade_save
+  - /get_xp_data_limit_for_apple_save
+  permission-required: false
+  execute_mode: FROM_ANOTHER_COMMAND
 
 xp:
  command: /xp
@@ -115,12 +139,8 @@ xp:
  - $Script$%elseif%$arg1==info
  - /go_xp info
  - $Script$%elseif%$arg1==shop
- # 在顯示商店前先取得數據
- - /get_xp_for_save
- - /get_xp_data_limit_for_CloudspringAzureBlade_save
- - /get_xp_data_limit_for_apple_save
- - /xp_shop
-
+ - /xp_shop # 直接打開商店
+ - /refresh_exp_value # 同時刷新數據
  - $Script$%else%
  - $text$ &e&l经验系统
  - $rawtext$ &7/xp &bpay &7(目标) (数量) 转账经验给指定玩家;&7/xp pay转账给玩家;/xp pay (玩家) (数量)
@@ -149,7 +169,6 @@ xp:
  permission-required: true
  permission-node: neko.default.1 
 
-
 xp_shop: 
   command: /xp_shop
   type: ICON_MENU
@@ -166,16 +185,28 @@ xp_shop:
   - HIDE_POTION_EFFECTS
   - HIDE_UNBREAKABLE
   iconmenu_commands:
-  iconmenu_commands:
-  - "0:PLAYER_HEAD%i:0:%stayopen%:&a您的经验:&7账户经验 &e$PlayerData%system_account_exp%;&7现有经验 &e$exp:"
-  - "10:DIAMOND_SWORD;DAMAGE_ALL;1:0:%stayopen%:&b碧波云泉剑:劍光映碧波 出鞘起雲泉;&9锋利X;&3击退5;&7耐久3;;&7$PlayerData%exp_limit_for_CloudspringAzureBlade%/限兑一次"
-  - "19:ENDER_EYE:0:%stayopen%/go_xp_exchange CloudspringAzureBlade:&a兑换:&7需要&d300,000&7经验;&7点击兑换"
-  - "12:EMERALD;DAMAGE_ALL;1:0:%stayopen%:&e金币:&a1w &7经验兑换 &6100金币;;&7限每日一次"
-  - "21:ENDER_EYE:0:%stayopen%/go_xp_exchange bal100:&a兑换:&7需要&d10,000&7经验;&7点击兑换&6100金币"
-  - "14:ENCHANTED_GOLDEN_APPLE:0:%stayopen%:&6附魔金苹果:&a3个&6附魔金苹果;;&7已兑$PlayerData%exp_limit_for_apple%次/限兑换100次"
-  - "23:ENDER_EYE:0:%stayopen%/go_xp_exchange enchantedGoldenApple3:&a兑换:&7需要&d5,000&7经验;&7点击兑换"
-  - '26:DIAMOND:0:%openiconmenu%/xp shop:&a刷新菜单:&7点击刷新数据'
-  - "35:BARRIER:0:%close%:&c关闭"
+  # 頂部資訊
+  - "0:PLAYER_HEAD%$player:0:%stayopen%:&a您的经验:&7账户经验 &e$PlayerData%system_account_exp%;&7现有经验 &e$exp"
+  
+  # 神器兌換 - 修正兌換次數顯示格式
+  - "11:DIAMOND_SWORD;DAMAGE_ALL;1:0:%stayopen%:&b碧波云泉剑:劍光映碧波 出鞘起雲泉;&9锋利X;&3击退5;&7耐久3;;&7限兑 &e$PlayerData%exp_limit_for_CloudspringAzureBlade%&7/1次;&7需要 &d300,000 &7经验"
+  - "20:ENDER_EYE:0:%stayopen%/do_exp_exchange CloudspringAzureBlade:&a兑换碧波云泉剑:&7消耗 &d300,000 &7经验;&7&l点击兑换"
+  
+  # 金幣兌換
+  - "13:EMERALD:0:%stayopen%:&e金币兑换:&7兑换 &a100 &7金币;&7限制 &e每日一次;&7需要 &d10,000 &7经验"
+  - "22:ENDER_EYE:0:%stayopen%/do_exp_exchange bal100:&a兑换金币:&7消耗 &d10,000 &7经验;&7获得 &6100 &7金币;&7&l点击兑换"
+  
+  # 金蘋果兌換 - 修正兌換次數顯示格式
+  - "15:ENCHANTED_GOLDEN_APPLE:0:%stayopen%:&6附魔金苹果:&7兑换 &a3个 &6附魔金苹果;&7已兑换 &e$PlayerData%exp_limit_for_apple% &7/ 100次;&7需要 &d5,000 &7经验"
+  - "24:ENDER_EYE:0:%stayopen%/do_exp_exchange enchantedGoldenApple3:&a兑换附魔金苹果:&7消耗 &d5,000 &7经验;&7获得 &63个 &7附魔金苹果;&7&l点击兑换"
+  
+  # 經驗操作說明
+  - "18:BOOK:0:%stayopen%:&a经验操作说明:&7● &e/xp save &7- 存入经验;&7● &e/xp raw [数量] &7- 取出经验;&7● &e/xp pay [玩家] [数量] &7- 转账经验"
+  
+  # 底部按鈕
+  - "27:ARROW:0:%stayopen%/neko_menu:&a返回主页:&7返回主菜单"
+  # - "49:REDSTONE:0:%stayopen%/refresh_exp_value:&a刷新数据:&7刷新经验数据"
+  - "35:BARRIER:0:%close%:&c关闭:&7关闭菜单"
 
 exp_exchange:
   command: /exp_exchange
@@ -185,7 +216,8 @@ exp_exchange:
   runcmd:
   - $Script$%if%$arg1==CloudspringAzureBlade
   - $text$&7 兑换神装 碧波云泉剑成功! 消耗$arg2 xp 剩余$arg3 xp
-  - $RUN_CONSOLE$minecraft:give $player minecraft:diamond_sword{display:{Name:'{"color":"#71CCFA","text":"碧波云泉剑"}',Lore:['"劍光映碧波 出鞘起雲泉"']},Enchantments:[{id:"minecraft:sharpness",lvl:10},{id:"minecraft:knockback",lvl:5},{id:"minecraft:unbreaking",lvl:3}]} 1
+  - /artifact_rewards CloudspringAzureBlade
+  # - $RUN_CONSOLE$minecraft:give $player minecraft:diamond_sword{display:{Name:'{"color":"#71CCFA","text":"碧波云泉剑"}',Lore:['"劍光映碧波 出鞘起雲泉"']},Enchantments:[{id:"minecraft:sharpness",lvl:10},{id:"minecraft:knockback",lvl:5},{id:"minecraft:unbreaking",lvl:3}]} 1
   - $RUN_CONSOLE$broadcast 恭喜玩家 &e $player &a 获得 &b 碧波云泉剑 &a! 
   - $Script$%if%$arg1==bal100
   - $text$&7 兑换100金币成功! 消耗$arg2 xp 剩余$arg3 xp

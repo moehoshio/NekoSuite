@@ -4,18 +4,18 @@ from collections import Counter
 from matplotlib import rcParams
 
 # API 設定
-BASE_URL = "http://neko.moe/wish/wish.php?"
+BASE_URL = "http://localhost:8080/wish/?"
 USER_NAME = "test_user"
-WISH_TYPE = "normal"  # 可選 normal / valentine / daily 。 如果要測試每日祈願，需要將handle_wish_action函式中處理每日祈願邏輯的代碼註釋掉。
+WISH_TYPE = "Starpath"  # 可選 normal / valentine / daily / celestine_breeze。 如果要測試每日祈願，需要將handle_wish_action函式中處理每日祈願邏輯的代碼註解掉，以暫時性忽略限制。
 WISH_COUNT = 10  # 每次測試祈願次數
 TOTAL_TRIALS = 10000  # 測試總次數
 
-rcParams['font.sans-serif'] = ['SimHei']  # 使用黑體
-rcParams['axes.unicode_minus'] = False  # 防止負號顯示為亂碼
+rcParams['font.sans-serif'] = ['SimHei']
+rcParams['axes.unicode_minus'] = False
 
 # 物品 ID 對應物品名稱
 ITEM_MAPPING = {
-    "normal" : {
+    "Starpath" : {
         "iron_ingot5": "鐵錠*5",
         "gold_ingot3": "金锭*3",
         "diamond": "鑽石*1",
@@ -40,6 +40,46 @@ ITEM_MAPPING = {
         "potion_revive": "生命恢复Ⅱ",
         "UnrivaledCrimsonFeatherBow": "无双赤羽弓",
         "UnrivaledCrimsonFeatherBow_guarantee": "保底:无双赤羽弓"
+    },
+    "celestine_breeze": {
+        "buddycards": "隨機卡牌",
+        "buddycards:card.1.1": "隨機卡牌",
+        "buddycards:card.1.2": "隨機卡牌",
+        "buddycards:card.1.3": "隨機卡牌",
+        "buddycards:card.1.4": "隨機卡牌",
+        "buddycards:card.1.5": "隨機卡牌",
+        "buddycards:card.1.6": "隨機卡牌",
+        "buddycards:card.1.7": "隨機卡牌",
+        "buddycards:card.1.8": "隨機卡牌",
+        "buddycards:card.1.9": "隨機卡牌",
+        "buddycards:card.1.10": "隨機卡牌",
+        "buddycards:card.1.11": "隨機卡牌",
+        "buddycards:card.1.12": "隨機卡牌",
+        "buddycards:card.1.13": "隨機卡牌",
+        "buddycards:card.1.14": "隨機卡牌",
+        "buddycards:card.1.15": "隨機卡牌",
+        "buddycards:card.1.16": "隨機卡牌",
+        "buddycards:card.1.17": "隨機卡牌",
+        "buddycards:card.1.18": "隨機卡牌",
+        "buddycards:card.1.19": "隨機卡牌",
+        "buddycards:card.1.20": "隨機卡牌",
+        "buddycards:card.1.21": "隨機卡牌",
+        "buddycards:card.1.22": "隨機卡牌",
+        "buddycards:card.1.23": "隨機卡牌",
+        "buddycards:card.1.24": "隨機卡牌",
+        "buddycards:card.1.25": "隨機卡牌",
+        "buddycards:card.1.26": "隨機卡牌",
+        "buddycards:card.1.27": "隨機卡牌",
+        "soul_sprout2": "靈魂芽*2",
+        "goat_fur": "山羊毛皮",
+        "diamond2": "鑽石*2",
+        "potion_ice_resistance": "禦寒藥水*90s",
+        "purified_water_canteen": "純淨水袋",
+        "potion_fire_resistance": "火免藥水*180s",
+        "chameleon_molt": "變色龍皮",
+        "heart_of_the_sea": "海洋之心",
+        "CelestineBreezeHelm": "星風輕霜盔",
+        "CelestineBreezeHelm_guarantee": "保底:星風輕霜盔"
     },
     "daily" : {
         "bal5": "金幣*5",
@@ -72,7 +112,7 @@ def make_wish():
         "action": "wish",
         "user": USER_NAME,
         "type": WISH_TYPE,
-        "wish": WISH_COUNT
+        "value": WISH_COUNT
     }
     response = requests.get(BASE_URL, params=params)
     if response.status_code == 200:
@@ -82,21 +122,34 @@ def make_wish():
 print("now ready request")
 
 # 進行多次祈願測試
-for _ in range(TOTAL_TRIALS // WISH_COUNT):
+for i in range(TOTAL_TRIALS // WISH_COUNT):
     result = make_wish()
     if result:
-        parsed_items = result.strip().split()[2:]  # 解析物品ID
+        # print(f"第 {i+1} 次請求結果: {result}")  # 添加除錯資訊
+        parsed_items = result.strip().split()[3:]  # 跳過前3個元素：路徑、cost、次數
         wish_results.extend(parsed_items)
+    else:
+        print(f"第 {i+1} 次請求失敗")
 
 # 轉換為物品名稱並計算出現次數
 item_names = [ITEM_MAPPING[WISH_TYPE].get(item, f"未知物品({item})") for item in wish_results]
 item_counts = Counter(item_names)
 
+print(f"收集到的物品總數: {len(wish_results)}")
+print(f"物品計數: {dict(item_counts)}")
 print("request is okay , now plot")
 
 # 繪製圖表代碼
 def plot_results():
     """繪製祈願結果柱狀圖"""
+    if not item_counts:
+        print("錯誤：沒有收集到任何祈願數據，無法繪製圖表")
+        print("可能原因：")
+        print("1. API 請求失敗")
+        print("2. 返回的數據格式不正確")
+        print("3. 物品ID解析失敗")
+        return
+    
     items, counts = zip(*item_counts.items())
     plt.figure(figsize=(12, 6))
     bars = plt.bar(items, counts, color='skyblue')
@@ -110,7 +163,7 @@ def plot_results():
     plt.xlabel("Item")
     plt.ylabel("Frequency")
     # 更新標題，顯示本次祈願的總次數
-    plt.title(f"Wish Probability Distribution ({WISH_TYPE}) - Total Wishes: {TOTAL_TRIALS}")
+    plt.title(f"Wish Probability Distribution ({WISH_TYPE}) - Total Wishes: {len(wish_results)}")
     plt.xticks(rotation=45, ha="right")
     plt.subplots_adjust(bottom=0.20)
     plt.show()

@@ -1,34 +1,73 @@
 # NekoSuite
 
-- [English](./readme_en.md)，[简体中文](./readme_zh-cn.md)
+<!-- - [English](./readme_en.md)，[简体中文](./readme_zh-cn.md) -->
 
-NekoSuite 是一個Minecraft伺服器的功能解決方案，目前實現了 `CDK` 兌換碼、`EXP` 經驗系統和 `WISH` 祈願抽獎系統。它是基於插件 Bukkit 插件 [MYCommand](https://dev.bukkit.org/projects/mycommand) 編寫的腳本範例。核心功能由PHP實現，經過測試的PHP版本為7.x和8.1。
+NekoSuite 是一個模塊化的 Minecraft 伺服器功能拓展系統，提供了許多功能實現：
+
+- BUY（購買）
+- CDK（兌換碼）
+- WISH（祈願/抽獎）
+- EXP（經驗）系統
+
+前端是基於 Bukkit 插件 [MyCommand](https://dev.bukkit.org/projects/mycommand) 編寫的腳本，後端功能由Go實現。  
+
+## Note
+
+我們正在使用Go重構後端，並計劃在未來幾個月內完成所有功能的遷移。
+
+## 项目结构
+
+```
+NekoSuite/
+├── main.go                 # 主程序入口
+├── go.mod                  # Go 模块文件
+├── build.sh/.bat          # 构建脚本
+├── wish/                   # 祈愿模块
+│   ├── wish.go            # 模块入口和路由注册
+│   ├── config_example.yaml# 範例祈願後端配置
+│   ├── wish.yml           # MyCommand 前端脚本
+│   ├── wish_gui.yml       # Wish Gui
+│   ├── go/                # Go 实现子模块
+│   └── API_DOCUMENTATION  # 模块API文档
+├── artifacts/
+├── buy/                   # 购买系统 （待重構）
+├── cdk/                   # CDK 系统 （待重構）
+├── exp/                   # 经验系统 （待重構）
+└── tools/                 # 工具系统 （待重構）
+```
 
 具體來說，目前它有以下功能：
 
-1. **CDK系統**：
+
+1. **WISH**：
+    - `祈願抽獎`，可花費一定貨幣（需要 Vault）來抽取特定獎勵。
+    - 累計抽獎N次必定中獎的`保底機制`。
+    - `祈願券`功能：可以抵扣祈願費用，並支援按次數和只能用於特定次數的抵扣。
+    - 機率和獎品可調整。
+
+2. **CDK**：
     - 輸入CDK兌換玩家的特定獎勵！
     - 三種CDK類型：`僅能使用一次` 、`每位用戶可兌換一次` 、`限制總計可兌換次數（每位用戶一次）`。
-    - 可配置`過期時間`和任意獎勵。
+    - 可配置`過期時間`和任意獎勵
 
-2. **WISH系統**：
-    - `祈願抽獎`，可花費一定貨幣（需要 Vault）來抽取特定獎勵。
-    - 具有累計抽獎N次必定中獎的`保底機制`。
-    - 機率和獎品可任意調整，包括如：物品獎勵、藥水或效果、第三方模組內容等。
-
-3. **EXP系統**：
+3. **EXP**：
     - 經驗系統，可以 `存取經驗`、`轉賬經驗`、`經驗商店兌換物品`等。
     - 將經驗存儲到系統以免玩家死亡後經驗消失！同時可以使用經驗兌換指定獎勵。
 
+4. **BUY**：
+    - 購買系統，玩家可以使用貨幣（需要 Vault）購買特定服務（例如：vip、mcd等）。
+    - Buy系統只提供權益管理，具體權益和功能應自行透過權限組配置。
+
 ## 先決條件
 
-- A Web Server（e.g Nginx）
-- PHP 7.x/8.1
-- MyCommand Plugin 5.x
+- MyCommand Plugin 5.6+
+- Go 1.16+
+- ~~A Web Server（e.g Nginx）~~
+- ~~PHP 7.x/8.1 or other~~
 
 ### 安全性提醒
 
-請勿將PHP公開暴露，應當只能由Minecraft Server伺服器訪問。  
+請勿將後端公開暴露，應當只能由Minecraft伺服器訪問。  
 
 ## 部署
 
@@ -65,7 +104,7 @@ NekoSuite 是一個Minecraft伺服器的功能解決方案，目前實現了 `CD
 3. **WISH系統**
 
 - `/wish <類型> <次數>` 進行祈願。
-- `/wish info <類型>` 查詢卡池資訊。
+- `/wish query <類型>` 查詢卡池資訊。
 
 ## 自定義內容
 
@@ -81,8 +120,7 @@ NekoSuite 是一個Minecraft伺服器的功能解決方案，目前實現了 `CD
 
 3. **自定WISH卡池**
 
-- 編輯`wish_core.php`中的`WISH_CONFIG`，添加或修改卡池配置。
-- 再將`wish.yml`對應的祈願類型中的獎勵變更即可，通常來說它的名稱是`give_wish_xxx`，例如：`give_wish_daily`
+- 編輯`wish/config_example.yaml`，添加或修改卡池，祈願券等配置。
 
 4. **修改玩家數據**
 

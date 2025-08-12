@@ -1,0 +1,548 @@
+# 错误訊息
+buy_err_text:
+    command: /buy_err_text
+    type: 
+    - RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==invalid_user_name
+    - $text$&c 无效的用户名，请联络管理员以解决!
+    - $Script$%if%$arg1==invalid_type
+    - $text$&c 无效的开通类型!
+    - $Script$%if%$arg1==invalid_value
+    - $text$&c 无效的开通时长!
+    - $Script$%if%$arg1==invalid_action
+    - $text$&c 无效操作!
+    - $Script$%if%$arg1==invalid_level
+    - $text$&c 无效等级!
+    - $Script$%if%$arg1==the_already_have
+    - $text$&c 已经拥有该等级咯!
+    - $Script$%if%$arg1==level_cannot_downgrade
+    - $text$&c 已开通更高等级的内容，不能降级!
+    - $Script$%else%
+    - $text$&c 未知错误!
+    permission-required: false
+
+# 顯示查詢訊息
+# $arg1 = vip/mcd/bag/not_found
+# $arg2 = 等级
+# $arg3 = 到期時間
+buy_run_msg:
+    command: /buy_run_msg
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==vip
+    - $text$&7 vip等级&d$arg2&7 到期时间 &b$arg3
+    - $Script$%if%$arg1==mcd
+    - $text$&7 月卡等级&d$arg2&7 到期时间 &b$arg3
+    - $Script$%if%$arg1==bag
+    - $text$&7 背包等级&d$arg2&7
+    - $Script$%if%$arg1==all
+    - $text$&7 用户 $player 的权益 $multiargs &7(not_found 代表未开通过服务)
+    - $Script$%if%$arg1==not_found
+    - $text$&c 未开通过服务!
+    regex_pattern : "^[\u4E00-\u9FA5A-Za-z0-9_&.@\\- ~;:,]+$"
+    permission-required: false
+
+# 應該放到玩家加入和退出時執行，或定時檢查
+go_check_permission:
+    command: /go_check_permission
+    type: RUN_COMMAND
+    runcmd:
+    - /buy_go_reassign_permission
+    permission-required: false
+
+go_buy_query:
+    command: /go_buy_query
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://neko.moe/buy/buy.php?user=$player&action=query&type=$arg1
+    get_output : true
+    show_output_ingame : false
+    get_run_command: $output
+    permission-required: false
+
+# 請求开通，這應該發生在已收取費用後
+# $arg1 = vip/mcd/bag
+# $arg2 = 等级
+# $arg3 = 時長 （訂閱類型）
+go_buy:
+    command: /go_buy
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://neko.moe/buy/buy.php?user=$player&action=buy&type=$arg1&level=$arg2&value=$arg3
+    get_output : true
+    show_output_ingame : false
+    get_run_command: $output
+    permission-required: false
+
+# 請求給予用戶權益
+go_give_buy:
+    command: /go_give_buy
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://neko.moe/buy/buy.php?user=$player&action=buy&type=$arg1&level=$arg2&value=$arg3
+    get_output : false
+    show_output_ingame : false
+    permission-required: false
+
+# 活動用的，免費給予用戶權益
+# $arg1 = vip/mcd/bag
+# $arg2 = 等级
+# $arg3 = 時長 （訂閱類型）
+give_buy:
+    command: /give_buy
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - /go_give_buy $arg1 $arg2 $arg3
+    - /buy_reassign_permission $arg1 $arg2 $arg3
+    permission-required: false
+
+# 檢查餘額
+# 如果在開始前收取費用，可能導致用戶支付了費用但是未開通權益
+# 因此在開始前檢查一次餘額，且在開通後扣除費用。
+# （默認應該是支援負債的？ 因此即便此時餘額不足，也不會使玩家⌈逃票⌋）
+# $arg1 = 類型
+# $arg2 = 等级
+# $arg3 = 費用
+go_buy_check_bal:
+    command: /go_buy_check_bal
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    # 也可以將 papi的 %vault_eco_balance_0dp% 替換爲mycmd的 $money 變數
+    - $Script$%if%%vault_eco_balance_0dp%>=$arg3
+    - /go_buy $arg1 $arg2 31
+    - $Script$%else%
+    - $text$&c 金币不够哟～ 需要 &d$arg3 &c金币，您只有 &b%vault_eco_balance_0dp%
+    permission-required: false
+
+# 分發與檢查vip等级
+# $arg1 = 1~6 vip等级
+go_buy_vip:
+    command: /go_buy_vip
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==1
+    - /go_buy_check_bal vip 1 688
+    - $Script$%if%$arg1==2
+    - /go_buy_check_bal vip 2 1588
+    - $Script$%if%$arg1==3
+    - /go_buy_check_bal vip 3 3399
+    - $Script$%if%$arg1==4
+    - /go_buy_check_bal vip 4 7688
+    - $Script$%if%$arg1==5
+    - /go_buy_check_bal vip 5 23999
+    - $Script$%if%$arg1==6
+    - /go_buy_check_bal vip 6 128888
+    - $Script$%else%
+    - /buy_err_text invalid_level
+    permission-required: false
+
+# 分發與檢查月卡等级
+# $arg1 = 1~2 月卡等级
+go_buy_mcd:
+    command: /go_buy_mcd
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==1
+    - /go_buy_check_bal mcd 1 799
+    - $Script$%if%$arg1==2
+    - /go_buy_check_bal mcd 2 2688
+    - $Script$%else%
+    - /buy_err_text invalid_level
+    permission-required: false
+
+# 分發與檢查背包等级
+# $arg1 = 1~6 背包等级
+go_buy_bag:
+    command: /go_buy_bag
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==1
+    - /go_buy_check_bal bag 1 360
+    - $Script$%if%$arg1==2
+    - /go_buy_check_bal bag 2 1200
+    - $Script$%if%$arg1==3
+    - /go_buy_check_bal bag 3 3600
+    - $Script$%if%$arg1==4
+    - /go_buy_check_bal bag 4 6888
+    - $Script$%if%$arg1==5
+    - /go_buy_check_bal bag 5 13999
+    - $Script$%if%$arg1==6
+    - /go_buy_check_bal bag 6 36888
+    - $Script$%else%
+    - /buy_err_text invalid_level
+    permission-required: false
+
+buy:
+    command: /buy
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==info<and>$arg2==vip
+    - $text$
+    - $text$&0[&6*&0]  &c&lvip
+    - $text$&0[&6*&0] &bvip_lv &9& &e价格 &9& &6时长 &9& &a内容
+    - $text$
+    - $text$&0[&6*&0]  &b1  &e688  &631天   &7包含lv&a1&7背包 额外&a1个&7在线奖励 &a3个&7商店数量
+    - $text$&0[&6*&0]  &b2  &e1,588  &631天  &7包含lv&a3&7背包  &a8字&7商店名称 &7包含vip1所有内容
+    - $text$
+    - $text$&0[&6*&0]  &b3  &e3,399  &631天  &7包含&b小月卡&7(vip期间) 击败生物多&b10%&7金额掉落  额外&b2个&7在线奖励 lv&b4&7背包 可打开&b历史&7签到页 &7包含vip2所有内容
+    - $text$&0[&6*&0]  &b4  &e7,688  &631天  &7包含&b大月卡&7(vip期间) 生物多&b20%&7 被击败少掉落&b30%&7金额 &7包含vip3所有内容
+    - $text$
+    - $text$&0[&6*&0]  &b5  &e23,999  &631天  &7 lv&d5&7背包 额外&d3个&7在线奖励 生物多&d30%&7 死亡少&d50% &7可设置,使用&bhome&7 &7包含vip4所有内容
+    - $text$&0[&6*&0]  &b6  &e128,888  &631天  &7至高等级 lv&d6&7背包  生物多&d50%&7 死亡少&d80% &7包含vip5所有内容
+    - $text$
+    - $Script$%if%$arg1==info<and>$arg2==mcd
+    - $text$
+    - $text$&0[&6*&0] &d&lmcd &7(monthly card 月卡)
+    - $text$&0[&6*&0] &3mcd_lv &9& &c价格 &9& &5时长 &9& &a内容
+    - $text$&0[&6*&0] &3lv_1  &c799  &531天  &7最低签到14天可获得&a2560&7额外金额  和价值约&a2000&7的物品及额外掉落时长. 普通签到金额提升至&b70
+    - $text$ &7周末额外&d补签卡&7,额外&a70金额
+    - $text$
+    - $text$&0[&6*&0] &3lv_2  &c2688  &531天  &7最少签到8天可获得&a4212&7额外金额  和价值约&a7999&7的物品及额外掉落时长 普通签到金额&b150&7
+    - $text$ &7周末额外&a2张&d补签卡&7,额外&a220金额 . &7可打开&b历史&7签到页
+    - $text$
+    - $Script$%if%$arg1==info<and>$arg2==bag
+    - $text$
+    - $text$&0[&6*&0]  &b&lbag &7(拓展背包)
+    - $text$&0[&6*&0] &3bag_lv &9& &c价格 &9& &5时长 &9& &a内容
+    - $text$
+    - $text$&0[&6*&0] &c1  &b360  &6永久 &a1级背包  共 2 栏 1 页背包
+    - $text$&0[&6*&0] &c2  &b1200  &6永久 &a2级背包 共 3 栏 1 页背包
+    - $text$&0[&6*&0] &c3  &b3600  &6永久 &a3级背包 共 4 栏 2 页背包
+    - $text$&0[&6*&0] &c4  &b6888  &6永久 &a4级背包 共 4 栏 5 页背包
+    - $text$&0[&6*&0] &c5  &b13999  &6永久 &a5级背包 共 4 栏 8 页背包
+    - $text$&0[&6*&0] &c6  &b36888  &6永久 &a6级背包 共 4 栏 15 页背包
+    - $text$
+    - $text$&0[&6*&0] &7每行栏有7格物品位，每页最大有4行栏，没有页数限制。
+    - $text$&0[&c*&0] &7背包仅生效最高等级，无法叠加。已有低等级背包将退还费用。
+    - $Script$%if%$arg1==vip
+    - /go_buy_vip $arg2
+    - $Script$%if%$arg1==mcd
+    - /go_buy_mcd $arg2
+    - $Script$%if%$arg1==bag
+    - /go_buy_bag $arg2
+    - $Script$%if%$arg1==my
+    - /go_buy_query $arg2
+    - $Script$%else%
+    - $text$&0[&c*&0] &6Buy
+    - $text$
+    - "$rawtext$&0[&d*&0]  &c&lvip;&7点击查询vip資訊;/buy info vip<and> &9& <and> &b&lbag&7(拓展背包);&7点击查询背包資訊;/buy info bag<and> &9& <and> &d&lmcd&7(月卡);&7点击查询月卡資訊;/buy info mcd"
+    - $text$
+    - "$rawtext$&0[&d*&0] &7查询权益详情: &b/buy &einfo &6vip&7/&6bag&7/&6mcd;&7查询权益详情 如vip: &b/buy info vip;/buy info vip"
+    - "$rawtext$&0[&d*&0] &7查询已开通的权益: &b/buy my &6all/&6vip&7/&6bag&7/&6mcd;&7点击查询我的全部权益 /buy &bmy &6all;/buy my all"
+    - $text$
+    - "$rawtext$&0[&d*&0] &b/buy &c<项目> &a<等级> &7开通权益 (订阅31天，背包永久);&7开通1级vip   &b/buy vip 1;/buy vip 1"
+    - $text$
+    - "$text$&0[&d*&0] &7货币为游戏金币，通过日常奖励免费取得。"
+    - "$text$&0[&d*&0] &7Neko Server是一个公益服务器，沒有任何增值内容。"
+    permission-required: false
+    error-message: '&c错误! 可能是參數不足哟～ 检查一下你的输入吧！'
+    register: true
+    tab_completer:
+        1:
+        - info
+        - vip
+        - bag
+        - mcd
+        - my
+        2:
+        - vip<pos_1=my>
+        - mcd<pos_1=my>
+        - bag<pos_1=my>
+        - all<pos_1=my>
+        - 查询已开通的权益<pos_1=my>
+        - 1<pos_1=vip>
+        - 2<pos_1=vip>
+        - 3<pos_1=vip>
+        - 4<pos_1=vip>   
+        - 5<pos_1=vip>  
+        - 6<pos_1=vip>
+        - 需要开通的vip等级<pos_1=vip>
+        - 1<pos_1=bag>
+        - 2<pos_1=bag>
+        - 3<pos_1=bag>
+        - 4<pos_1=bag>   
+        - 5<pos_1=bag>  
+        - 6<pos_1=bag>
+        - 需要开通的背包等级<pos_1=bag>  
+        - 1<pos_1=mcd>
+        - 2<pos_1=mcd>
+        - 需要开通的月卡等级<pos_1=mcd>  
+        - vip<pos_1=info>
+        - bag<pos_1=info>
+        - mcd<pos_1=info>
+        - 查询权益详情<pos_1=info> 
+
+
+# 購買權益，收取費用
+# 默認應該是支援負債的？ 因此即便此時餘額不足，也不會使玩家⌈逃票⌋
+# $arg1 = vip_1~vip_6/mcd_1~mcd_2/bag_1~bag_6
+buy_run_cost:
+    command: /buy_run_cost
+    type:
+    - RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==vip_1
+    - $RUN_CONSOLE$essentials:eco take $player 688
+    - $Script$%if%$arg1==vip_2
+    - $RUN_CONSOLE$essentials:eco take $player 1588
+    - $Script$%if%$arg1==vip_3
+    - $RUN_CONSOLE$essentials:eco take $player 3399
+    - $Script$%if%$arg1==vip_4
+    - $RUN_CONSOLE$essentials:eco take $player 7688
+    - $Script$%if%$arg1==vip_5
+    - $RUN_CONSOLE$essentials:eco take $player 23999
+    - $Script$%if%$arg1==vip_6
+    - $RUN_CONSOLE$essentials:eco take $player 128888
+    - $Script$%if%$arg1==mcd_1
+    - $RUN_CONSOLE$essentials:eco take $player 799
+    - $Script$%if%$arg1==mcd_2
+    - $RUN_CONSOLE$essentials:eco take $player 2688
+    - $Script$%if%$arg1==bag_1
+    - $RUN_CONSOLE$essentials:eco take $player 360
+    - $Script$%if%$arg1==bag_2
+    - $RUN_CONSOLE$essentials:eco take $player 1200
+    - $Script$%if%$arg1==bag_3
+    - $RUN_CONSOLE$essentials:eco take $player 3600
+    - $Script$%if%$arg1==bag_4
+    - $RUN_CONSOLE$essentials:eco take $player 6888
+    - $Script$%if%$arg1==bag_5
+    - $RUN_CONSOLE$essentials:eco take $player 13999
+    - $Script$%if%$arg1==bag_6
+    - $Script$%else%
+    - $text$&c 错误的权益等级! 联络管理员以解决此问题
+    permission-required: false 
+
+
+
+# 查詢並請求重新指派權限 （回調請求/buy_reassign_permission）
+buy_go_reassign_permission:
+    command: /buy_go_reassign_permission
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://neko.moe/buy/buy.php?user=$player&action=check_expiry
+    get_output : true
+    show_output_ingame : false
+    get_run_command: $output
+    permission-required: false 
+
+# 重新指派權限
+# $arg1 = vip_1~vip_6
+# $arg2 = mcd_1~mcd_2
+# $arg3 = bag_1~bag_6
+# 這裏權限使用GroupManager管理，有需要請自行修改
+buy_reassign_permission:
+    command: /buy_reassign_permission
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - "/buy_reassign_permission_vip $arg1"
+    - "/buy_reassign_permission_mcd $arg2"
+    - "/buy_reassign_permission_bag $arg3"
+    permission-required: false
+
+# 重新指派vip權限
+# $arg1 = lv_1~lv_6
+# vip透過 [用戶組] 分配權限
+buy_reassign_permission_vip:
+    command: /buy_reassign_permission_vip
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    
+    - $RUN_CONSOLE$manudel $player # 移動到默認權限組
+
+    - $Script$%if%$arg1==vip_1<or>$arg1==vip_2<or>$arg1==vip_3<or>$arg1==vip_4<or>$arg1==vip_5<or>$arg1==vip_6
+    - "$RUN_CONSOLE$manuadd $player $arg1"
+
+    - $Script$%if%$arg1==none
+    # 僅清除權限，if什麼都不做，只是爲了避免顯示默認內容
+
+    - $Script$%else%
+    - $text$&c 错误的vip等级，联络管理员以解决此问题!
+    permission-required: false
+
+# 重新指派mcd權限
+# $arg1 = mcd_1~mcd_2
+# 月卡透過 [子用戶組] 分配權限，也可以直接分配權限
+buy_reassign_permission_mcd:
+    command: /buy_reassign_permission_mcd
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+   
+    # 如果分配權限，則移除所有月卡權限
+    # - $RUN_CONSOLE$manudelp $player signin.reward.mcd_2
+    # - $RUN_CONSOLE$manudelp $player signin.reward.mcd_1
+
+    # 移除月卡子用戶組
+    - $RUN_CONSOLE$manudelsub $player mcd_2
+    - $RUN_CONSOLE$manudelsub $player mcd_1
+
+    - $Script$%if%$arg1==mcd_1<or>$arg1==mcd_2
+    - "$RUN_CONSOLE$manuaddsub $player $arg1"
+
+    - $Script$%if%$arg1==none
+    # 僅清除權限，if什麼都不做，只是爲了避免顯示默認內容
+
+    - $Script$%else%
+    - $text$&c 错误的月卡等级，联络管理员以解决此问题!
+    permission-required: false
+
+# 重新指派bag權限
+# $arg1 = bag_1~bag_6
+# 背包透過 [子用戶組] 分配權限，也可以直接分配權限
+buy_reassign_permission_bag:
+    command: /buy_reassign_permission_bag
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+
+    # 如果直接分配權限，則移除所有背包權限
+    # - $RUN_CONSOLE$manudelp $player geekbag.page.bag_6
+    # - $RUN_CONSOLE$manudelp $player geekbag.page.bag_5
+    # - $RUN_CONSOLE$manudelp $player geekbag.page.bag_4
+    # - $RUN_CONSOLE$manudelp $player geekbag.page.bag_3
+    # - $RUN_CONSOLE$manudelp $player geekbag.page.bag_2
+    # - $RUN_CONSOLE$manudelp $player geekbag.page.bag_1
+    # - $RUN_CONSOLE$manudelp $player geekbag.vip.gui.bag_6
+    # - $RUN_CONSOLE$manudelp $player geekbag.vip.gui.bag_5
+    # - $RUN_CONSOLE$manudelp $player geekbag.vip.gui.bag_4
+    # - $RUN_CONSOLE$manudelp $player geekbag.vip.gui.bag_3
+    # - $RUN_CONSOLE$manudelp $player geekbag.vip.gui.bag_2
+    # - $RUN_CONSOLE$manudelp $player geekbag.vip.gui.bag_1
+
+    # 移除背包子用戶組
+    - $delay$$RUN_CONSOLE$manudelsub $player bag_6
+    - $delay$$RUN_CONSOLE$manudelsub $player bag_5
+    - $delay$$RUN_CONSOLE$manudelsub $player bag_4
+    - $delay$$RUN_CONSOLE$manudelsub $player bag_3
+    - $delay$$RUN_CONSOLE$manudelsub $player bag_2
+    - $delay$$RUN_CONSOLE$manudelsub $player bag_1
+
+
+    - $Script$%if%$arg1==bag_1<or>$arg1==bag_2<or>$arg1==bag_3<or>$arg1==bag_4<or>$arg1==bag_5<or>$arg1==bag_6
+    - "$RUN_CONSOLE$manuaddsub $player $arg1"
+
+    - $Script$%if%$arg1==none
+    # 僅清除權限，if什麼都不做，只是爲了避免顯示默認內容
+
+    - $Script$%else%
+    - $text$&c 错误的背包等级，联络管理员以解决此问题!
+    permission-required: false
+    delaytimer: 5 # 等待5tick，應該有助於避免卡頓
+    delaytimer_format: TICKS
+ 
+buy_run_vip:
+    command: /buy_run_vip
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: 
+    - RAW_TEXT
+    - RUN_COMMAND
+    text:
+    - ''
+    runcmd:
+    - /buy_run_cost $arg1
+    - $text$&7 您已开通 &d$arg1 至 &b$arg2 天
+    - $RUN_CONSOLE$run_broadcast 玩家&c $player &7开通了 &d$arg1 &7一个月！ 点击可蹭蹭奖励;&7点击领取幸运奖励;/lucky_pack # run_broadcast 爲tools.yml中的功能
+
+    - $Script$%if%$arg1==vip_1<or>$arg1==vip_2<or>$arg1==vip_3<or>$arg1==vip_4<or>$arg1==vip_5<or>$arg1==vip_6
+    - /buy_reassign_permission_vip $arg1
+
+    - $Script$%else%
+    - $text$&c 这应该是一个错误？联络管理员以解决此问题
+    permission-required: false
+
+buy_run_mcd:
+    command: /buy_run_mcd
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: 
+    - RAW_TEXT
+    - RUN_COMMAND
+    text:
+    - ''
+    runcmd:
+    - /buy_run_cost $arg1
+    - $text$&7 您已开通 &d$arg1 至 &b$arg2 天
+    - $RUN_CONSOLE$run_broadcast 玩家&c $player &7开通了 &d$arg1 &7一个月! 点击可蹭蹭奖励;&7点击领取幸运奖励;/lucky_pack  # run_broadcast 爲tools.yml中的功能
+
+    - $Script$%if%$arg1==mcd_1<or>$arg1==mcd_2
+    - /buy_reassign_permission_mcd $arg1
+
+    - $Script$%else%
+    - $text$&c 这应该是一个错误？联络管理员以解决此问题
+    permission-required: false
+
+buy_run_bag:
+    command: /buy_run_bag
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: 
+    - RAW_TEXT
+    - RUN_COMMAND
+    text:
+    - ''
+    runcmd:
+    - /buy_run_cost $arg1
+    - $text$&7 您已开通 &d$arg1
+    - $RUN_CONSOLE$run_broadcast 玩家&c $player &7开通了 &d$arg1 &7背包! 点击可蹭蹭奖励;&7点击领取幸运奖励;/lucky_pack # run_broadcast 爲tools.yml中的功能
+
+    - $Script$%if%$arg1==bag_1<or>$arg1==bag_2<or>$arg1==bag_3<or>$arg1==bag_4<or>$arg1==bag_5<or>$arg1==bag_6
+    - /buy_reassign_permission_bag $arg1
+
+    - $Script$%if%$arg2!=0 # 退還費用
+    - $text$&7 您已有低等级的背包，退回 &d$arg2 &7金币
+    - $RUN_CONSOLE$essentials:eco give $player $arg2
+
+    - $Script$%else%
+    - $text$&c 这应该是一个错误？联络管理员以解决此问题
+    permission-required: false
+
+# 領取紅包獎勵
+lucky_pack:
+    command: /lucky_pack
+    type: CALL_URL
+    url: http://neko.moe/buy/lucky_pack.php?action=claim&user=$player
+    get_output: true
+    show_output_ingame: false
+    get_run_command: $output
+    permission-required: false
+
+# 紅包錯誤處理
+lucky_pack_err:
+    command: /lucky_pack_err
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==already_claimed
+    - $text$&c 今天已经领取过幸运奖励咯!
+    - $Script$%if%$arg1==invalid_action
+    - $text$&c 无效操作
+    - $Script$%else%
+    - $text$&c 未知错误
+    permission-required: false
+
+# 發放紅包獎勵
+# $arg1 = 類型，money/item
+# $arg2 = 金額 (如果類型爲item則是物品名）
+# $arg3 = 物品數量
+lucky_pack_give:
+    command: /lucky_pack_give
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: RUN_COMMAND
+    runcmd:
+    - $Script$%if%$arg1==money
+    - $RUN_CONSOLE$essentials:eco give $player $arg2
+    - $text$&a 恭喜您获得 &6$arg2 &7金币
+    - $text$&7 - &6$arg2 &7金币
+    - $Script$%if%$arg1==item
+    - $text$&a 恭喜您获得 &b$arg3 &7个 &b$arg2
+    - $RUN_CONSOLE$minecraft:give $player $arg2 $arg3
+    - $text$&7 - &b$arg3 &7个 &b$arg2
+    - $Script$%else%
+    - $text$&c 无效的奖励类型！联络管理员以解决此问题
+    permission-required: false

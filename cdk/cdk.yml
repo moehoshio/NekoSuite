@@ -35,22 +35,17 @@ go_cdk:
   cooldown: 1 
 
 cdk:
-  command: /cdk
-  type: 
-  - RUN_COMMAND
-  runcmd: 
-  - $Script$%if%$arg1==exchange<or>$arg1==ex<or>$arg1==e
-  - /go_cdk $arg2
-  - $Script$%else%
-  - $text$&6 cdk &7系统
-  - "$text$&7 使用方法: /cdk ex (&6兑换码&7)"
-  permission-required: false 
-  register: true 
-  tab_completer:
-   1:
-   - ex
-   2:
-   - 您的cdk<pos_1=ex>
+    command: /cdk
+    type: 
+    - RUN_COMMAND
+    runcmd: 
+    - /go_cdk $arg1
+    permission-required: false 
+    error-message: '&c错误! &7使用方法: /cdk <&b您的cdk&7> 以兑换' 
+    register: true
+    tab_completer:
+        1:
+        - <CDK>
 
 give_cdk_reward:
   command: /give_cdk_reward
@@ -61,6 +56,9 @@ give_cdk_reward:
   - $Script$%if%$arg1==NekoServer2025
   - $text$&7 NekoServer 2025 祝您新年快乐! 赠送您360余额，新的一年与您同在!
   - $RUN_CONSOLE$essentials:eco give $player 360
+  - $Script$%elseif%$arg1==goUseBuy
+  - $text$&7 獲得7天 2級vip！
+  - /do_buy $player vip 2 7
   - $Script$%else$
   - $text$&c 无效的奖励id，聯絡管理員以解決該問題
   permission-required: false 

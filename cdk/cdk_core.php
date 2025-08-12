@@ -17,10 +17,10 @@ const CDK_CONFIG = [
         ]
     ],
     'total_limit' => [ //公共可使用N次的cdk，每位用戶一次。
-        'cdk3' => [
-            'reward' => 'reward3',
-            'expiry' => '2025-01-01',
-            'limit' => 100
+        'buyVip2-7' => [ // buy系統維護與重構上線的補償
+            'reward' => 'buyVip2-7',
+            'expiry' => '2025-03-05',
+            'limit' => 10
         ]
     ]
 ];
