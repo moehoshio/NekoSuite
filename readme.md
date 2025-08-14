@@ -70,5 +70,12 @@ cp <module_name>/config.example.yml <module_name>/config.yml
 ## 文檔
 
 - [整體架構設計](ARCHITECTURE.md)
-- [開發指南](DEVELOPMENT_GUIDE.md)
-- [各模塊詳細文檔](模塊文件夾中的 README.md)
+- [各模塊詳細文檔和 API](模塊文件夾中的 README.md)
+
+## 開發規範
+
+- 所有 API 響應必須只包含 ASCII 字符
+- 響應格式為可執行的 MyCommand 命令：`/command_name param1 param2`
+- 錯誤響應格式：`/module_error_text error_type`
+- 中文內容由前端 MyCommand 腳本處理
+- 禁止返回 JSON 格式（MyCommand call_url 不支援 UTF8）
