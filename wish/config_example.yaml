@@ -140,7 +140,7 @@ pools:
         items:
             exp100: 20.0
             end_rod12: 18.0
-            feather12: 16.0
+            phantom_membrane3: 16.0
             mysteryCardPack3: 16.0
             diamond3: 16.0
             focusBag: 5.0
@@ -221,23 +221,23 @@ pools:
             potions:
                 probability: 20.0
                 subList:
-                    potion:minecraft:speed: 1
-                    potion:minecraft:haste: 1
-                    potion:minecraft:strength: 1
-                    potion:minecraft:instant_health: 1
-                    potion:minecraft:jump_boost: 1
-                    potion:minecraft:regeneration: 1
-                    potion:minecraft:resistance: 1
-                    potion:minecraft:fire_resistance: 1
-                    potion:minecraft:water_breathing: 1
-                    potion:minecraft:invisibility: 1
-                    potion:minecraft:night_vision: 1
-                    potion:minecraft:health_boost: 1
-                    potion:minecraft:absorption: 1
-                    potion:minecraft:saturation: 1
-                    potion:minecraft:glowing: 1
-                    potion:minecraft:levitation: 1
-                    potion:minecraft:luck: 1
+                    minecraft:speed: 1
+                    minecraft:haste: 1
+                    minecraft:strength: 1
+                    minecraft:instant_health: 1
+                    minecraft:jump_boost: 1
+                    minecraft:regeneration: 1
+                    minecraft:resistance: 1
+                    minecraft:fire_resistance: 1
+                    minecraft:water_breathing: 1
+                    minecraft:invisibility: 1
+                    minecraft:night_vision: 1
+                    minecraft:health_boost: 1
+                    minecraft:absorption: 1
+                    minecraft:saturation: 1
+                    minecraft:glowing: 1
+                    minecraft:levitation: 1
+                    minecraft:luck: 1
         guarantee_items:
             CloudspringAzureBlade_guarantee: 1
             UnrivaledCrimsonFeatherBow_guarantee: 1

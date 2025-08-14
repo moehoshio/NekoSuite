@@ -51,11 +51,11 @@ wish_gui:
         - HIDE_ATTRIBUTES
         # - HIDE_ENCHANTS
     iconmenu_commands:
-        - "11:SUNFLOWER:0:%stayopen%/go_wish_query GlimmeringPrayer true:&6微光之愿:;&7[ &o一縷微光穿星夜，輕聲禱語寄心願 &7];;&7每日曦光赠送恩赐， &e可进行一次祈愿;;&7&l点击查看"
-        - "13:NETHER_STAR:0:%stayopen%/go_wish_query StarPath true:&e星途:;&7[ &o初心未改，步步皆光 &7];;&b星光始终于空中闪耀，指引踏上旅途的人;;&7&l点击查看"
-        - "15:DIAMOND:0:%stayopen%/go_wish_query StarryMirage true:&b星光如梦:;&7[ &o星河倒映夢中影， 浮光織就幻世形 &7];;&7星光幻梦将于 2025-&509-01&7 前消退;;&7&l点击查看"
+        - "11:SUNFLOWER:0:%stayopen%/go_wish_query GlimmeringPrayer gui:&6微光之愿:;&7[ &o一縷微光穿星夜，輕聲禱語寄心願 &7];;&7每日曦光赠送恩赐， &e可进行一次祈愿;;&7&l点击查看"
+        - "13:PAPER:1;1202:%stayopen%/go_wish_query StarPath gui:&e星途:;&7[ &o初心未改，步步皆光 &7];;&b星光始终于空中闪耀，指引踏上旅途的人;;&7&l点击查看"
+        - "15:PAPER:1;1104:%stayopen%/go_wish_query StarryMirage gui:&b星光如梦:;&7[ &o星河倒映夢中影， 浮光織就幻世形 &7];;&7星光幻梦将于 2025-&509-01&7 前消退;;&7&l点击查看"
 
-        # - "15:RED_STAINED_GLASS:0:%stayopen%/go_wish_query GlimmeringPrayer true:&d情人节祈愿:&7限时活动;&72025-&503-15&7前;&7&l点击查看"
+        # - "15:RED_STAINED_GLASS:0:%stayopen%/go_wish_query GlimmeringPrayer gui:&d情人节祈愿:&7限时活动;&72025-&503-15&7前;&7&l点击查看"
 
         # 底部按鈕
         - "36:BOOK:0:%stayopen%:&e祈愿说明:;&7每次祈愿可累计相应的&e命运刻痕;;&7命运刻痕抵达临界时， 必定获得&6终极&7奖励;;&7命运刻痕&b不因时间流逝而消失;;&7每个祈愿池24H最多祈愿999次"
@@ -95,7 +95,7 @@ wish_GlimmeringPrayer_gui:
     permission-required: false
     iconmenu_commands:
         # 資訊顯示
-        - "0:PLAYER_HEAD%eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzRlNWYxM2JkN2YyYjllNWRkOGMwMGMxZDI0NTk5NWQyYjMzYmE0Zjg0MWUzYzM3ZGE2NjM5OTdhYjAxMjUxZiJ9fX0=:0:%stayopen%:&e微光之愿:;&7命运刻痕： (&6$arg1&7/&e100&7);;&7可用祈愿券： &b$arg2"
+        # - "0:PLAYER_HEAD%eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzRlNWYxM2JkN2YyYjllNWRkOGMwMGMxZDI0NTk5NWQyYjMzYmE0Zjg0MWUzYzM3ZGE2NjM5OTdhYjAxMjUxZiJ9fX0=:0:%stayopen%:&e微光之愿:;&7命运刻痕： (&6$arg1&7/&e100&7);;&7可用祈愿券： &b$arg2"
 
         # 獎勵預覽（詳細機率）
         - "9:GOLD_INGOT:0:%stayopen%:&7金币 x5（25%）:&7获得 &e5金币"
@@ -109,12 +109,12 @@ wish_GlimmeringPrayer_gui:
         - "17:EXPERIENCE_BOTTLE:0:%stayopen%:&7经验 x20（20%）:&7获得 &e20经验"
         - "18:EXPERIENCE_BOTTLE:0:%stayopen%:&7经验 x100（10%）:&7获得 &e100经验"
         - "19:POTION:0:%stayopen%:&7随机药水效果（20%）:&7获得 &e随机效果;&7持续 &e180秒"
-        - "20:PAPER:1;10100:%stayopen%:&6P点 x5（10%）:&7获得 &6P点x5;&7用于女仆相关"
+        - "20:PAPER:1;5100:%stayopen%:&6P点 x5（10%）:&7获得 &6P点x5;&7用于女仆相关"
         - "21:GOLD_INGOT:0:%stayopen%:&e金币 x10,000（0.01%）:&7获得 &e10,000金币"
         - "22:DIAMOND_SWORD:0:%stayopen%:&e随机神装（0.01%）:&7随机获得以下神装之一:;&6- 无双赤羽弓;&b- 碧波云泉剑;&4- 麒麟霸炎铠"
 
         # 祈願按鈕
-        - "40:NETHER_STAR:0:%stayopen%/do_wish GlimmeringPrayer 1:&a进行祈愿:;&7每日曦光赠送恩赐，可进行一次祈愿;;&7&l点击祈愿"
+        - "40:PAPER:1;1100:%stayopen%/do_wish GlimmeringPrayer 1:&a进行祈愿:;&7命运刻痕： (&6$arg1&7/100);;&7可用祈愿券： &b$arg2;;&7每日曦光赠送恩赐，可进行一次祈愿;;&7&l点击祈愿"
 
         # 底部按鈕
         - "45:ARROW:0:%stayopen%/wish_gui:&a返回主页:&7返回祈愿主页"
@@ -138,16 +138,16 @@ wish_StarPath_gui:
         - "10:GOLD_INGOT:0:%stayopen%:&7金锭 x5（18%）:&7获得 &e金锭x5"
         - "11:DIAMOND:0:%stayopen%:&7钻石 x2（15%）:&7获得 &e钻石x2"
         - "12:EXPERIENCE_BOTTLE:0:%stayopen%:&7经验 x50（20%）:&7获得 &e50经验"
-        - "13:PAPER:1;10100:%stayopen%:&6P点 x5（12%）:&7获得 &6P点x5;&7用于女仆相关"
+        - "13:PAPER:1;5100:%stayopen%:&6P点 x5（12%）:&7获得 &6P点x5;&7用于女仆相关"
         - "14:POTION:0:%stayopen%:&c力量Ⅲ x180s（5%）:&7获得 &c力量Ⅲ药水;&7持续180秒"
         - "15:NETHERITE_SCRAP:0:%stayopen%:&9下界合金碎片（5%）:&7获得 &9下界合金碎片x1"
-        - "16:PAPER:1;10202:%stayopen%:&5召回核心（2%）:&7获得 &5召回核心;&7用于召回法术"
-        - "17:PAPER:1;10400:%stayopen%:&7净水袋（12%）:&7获得 &e净水袋x1;&7可重复使用"
+        - "16:PAPER:1;5202:%stayopen%:&5召回核心（2%）:&7获得 &5召回核心;&7用于召回法术"
+        - "17:PAPER:1;5400:%stayopen%:&7净水袋（12%）:&7获得 &e净水袋x1;&7可重复使用"
         - "18:GOLDEN_CHESTPLATE:0:%stayopen%:&e麒麟霸炎铠（0.246%）:&7获得 &e麒麟霸炎铠;&c火焰保护X;&4荆棘5;&7耐久3"
 
         # 祈願按鈕（下移兩行）
-        - "39:EMERALD:0:%stayopen%/do_wish StarPath 1:&a祈愿一次:&7星纹祈愿券 &e80&7 金币兑换一张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
-        - "41:DIAMOND:0:%stayopen%/do_wish StarPath 5:&6祈愿五次:&7星纹祈愿券 &e400&7 金币兑换五张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
+        - "39:PAPER:1;1101:%stayopen%/do_wish StarPath 1:&a祈愿一次:&7星纹祈愿券 &e80&7 金币兑换一张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
+        - "41:PAPER:1;1100:%stayopen%/do_wish StarPath 5:&6祈愿五次:&7星纹祈愿券 &e400&7 金币兑换五张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
 
         # 底部按鈕
         - "45:ARROW:0:%stayopen%/wish_gui:&a返回主页:&7返回祈愿主页"
@@ -179,8 +179,8 @@ wish_OathOfTheRedRose_gui:
         - "18:BOW:0:%stayopen%:&6无双赤羽弓（0.246%）:&7获得 &6无双赤羽弓;&e力量X;&2经验修补;&c火矢;&5无限"
 
         # 祈願按鈕（下移兩行）
-        - "39:EMERALD:0:%stayopen%/do_wish OathOfTheRedRose 1:&a祈愿一次:&7红誓之符 &e80 &7金币兑换一张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
-        - "41:DIAMOND:0:%stayopen%/do_wish OathOfTheRedRose 5:&a祈愿五次:&7红誓之符 &e400 &7金币兑换五张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
+        - "39:PAPER:1;1101:%stayopen%/do_wish OathOfTheRedRose 1:&a祈愿一次:&7红誓之符 &e80 &7金币兑换一张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
+        - "41:PAPER:1;1100:%stayopen%/do_wish OathOfTheRedRose 5:&a祈愿五次:&7红誓之符 &e400 &7金币兑换五张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
 
         # 底部按鈕
         - "45:ARROW:0:%stayopen%/wish_gui:&a返回主页:&7返回祈愿主页"
@@ -197,26 +197,26 @@ wish_StarryMirage_gui:
     permission-required: false
     iconmenu_commands:
         # 資訊顯示
-        - "0:PLAYER_HEAD%eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmU2ZDQxZGU2YWU1NDYzYTc3NjVhZGJmODZlMWUxOGY5YThkYzA5NGY4OTFkZTAzM2VjYzMyNWI2ZjA0YzVhNyJ9fX0=:0:%stayopen%:&b星光如梦:;&7命运刻痕： (&6$arg1&7/200);;&7可用祈愿券： (&b$arg2&7)"
-
+        # - "0:PLAYER_HEAD%eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmU2ZDQxZGU2YWU1NDYzYTc3NjVhZGJmODZlMWUxOGY5YThkYzA5NGY4OTFkZTAzM2VjYzMyNWI2ZjA0YzVhNyJ9fX0=:0:%stayopen%:&b星光如梦:;&7命运刻痕： (&6$arg1&7/200);;&7可用祈愿券： (&b$arg2&7)"
+# 
         # 獎勵預覽（詳細機率）
         - "9:EXPERIENCE_BOTTLE:0:%stayopen%:&7经验 x100（20%）:&7获得 &e100经验"
         - "10:END_ROD:0:%stayopen%:&7末地烛 x12（18%）:&7获得 &e末地烛x12"
-        - "11:FEATHER:0:%stayopen%:&7羽毛 x12（16%）:&7获得 &e羽毛x12"
-        - "12:PAPER:1;10300:%stayopen%:&7神秘卡牌礼包 x3（16%）:&7获得 &e神秘卡牌礼包x3;&7使用后获得9张随机卡牌"
+        - "11:PHANTOM_MEMBRANE:0:%stayopen%:&7幻影膜 x3（16%）:&7获得 &e幻影膜x3"
+        - "12:PAPER:1;5300:%stayopen%:&7神秘卡牌礼包 x3（16%）:&7获得 &e神秘卡牌礼包x3;&7使用后获得9张随机卡牌"
         - "13:DIAMOND:0:%stayopen%:&b钻石 x3（16%）:&7获得 &b钻石x3"
-        - "14:PAPER:1;10203:%stayopen%:&7核心包（5%）:&7获得 &7法术核心包;&7可快捷切换核心"
+        - "14:PAPER:1;5203:%stayopen%:&7核心包（5%）:&7获得 &7法术核心包;&7可快捷切换核心"
         - "15:NETHER_STAR:0:%stayopen%:&a下界之星（2%）:&7获得 &a下界之星x1"
-        - "16:PAPER:1;10201:%stayopen%:&b冰霜核心（1%）:&7获得 &b冰霜核心;&7用于冰霜法术"
-        - "17:PAPER:1;10200:%stayopen%:&c冲击核心（1%）:&7获得 &c冲击核心;&7用于冲击法术"
-        - "18:PAPER:1;10204:%stayopen%:&e星之护符（1%）:&7获得 &e星之护符;&7低血量时获得凋零铠甲"
+        - "16:PAPER:1;5201:%stayopen%:&b冰霜核心（1%）:&7获得 &b冰霜核心;&7用于冰霜法术"
+        - "17:PAPER:1;5200:%stayopen%:&c冲击核心（1%）:&7获得 &c冲击核心;&7用于冲击法术"
+        - "18:PAPER:1;5204:%stayopen%:&e星之护符（1%）:&7获得 &e星之护符;&7低血量时获得凋零铠甲"
         - "19:DIAMOND_HELMET:0:%stayopen%:&b星風輕霜（0.246%）:&7获得 &b星風輕霜;&9投射物保护X;&9保护V;&7耐久III;&7装备时+0.7攻速"
         - "20:DIAMOND_BOOTS:0:%stayopen%:&d天語輕行（0.246%）:&7获得 &d天語輕行;&9保护V;&9轻盈V;&5深海漫游V;&b冰霜行者II;&7装备时+12%移速"
         - "21:DIAMOND_SWORD:0:%stayopen%:&b碧波雲泉劍（0.246%）:&7获得 &b碧波雲泉劍;&9锋利X;&3击退V;&7耐久III;&7快如泉影+0.8攻速"
 
         # 祈願按鈕（下移兩行）
-        - "39:EMERALD:0:%stayopen%/do_wish StarryMirage 1:&a祈愿一次:&7星纹祈愿券 &e80 &7金币兑换一张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
-        - "41:DIAMOND:0:%stayopen%/do_wish StarryMirage 5:&b祈愿五次:&7星纹祈愿券 &e400 &7金币兑换五张;;&7你的金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
+        - "39:PAPER:1;1101:%stayopen%/do_wish StarryMirage 1:&a祈愿一次:;&7命运刻痕： (&6$arg1&7/200);;&7剩余金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7使用 &e80 &7金币兑换一张星纹祈愿券;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
+        - "41:PAPER:1;1100:%stayopen%/do_wish StarryMirage 5:&b祈愿五次:;&7命运刻痕： (&6$arg1&7/200);;&7剩余金币： &6%vault_eco_balance_3dp%;;&7可用祈愿券数量： &b$arg2;;&7使用 &e400 &7金币兑换五张星纹祈愿券;;&7祈愿券不足时自动使用金币兑换;&7&l点击祈愿"
 
         # 底部按鈕
         - "45:ARROW:0:%stayopen%/wish_gui:&a返回主页:&7返回祈愿主页"

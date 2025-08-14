@@ -584,9 +584,9 @@ give_wish_GlimmeringPrayer:
         - /show_wish_GlimmeringPrayer_message normal &7P点x5;&4P点&7是女仆相关的点数，可用于女仆相关，举行仪式等需要
         - $RUN_CONSOLE$minecraft:give $player touhou_little_maid:power_point 5
 
-        - $Script$%if%$arg1==potion:minecraft:speed<or>$arg1==potion:minecraft:haste<or>$arg1==potion:minecraft:strength<or>$arg1==potion:minecraft:instant_health<or>$arg1==potion:minecraft:jump_boost<or>$arg1==potion:minecraft:regeneration<or>$arg1==potion:minecraft:resistance<or>$arg1==potion:minecraft:fire_resistance<or>$arg1==potion:minecraft:water_breathing<or>$arg1==potion:minecraft:invisibility<or>$arg1==potion:minecraft:night_vision<or>$arg1==potion:minecraft:health_boost<or>$arg1==potion:minecraft:absorption<or>$arg1==potion:minecraft:saturation<or>$arg1==potion:minecraft:glowing<or>$arg1==potion:minecraft:levitation<or>$arg1==potion:minecraft:luck
+        - $Script$%if%$arg1==minecraft:speed<or>$arg1==minecraft:haste<or>$arg1==minecraft:strength<or>$arg1==minecraft:instant_health<or>$arg1==minecraft:jump_boost<or>$arg1==minecraft:regeneration<or>$arg1==minecraft:resistance<or>$arg1==minecraft:fire_resistance<or>$arg1==minecraft:water_breathing<or>$arg1==minecraft:invisibility<or>$arg1==minecraft:night_vision<or>$arg1==minecraft:health_boost<or>$arg1==minecraft:absorption<or>$arg1==minecraft:saturation<or>$arg1==minecraft:glowing<or>$arg1==minecraft:levitation<or>$arg1==minecraft:luck
         - /show_wish_GlimmeringPrayer_message normal &7随机增益药水效果x180s;&7随机增益药水效果，持续180秒
-        - $RUN_CONSOLE$minecraft:effect give $player $arg2 181 1
+        - $RUN_CONSOLE$minecraft:effect give $player $arg1 181 1
 
 
         # Show guarantee
@@ -662,9 +662,9 @@ give_wish_StarryMirage:
         - /show_wish_StarryMirage_message normal &7末地烛x12
         - $RUN_CONSOLE$minecraft:give $player minecraft:end_rod 12
 
-        - $Script$%if%$arg1==feather12
-        - /show_wish_StarryMirage_message normal &7羽毛x12
-        - $RUN_CONSOLE$minecraft:give $player minecraft:feather 12
+        - $Script$%if%$arg1==phantom_membrane3
+        - /show_wish_StarryMirage_message normal &7幻影膜x3
+        - $RUN_CONSOLE$minecraft:give $player minecraft:phantom_membrane 3
 
         - $Script$%if%$arg1==mysteryCardPack3
         - /show_wish_StarryMirage_message normal &7神秘卡牌礼包x3;&7使用后获得9张随机的任意卡牌
