@@ -32,6 +32,8 @@ func NewWishService(configPath string) (*Service, error) {
 	}
 
 	ticketManager := NewWishTicketManager()
+
+	// 創建共用的限制模式管理器（先暫時使用舊的管理器）
 	limitModeManager := NewLimitModeManager(store)
 
 	// 创建服务实例
@@ -138,6 +140,19 @@ func (s *Service) PerformWish(user string, poolType string, count int) (*WishRes
 	}
 
 	poolConfig, exists := s.config.GetPoolConfig(poolType)
+	if !exists {
+		return nil, fmt.Errorf("pool_not_found")
+	}
+
+	// 检查祈愿池的持续时间
+	if err := s.limitModeManager.CheckPoolDuration(poolConfig); err != nil {
+		return nil, err
+	}
+
+	// 检查限制模式
+	if err := s.limitModeManager.CheckLimitMode(user, poolType, poolConfig, count); err != nil {
+		return nil, err
+	}
 	if !exists {
 		return nil, fmt.Errorf("invalid_wish_type")
 	}

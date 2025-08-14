@@ -11,7 +11,7 @@ go_wish:
     command: /go_wish
     execute_mode: FROM_ANOTHER_COMMAND
     type: CALL_URL
-    url: http://localhost:8080/wish/?action=wish&user=$player&type=$arg1&value=$arg2&bal=$money
+    url: http://localhost:8080/wish/?action=wish&user=$player&pool=$arg1&value=$arg2&bal=$money
     get_output: true
     get_run_command: $output
     permission-required: false
@@ -24,7 +24,7 @@ go_wish_query:
     command: /go_wish_query
     execute_mode: FROM_ANOTHER_COMMAND
     type: CALL_URL
-    url: http://localhost:8080/wish/?action=query&user=$player&type=$arg1&mode=$arg2
+    url: http://localhost:8080/wish/?action=query&user=$player&pool=$arg1&mode=$arg2
     get_output: true
     get_run_command: $output
     permission-required: false

@@ -1,6 +1,7 @@
 # wish/config.yaml
 # 祈愿模块配置文件
 
+
 # 奖励配置：
 # 在每个祈愿池的items下配置物品和概率
 # 格式为 奖励: 概率
@@ -57,15 +58,12 @@
 # 未开始或已结束的祈愿池无法进行祈愿
 # 如果不需要可以移除duration
 
-
-# 数据存储配置
+# 數據存儲配置
 storage:
-    # yaml, sqlite
+    # 存儲類型: yaml, sqlite (未來支持)
     type: "yaml"
-    # 使用yml的数据存储目录
-    data_path: "userdata/"
-    # 使用数据库的文件路径
-    db_path: "userdata/wish.db"
+    # 數據存儲目錄
+    data_dir: "userdata"
 
 history:
     max_size: 100 # 祈愿历史记录最大条数。当你使用yaml存储时不要设定太多，这会造成性能问题。

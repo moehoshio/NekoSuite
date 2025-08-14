@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"neko-suite/event"
 	"neko-suite/wish"
 	"net/http"
 
@@ -29,6 +30,9 @@ func main() {
 	// 注册祈愿模块路由
 	wish.RegisterRoutes(router)
 
+	// 注册活动模块路由
+	event.RegisterRoutes(router)
+
 	// 健康检查
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -38,7 +42,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "NekoSuite API Server",
-			"modules": []string{"wish"},
+			"modules": []string{"wish", "event"},
 		})
 	})
 

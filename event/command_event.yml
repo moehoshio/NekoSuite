@@ -1,0 +1,273 @@
+# event 活動系統
+
+# 安全性提醒： 除入口命令，其餘所有命令均應有模塊限制，如必須來源於其他命令 `FROM_ANOTHER_COMMAND`，以免玩家可以直接略過限制。
+# 插件版本：MYCommand 5.7
+
+# 檢查可用活動入口
+go_event_check:
+    command: /go_event_check
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://localhost:8080/event/?action=check&user=$player
+    get_output: true
+    get_run_command: $output
+    permission-required: false
+    cooldown: 1
+
+# 參與活動入口
+go_event_participate:
+    command: /go_event_participate
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://localhost:8080/event/?action=participate&user=$player&event_id=$arg1
+    get_output: true
+    get_run_command: $output
+    permission-required: false
+    cooldown: 1
+
+# 查詢活動狀態入口
+go_event_query:
+    command: /go_event_query
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://localhost:8080/event/?action=query&user=$player&event_id=$arg1
+    get_output: true
+    get_run_command: $output
+    permission-required: false
+    cooldown: 1
+
+# 領取活動獎勵入口
+go_event_claim:
+    command: /go_event_claim
+    execute_mode: FROM_ANOTHER_COMMAND
+    type: CALL_URL
+    url: http://localhost:8080/event/?action=claim&user=$player&event_id=$arg1
+    get_output: true
+    get_run_command: $output
+    permission-required: false
+    cooldown: 1
+
+# 活動主命令
+event:
+    command: /event
+    type: RUN_COMMAND
+    runcmd:
+        # 檢查可用活動
+        - $Script$%if%$arg1==check
+        - /go_event_check
+        
+        # 參與特定活動
+        - $Script$%if%$arg1==daily_login
+        - /go_event_participate daily_login
+        - $Script$%if%$arg1==daily_checkin
+        - /go_event_participate daily_checkin
+        - $Script$%if%$arg1==sunday_special
+        - /go_event_participate sunday_special
+        - $Script$%if%$arg1==new_year_2026
+        - /go_event_participate new_year_2026
+        - $Script$%if%$arg1==monthly_reward
+        - /go_event_participate monthly_reward
+        
+        # 查詢活動狀態
+        - $Script$%if%$arg1==query<and>$arg2==daily_login
+        - /go_event_query daily_login
+        - $Script$%if%$arg1==query<and>$arg2==daily_checkin
+        - /go_event_query daily_checkin
+        - $Script$%if%$arg1==query<and>$arg2==sunday_special
+        - /go_event_query sunday_special
+        - $Script$%if%$arg1==query<and>$arg2==new_year_2026
+        - /go_event_query new_year_2026
+        - $Script$%if%$arg1==query<and>$arg2==monthly_reward
+        - /go_event_query monthly_reward
+        
+        # 手動領取活動獎勵
+        - $Script$%if%$arg1==claim<and>$arg2==daily_login
+        - /go_event_claim daily_login
+        - $Script$%if%$arg1==claim<and>$arg2==daily_checkin
+        - /go_event_claim daily_checkin
+        - $Script$%if%$arg1==claim<and>$arg2==sunday_special
+        - /go_event_claim sunday_special
+        - $Script$%if%$arg1==claim<and>$arg2==new_year_2026
+        - /go_event_claim new_year_2026
+        - $Script$%if%$arg1==claim<and>$arg2==monthly_reward
+        - /go_event_claim monthly_reward
+        
+        # 顯示幫助
+        - $Script$%if%$arg1==help
+        - $text$
+        - $text$ &e&l活動系統
+        - $text$ &7可用命令：
+        - $text$ &7/event check &f- 檢查可用活動
+        - $text$ &7/event daily_login &f- 領取每日登錄獎勵
+        - $text$ &7/event daily_checkin &f- 每日簽到
+        - $text$ &7/event sunday_special &f- 週日特別活動
+        - $text$ &7/event new_year_2026 &f- 新年活動
+        - $text$ &7/event monthly_reward &f- 月度獎勵
+        - $text$ &7/event query <活動名> &f- 查詢活動狀態
+        - $text$ &7/event claim <活動名> &f- 手動領取活動獎勵
+        
+        # 默認執行檢查
+        - $Script$%else%
+        - /go_event_check
+
+    register: true
+    permission-required: false
+    tab_completer:
+        1:
+            - "check"
+            - "daily_login"
+            - "daily_checkin"
+            - "sunday_special"
+            - "new_year_2026"
+            - "monthly_reward"
+            - "query"
+            - "claim"
+            - "help"
+        2:
+            - "daily_login"
+            - "daily_checkin"
+            - "sunday_special"
+            - "new_year_2026"
+            - "monthly_reward"
+
+# =========================
+# ======== 活動回調 ========
+# =========================
+
+# 檢查活動結果回調
+handle_event_check_result:
+    command: /handle_event_check_result
+    type: RUN_COMMAND
+    runcmd:
+        - $Script$%if%$arg1==no_events
+        - $text$&7沒有可用的活動
+        - $Script$%else%
+        - $text$&a找到可用活動，正在自動領取獎勵...
+    permission-required: false
+
+# 參與活動結果回調
+handle_event_participate_result:
+    command: /handle_event_participate_result
+    type: RUN_COMMAND
+    runcmd:
+        - $text$&a成功參與活動 &e$arg1&a！
+    permission-required: false
+
+# 領取活動獎勵結果回調
+handle_event_claim_result:
+    command: /handle_event_claim_result
+    type: RUN_COMMAND
+    runcmd:
+        - $Script$%if%$arg2==success
+        - $text$&a成功領取活動 &e$arg1 &a的獎勵！
+        - $Script$%else%
+        - $text$&c領取失败：&7$arg2
+    permission-required: false
+
+# 查詢活動結果回調
+handle_event_query_result:
+    command: /handle_event_query_result
+    type: RUN_COMMAND
+    runcmd:
+        - $Script$%if%$arg2==available
+        - $text$&a活動 &e$arg1 &a可用
+        - $text$&7狀態: &f$arg3
+        - $Script$%if%$arg4!=-1
+        - $text$&7剩餘次數: &f$arg4
+        - $Script$%elseif%$arg2==unavailable
+        - $text$&c活動 &e$arg1 &c不可用
+        - $text$&7原因: &f$arg3
+    permission-required: false
+
+# 查詢所有活動結果回調
+handle_event_query_all_result:
+    command: /handle_event_query_all_result
+    type: RUN_COMMAND
+    runcmd:
+        - $Script$%if%$arg1==no_events
+        - $text$&7沒有任何活動
+        - $Script$%else%
+        - $text$&e活動狀態列表:
+        - $text$&7$arg1
+    permission-required: false
+
+# 活動錯誤回調
+handle_event_error:
+    command: /handle_event_error
+    type: RUN_COMMAND
+    runcmd:
+        - $Script$%if%$arg1==invalid_action
+        - $text$&c [錯誤] &7無效的操作
+        - $Script$%elseif%$arg1==invalid_user_name
+        - $text$&c [錯誤] &7用戶名無效
+        - $Script$%elseif%$arg1==invalid_event_id
+        - $text$&c [錯誤] &7活動ID無效
+        - $Script$%elseif%$arg1==event_not_found
+        - $text$&c [錯誤] &7找不到指定的活動
+        - $Script$%elseif%$arg1==event_disabled
+        - $text$&c [錯誤] &7活動已禁用
+        - $Script$%elseif%$arg1==activity_not_started
+        - $text$&c [錯誤] &7活動尚未開始
+        - $Script$%elseif%$arg1==activity_expired
+        - $text$&c [錯誤] &7活動已結束
+        - $Script$%elseif%$arg1==limit_mode_exceeded
+        - $text$&c [錯誤] &7已達到活動參與次數限制
+        - $Script$%elseif%$arg1==already_participated_today
+        - $text$&e [提示] &7您今天已經參與過此活動
+        - $Script$%elseif%$arg1==already_checked_in_today
+        - $text$&e [提示] &7您今天已經簽到過了
+        - $Script$%else%
+        - $text$&c [錯誤] &7發生了未知的錯誤，請聯絡管理員
+    permission-required: false
+
+# =========================
+# ======== 獎勵發放 ========
+# =========================
+
+# 獎勵發放統一處理器
+handle_event_result:
+    command: /handle_event_result
+    type: RUN_COMMAND
+    runcmd:
+        # 金錢獎勵
+        - $Script$%if%$arg1==balance
+        - $RUN_CONSOLE$eco give $player $arg2
+        - "$text$&7獲得金錢: &a$arg2"
+        
+        # 經驗獎勵
+        - $Script$%if%$arg1==exp
+        - $RUN_CONSOLE$exp give $player $arg2
+        - "$text$&7獲得經驗: &b$arg2"
+
+        # 物品獎勵
+        - $Script$%if%$arg1==item
+        - $RUN_CONSOLE$minecraft:give $player $arg2 $arg3
+        - "$text$&7獲得物品: &e$arg2 &7x&e$arg3"
+        
+        # 自定義命令
+        - $Script$%if%$arg1==command
+        - $RUN_CONSOLE$$arg2
+        - $text$&7執行特殊獎勵
+        
+        # 未知類型
+        - $Script$%if%$arg1==unknown
+        - "$text$&c [錯誤] &7未知的獎勵類型: &6$arg2"
+
+        # 默認錯誤
+        - $Script$%else%
+        - "$text$&c [錯誤] &7獎勵類型 &6$arg1 &7無效，請聯絡管理員"
+    permission-required: false
+
+# =========================
+# ======== 自動觸發 ========
+# =========================
+
+# 玩家加入遊戲時自動檢查活動（可選）
+# 需要在其他插件的join事件中調用此命令
+auto_check_events_on_join:
+    command: /auto_check_events_on_join
+    type: RUN_COMMAND
+    runcmd:
+        - "$text$&7歡迎回來！檢查是否有可用活動..."
+        - /go_event_check
+    permission-required: false

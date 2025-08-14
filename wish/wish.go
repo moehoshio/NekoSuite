@@ -8,19 +8,19 @@ import (
 
 // RegisterRoutes 注册祈愿模块的路由
 func RegisterRoutes(router *gin.Engine) {
-	// 初始化祈愿服务
-	service, err := wishgo.NewWishService("wish/config.yaml")
+	// 初始化統一祈願服務
+	service, err := wishgo.NewUnifiedWishService("wish/config.yaml")
 	if err != nil {
-		panic("Failed to initialize wish service: " + err.Error())
+		panic("Failed to initialize unified wish service: " + err.Error())
 	}
 
-	// 创建处理器
-	handler := wishgo.NewHandler(service)
+	// 创建处理器（暂时使用原有的处理器结构）
+	handler := wishgo.NewUnifiedHandler(service)
 
 	// 祈愿模块路由组
 	wishGroup := router.Group("/wish")
 	{
-		// 兼容原有 PHP 接口的路径
 		wishGroup.GET("/", handler.HandleWish)
+		wishGroup.POST("/", handler.HandleWish)
 	}
 }

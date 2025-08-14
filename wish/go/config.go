@@ -4,23 +4,18 @@ import (
 	"fmt"
 	"os"
 
+	common "neko-suite/go"
+
 	"gopkg.in/yaml.v3"
 )
 
-// Config config structure
+// Config wish 模塊配置結構
 type Config struct {
-	DataPath string                    `yaml:"data_path"`
-	Storage  *StorageConfig            `yaml:"storage"`
+	DataPath string                    `yaml:"data_path"` // 向後兼容
+	Storage  common.StorageConfig      `yaml:"storage"`   // 統一存儲配置
 	History  *HistoryConfig            `yaml:"history,omitempty"`
 	Tickets  []TicketConfig            `yaml:"tickets,omitempty"`
 	Pools    map[string]WishPoolConfig `yaml:"pools"`
-}
-
-// StorageConfig storage configuration
-type StorageConfig struct {
-	Type     string `yaml:"type"`
-	DataPath string `yaml:"data_path"`
-	DBPath   string `yaml:"db_path"`
 }
 
 // TicketConfig ticket configuration

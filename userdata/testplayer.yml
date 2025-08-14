@@ -1,0 +1,77 @@
+created_at: "2025-08-14T15:09:34+09:00"
+updated_at: "2025-08-14T23:33:41+09:00"
+event:
+    limit_mode_records:
+        event:daily_login:
+            current_period_start: 2025-08-14T00:00:00+09:00
+            current_period_end: 2025-08-15T00:00:00+09:00
+            used_count: 1
+            last_refresh_time: 2025-08-14T23:33:41.9373664+09:00
+    events:
+        daily_login:
+            last_participate_time: 2025-08-14T23:33:41.9395977+09:00
+            total_participations: 1
+            consecutive_days: 0
+            claimed_rewards: []
+            created_at: "2025-08-14T23:33:41+09:00"
+            updated_at: "2025-08-14T23:33:41+09:00"
+wish:
+    history:
+        - cost: 0
+          count: 1
+          items:
+            - exp50
+          pool: StarPath
+          timestamp: 2025-08-14T15:09:34.0974222+09:00
+        - cost: 0
+          count: 1
+          items:
+            - gold_ingot5
+          pool: StarPath
+          timestamp: 2025-08-14T15:11:56.6803754+09:00
+        - cost: 0
+          count: 1
+          items:
+            - p_point5
+          pool: StarPath
+          timestamp: 2025-08-14T15:13:20.9384043+09:00
+        - cost: 0
+          count: 1
+          items:
+            - bal5
+          pool: GlimmeringPrayer
+          timestamp: 2025-08-14T15:13:20.9493148+09:00
+        - cost: 0
+          count: 1
+          items:
+            - end_rod12
+          pool: StarryMirage
+          timestamp: 2025-08-14T15:13:20.9641193+09:00
+        - cost: 0
+          count: 1
+          items:
+            - iron_ingot5
+          pool: StarPath
+          timestamp: 2025-08-14T15:14:43.5214898+09:00
+    limit_mode_records:
+        GlimmeringPrayer:
+            current_period_end: 2025-08-15T00:00:00+09:00
+            current_period_start: 2025-08-14T00:00:00+09:00
+            last_refresh_time: 2025-08-14T15:13:20.9488008+09:00
+            used_count: 1
+        StarryMirage:
+            current_period_end: 2025-08-15T15:13:20.9630877+09:00
+            current_period_start: 2025-08-14T15:13:20.9630877+09:00
+            last_refresh_time: 2025-08-14T15:13:20.9630877+09:00
+            used_count: 1
+    stats:
+        guarantee_count:
+            GlimmeringPrayer: 1
+            StarPath: 4
+            StarryMirage: 1
+        total_wishes:
+            GlimmeringPrayer: 1
+            StarPath: 4
+            StarryMirage: 1
+    tickets: {}
+    wish_counts: {}

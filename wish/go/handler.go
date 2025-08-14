@@ -73,7 +73,7 @@ func (h *Handler) handleWishAction(c *gin.Context, user, wishType, valueStr stri
 	// 执行祈愿（包含余额检查）
 	result, err := h.service.PerformWishWithBalance(user, wishType, value, userBalance)
 	if err != nil {
-		h.respondError(c, err.Error())
+		h.respondError(c, "wish_failed")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *Handler) handleQueryAction(c *gin.Context, user, wishType string) {
 
 	count, err := h.service.QueryWishCount(user, wishType)
 	if err != nil {
-		h.respondError(c, err.Error())
+		h.respondError(c, "query_failed")
 		return
 	}
 
@@ -335,8 +335,8 @@ func (h *Handler) handleTicketQueryAllAction(c *gin.Context, user string) {
 	// 遍历所有已注册的祈愿券类型
 	for ticketID := range h.service.ticketManager.TicketTypes {
 		amount := 0
-		if userData.WishTickets != nil {
-			amount = userData.WishTickets[ticketID]
+		if userData.Wish != nil && userData.Wish.WishTickets != nil {
+			amount = userData.Wish.WishTickets[ticketID]
 		}
 
 		// 格式: ticketType:amount

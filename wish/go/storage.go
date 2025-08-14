@@ -11,8 +11,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// UserData 用户祈愿数据结构
-type UserData struct {
+// WishModuleData wish 模块的数据结构
+type WishModuleData struct {
 	// 祈愿次数统计 (池名 -> 次数，用于保底计算)
 	WishCounts map[string]int `yaml:"wish_counts"`
 
@@ -38,6 +38,12 @@ type UserData struct {
 
 	// 祈愿历史记录 (可选，用于统计分析)
 	WishHistory []WishRecord `yaml:"wish_history,omitempty"`
+}
+
+// UserData 用户数据结构 (支持多模块)
+type UserData struct {
+	// 模块数据
+	Wish *WishModuleData `yaml:"wish,omitempty"`
 
 	// 用户创建时间和最后更新时间
 	CreatedAt string `yaml:"created_at"`
@@ -94,6 +100,11 @@ type FileStorage struct {
 	dataPath string
 }
 
+// makeWishKey 为池名添加 wish 模块前缀
+func (fs *FileStorage) makeWishKey(poolName string) string {
+	return "wish:" + poolName
+}
+
 // NewFileStorage 创建文件存储实例
 func NewFileStorage(dataPath string) *FileStorage {
 	return &FileStorage{
@@ -133,19 +144,21 @@ func (fs *FileStorage) GetUserData(user string) (*UserData, error) {
 
 		now := time.Now().Format(time.RFC3339)
 		userData := &UserData{
-			WishCounts:       make(map[string]int),
-			DailyWish:        make(map[string]string),
-			LimitModeRecords: make(map[string]LimitModeRecord),
-			GuaranteeCounts:  make(map[string]int),
-			WishTickets:      make(map[string]int),
-			WishHistory:      []WishRecord{},
-			CreatedAt:        now,
-			UpdatedAt:        now,
+			Wish: &WishModuleData{
+				WishCounts:       make(map[string]int),
+				DailyWish:        make(map[string]string),
+				LimitModeRecords: make(map[string]LimitModeRecord),
+				GuaranteeCounts:  make(map[string]int),
+				WishTickets:      make(map[string]int),
+				WishHistory:      []WishRecord{},
+			},
+			CreatedAt: now,
+			UpdatedAt: now,
 		}
 
 		// 初始化统计数据
-		userData.WishStats.TotalWishes = make(map[string]int)
-		userData.WishStats.GuaranteeCount = make(map[string]int)
+		userData.Wish.WishStats.TotalWishes = make(map[string]int)
+		userData.Wish.WishStats.GuaranteeCount = make(map[string]int)
 
 		// 保存新创建的用户数据
 		if err := fs.SaveUserData(user, userData); err != nil {
@@ -167,28 +180,41 @@ func (fs *FileStorage) GetUserData(user string) (*UserData, error) {
 	}
 
 	// 确保映射已初始化
-	if userData.WishCounts == nil {
-		userData.WishCounts = make(map[string]int)
-	}
-	if userData.GuaranteeCounts == nil {
-		userData.GuaranteeCounts = make(map[string]int)
-	}
-	if userData.WishHistory == nil {
-		userData.WishHistory = []WishRecord{}
-	}
-	if userData.DailyWish == nil {
-		userData.DailyWish = make(map[string]string)
-	}
-	if userData.WishTickets == nil {
-		userData.WishTickets = make(map[string]int)
-	}
+	if userData.Wish == nil {
+		userData.Wish = &WishModuleData{
+			WishCounts:       make(map[string]int),
+			DailyWish:        make(map[string]string),
+			LimitModeRecords: make(map[string]LimitModeRecord),
+			GuaranteeCounts:  make(map[string]int),
+			WishTickets:      make(map[string]int),
+			WishHistory:      []WishRecord{},
+		}
+		userData.Wish.WishStats.TotalWishes = make(map[string]int)
+		userData.Wish.WishStats.GuaranteeCount = make(map[string]int)
+	} else {
+		if userData.Wish.WishCounts == nil {
+			userData.Wish.WishCounts = make(map[string]int)
+		}
+		if userData.Wish.GuaranteeCounts == nil {
+			userData.Wish.GuaranteeCounts = make(map[string]int)
+		}
+		if userData.Wish.WishHistory == nil {
+			userData.Wish.WishHistory = []WishRecord{}
+		}
+		if userData.Wish.DailyWish == nil {
+			userData.Wish.DailyWish = make(map[string]string)
+		}
+		if userData.Wish.WishTickets == nil {
+			userData.Wish.WishTickets = make(map[string]int)
+		}
 
-	// 确保统计数据已初始化（向后兼容）
-	if userData.WishStats.TotalWishes == nil {
-		userData.WishStats.TotalWishes = make(map[string]int)
-	}
-	if userData.WishStats.GuaranteeCount == nil {
-		userData.WishStats.GuaranteeCount = make(map[string]int)
+		// 确保统计数据已初始化（向后兼容）
+		if userData.Wish.WishStats.TotalWishes == nil {
+			userData.Wish.WishStats.TotalWishes = make(map[string]int)
+		}
+		if userData.Wish.WishStats.GuaranteeCount == nil {
+			userData.Wish.WishStats.GuaranteeCount = make(map[string]int)
+		}
 	}
 
 	return &userData, nil
@@ -228,7 +254,9 @@ func (fs *FileStorage) GetWishCount(user string, poolName string) (int, error) {
 		return 0, err
 	}
 
-	count, exists := userData.WishCounts[poolName]
+	// 使用前綴鍵來區分不同模塊的數據
+	key := fs.makeWishKey(poolName)
+	count, exists := userData.Wish.WishCounts[key]
 	if !exists {
 		return 0, nil
 	}
@@ -243,7 +271,8 @@ func (fs *FileStorage) UpdateWishCount(user string, poolName string, count int) 
 		return err
 	}
 
-	userData.WishCounts[poolName] = count
+	key := fs.makeWishKey(poolName)
+	userData.Wish.WishCounts[key] = count
 
 	return fs.SaveUserData(user, userData)
 }
@@ -255,11 +284,11 @@ func (fs *FileStorage) GetLastDailyWish(user string, poolName string) (time.Time
 		return time.Time{}, err
 	}
 
-	if userData.DailyWish == nil {
+	if userData.Wish.DailyWish == nil {
 		return time.Time{}, nil
 	}
 
-	dateStr, exists := userData.DailyWish[poolName]
+	dateStr, exists := userData.Wish.DailyWish[poolName]
 	if !exists || dateStr == "" {
 		return time.Time{}, nil
 	}
@@ -279,11 +308,11 @@ func (fs *FileStorage) SetLastDailyWish(user string, poolName string, date time.
 		return err
 	}
 
-	if userData.DailyWish == nil {
-		userData.DailyWish = make(map[string]string)
+	if userData.Wish.DailyWish == nil {
+		userData.Wish.DailyWish = make(map[string]string)
 	}
 
-	userData.DailyWish[poolName] = date.Format("2006-01-02")
+	userData.Wish.DailyWish[poolName] = date.Format("2006-01-02")
 
 	return fs.SaveUserData(user, userData)
 }
@@ -300,7 +329,8 @@ func (fs *FileStorage) AddWishHistoryWithConfig(user string, record WishRecord, 
 		return err
 	}
 
-	userData.WishHistory = append(userData.WishHistory, record)
+	// 直接添加記錄，不需要前綴（數據已在 wish 模塊下隔離）
+	userData.Wish.WishHistory = append(userData.Wish.WishHistory, record)
 
 	// 使用配置限制历史记录数量
 	maxHistorySize := 50 // 默认值
@@ -308,13 +338,13 @@ func (fs *FileStorage) AddWishHistoryWithConfig(user string, record WishRecord, 
 		maxHistorySize = config.MaxSize
 	}
 
-	if len(userData.WishHistory) > maxHistorySize {
-		userData.WishHistory = userData.WishHistory[len(userData.WishHistory)-maxHistorySize:]
+	if len(userData.Wish.WishHistory) > maxHistorySize {
+		userData.Wish.WishHistory = userData.Wish.WishHistory[len(userData.Wish.WishHistory)-maxHistorySize:]
 	}
 
 	// 清理过期记录
 	if config != nil && config.Expiration != "" {
-		userData.WishHistory = fs.cleanExpiredHistory(userData.WishHistory, config.Expiration)
+		userData.Wish.WishHistory = fs.cleanExpiredHistory(userData.Wish.WishHistory, config.Expiration)
 	}
 
 	return fs.SaveUserData(user, userData)
@@ -391,11 +421,11 @@ func (fs *FileStorage) GetWishTickets(user string, ticketType string) (int, erro
 		return 0, err
 	}
 
-	if userData.WishTickets == nil {
-		userData.WishTickets = make(map[string]int)
+	if userData.Wish.WishTickets == nil {
+		userData.Wish.WishTickets = make(map[string]int)
 	}
 
-	return userData.WishTickets[ticketType], nil
+	return userData.Wish.WishTickets[ticketType], nil
 }
 
 // UpdateWishTickets 更新用户指定类型的祈愿券数量（设置为指定值）
@@ -405,11 +435,11 @@ func (fs *FileStorage) UpdateWishTickets(user string, ticketType string, amount 
 		return err
 	}
 
-	if userData.WishTickets == nil {
-		userData.WishTickets = make(map[string]int)
+	if userData.Wish.WishTickets == nil {
+		userData.Wish.WishTickets = make(map[string]int)
 	}
 
-	userData.WishTickets[ticketType] = amount
+	userData.Wish.WishTickets[ticketType] = amount
 	return fs.SaveUserData(user, userData)
 }
 
@@ -420,15 +450,15 @@ func (fs *FileStorage) AddWishTickets(user string, ticketType string, amount int
 		return err
 	}
 
-	if userData.WishTickets == nil {
-		userData.WishTickets = make(map[string]int)
+	if userData.Wish.WishTickets == nil {
+		userData.Wish.WishTickets = make(map[string]int)
 	}
 
-	userData.WishTickets[ticketType] += amount
+	userData.Wish.WishTickets[ticketType] += amount
 
 	// 确保不会出现负数
-	if userData.WishTickets[ticketType] < 0 {
-		userData.WishTickets[ticketType] = 0
+	if userData.Wish.WishTickets[ticketType] < 0 {
+		userData.Wish.WishTickets[ticketType] = 0
 	}
 
 	return fs.SaveUserData(user, userData)
@@ -441,11 +471,12 @@ func (fs *FileStorage) IncrementTotalWishes(user string, poolName string, count 
 		return err
 	}
 
-	if userData.WishStats.TotalWishes == nil {
-		userData.WishStats.TotalWishes = make(map[string]int)
+	if userData.Wish.WishStats.TotalWishes == nil {
+		userData.Wish.WishStats.TotalWishes = make(map[string]int)
 	}
 
-	userData.WishStats.TotalWishes[poolName] += count
+	key := fs.makeWishKey(poolName)
+	userData.Wish.WishStats.TotalWishes[key] += count
 
 	return fs.SaveUserData(user, userData)
 }
@@ -457,11 +488,12 @@ func (fs *FileStorage) IncrementGuaranteeCount(user string, poolName string) err
 		return err
 	}
 
-	if userData.WishStats.GuaranteeCount == nil {
-		userData.WishStats.GuaranteeCount = make(map[string]int)
+	if userData.Wish.WishStats.GuaranteeCount == nil {
+		userData.Wish.WishStats.GuaranteeCount = make(map[string]int)
 	}
 
-	userData.WishStats.GuaranteeCount[poolName]++
+	key := fs.makeWishKey(poolName)
+	userData.Wish.WishStats.GuaranteeCount[key]++
 
 	return fs.SaveUserData(user, userData)
 }
@@ -473,8 +505,9 @@ func (fs *FileStorage) GetWishStats(user string, poolName string) (totalWishes i
 		return 0, 0, err
 	}
 
-	totalWishes = userData.WishStats.TotalWishes[poolName]
-	guaranteeCount = userData.WishStats.GuaranteeCount[poolName]
+	key := fs.makeWishKey(poolName)
+	totalWishes = userData.Wish.WishStats.TotalWishes[key]
+	guaranteeCount = userData.Wish.WishStats.GuaranteeCount[key]
 
 	return totalWishes, guaranteeCount, nil
 }
@@ -486,11 +519,12 @@ func (fs *FileStorage) GetLimitModeRecord(user string, poolName string) (*LimitM
 		return nil, err
 	}
 
-	if userData.LimitModeRecords == nil {
-		userData.LimitModeRecords = make(map[string]LimitModeRecord)
+	if userData.Wish.LimitModeRecords == nil {
+		userData.Wish.LimitModeRecords = make(map[string]LimitModeRecord)
 	}
 
-	record, exists := userData.LimitModeRecords[poolName]
+	key := fs.makeWishKey(poolName)
+	record, exists := userData.Wish.LimitModeRecords[key]
 	if !exists {
 		// 返回空记录
 		return &LimitModeRecord{}, nil
@@ -506,11 +540,12 @@ func (fs *FileStorage) UpdateLimitModeRecord(user string, poolName string, recor
 		return err
 	}
 
-	if userData.LimitModeRecords == nil {
-		userData.LimitModeRecords = make(map[string]LimitModeRecord)
+	if userData.Wish.LimitModeRecords == nil {
+		userData.Wish.LimitModeRecords = make(map[string]LimitModeRecord)
 	}
 
-	userData.LimitModeRecords[poolName] = *record
+	key := fs.makeWishKey(poolName)
+	userData.Wish.LimitModeRecords[key] = *record
 
 	return fs.SaveUserData(user, userData)
 }
