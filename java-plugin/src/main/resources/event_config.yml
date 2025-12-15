@@ -1,0 +1,156 @@
+storage:
+    type: "yaml"
+    data_dir: "userdata"
+
+events:
+    daily_login:
+        name: "每日登錄獎勵"
+        description: "每天登錄遊戲即可獲得獎勵"
+        type: "daily_reward"
+        enabled: true
+        auto_claim: true
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            balance100:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 100"
+            exp50:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 50 points"
+
+    daily_checkin:
+        name: "每日簽到"
+        description: "每日簽到可獲得連續獎勵"
+        type: "check_in"
+        enabled: true
+        auto_claim: false
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "06:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            balance200:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 200"
+            diamond:
+                probability: 1
+                amount: 1
+                name: "minecraft:diamond"
+
+    sunday_special:
+        name: "週日特別活動"
+        description: "每週日的特別獎勵"
+        type: "daily_reward"
+        enabled: true
+        auto_claim: true
+        limit_modes:
+            count: 1
+            time: "1w"
+            refresh_at_time: "00:00"
+            refresh_at_week: 7
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            balance1000:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 1000"
+            exp500:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 500 points"
+            netherite:
+                probability: 1
+                amount: 1
+                name: "minecraft:netherite_ingot"
+
+    new_year_2026:
+        name: "2026新年活動"
+        description: "新年特別活動，僅在新年期間可用"
+        type: "holiday"
+        enabled: true
+        auto_claim: false
+        limit_modes:
+            count: 3
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2026-01-01T00:00:00Z"
+            endDate: "2026-01-07T23:59:59Z"
+        rewards:
+            balance2026:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 2026"
+            exp2026:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 2026 points"
+            golden_apple:
+                probability: 1
+                amount: 3
+                name: "minecraft:enchanted_golden_apple"
+            broadcast:
+                probability: 1
+                commands:
+                  - "broadcast 恭喜 {player} 獲得新年特別獎勵！"
+
+    monthly_reward:
+        name: "月度獎勵"
+        description: "每月1號的特別獎勵"
+        type: "daily_reward"
+        enabled: true
+        auto_claim: true
+        limit_modes:
+            count: 1
+            time: "1m"
+            refresh_at_time: "00:00"
+            refresh_at_month: 1
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            balance5000:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 5000"
+            exp1000:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 1000 points"
+            diamond_block:
+                probability: 1
+                amount: 5
+                name: "minecraft:diamond_block"
+
+    test_unlimited:
+        name: "測試活動"
+        description: "用於測試的無限制活動"
+        type: "custom"
+        enabled: false
+        auto_claim: true
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            balance1:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 1"
+            exp1:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 1 points"

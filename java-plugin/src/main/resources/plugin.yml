@@ -1,0 +1,48 @@
+name: NekoSuite
+main: org.moehoshio.nekosuite.NekoSuitePlugin
+version: 0.1.0
+commands:
+  wish:
+    description: Execute wish draws without HTTP
+    usage: /wish <pool> [count] or /wish query <pool>
+    permission: nekosuite.wish
+  wishquery:
+    description: Query wish status
+    usage: /wishquery <pool>
+    permission: nekosuite.wish.query
+  wishmenu:
+    description: Open wish GUI
+    usage: /wishmenu
+    permission: nekosuite.wish.menu
+  eventcheck:
+    description: Check available events
+    usage: /eventcheck
+    permission: nekosuite.event.check
+  eventparticipate:
+    description: Participate in an event
+    usage: /eventparticipate <eventId>
+    permission: nekosuite.event.participate
+  eventmenu:
+    description: Open event GUI
+    usage: /eventmenu
+    permission: nekosuite.event.menu
+  exp:
+    description: Experience account operations
+    usage: /exp <balance|save|withdraw|pay|menu|exchange>
+    permission: nekosuite.exp
+  expmenu:
+    description: Open experience GUI
+    usage: /expmenu
+    permission: nekosuite.exp.menu
+  cdk:
+    description: Redeem CDK code
+    usage: /cdk <code>
+    permission: nekosuite.cdk
+  buy:
+    description: Purchase privileges
+    usage: /buy <productId>
+    permission: nekosuite.buy
+  buymenu:
+    description: Open privilege purchase menu
+    usage: /buymenu
+    permission: nekosuite.buy.menu
