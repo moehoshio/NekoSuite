@@ -4,7 +4,7 @@
 # 新版奖励配置格式：
 # items:
 #   <minecraft:item>:
-#     probability: 概率
+#     probability: 概率 (大於1時視為百分比，0-1 視為直接機率)
 #     amount: 数量 (支持单值或范围 "1-3")
 #     command: "/abc {player} {amount}" # 如果存在则执行命令，不直接 give 物品
 #     subList: # 可选，继续使用相同格式

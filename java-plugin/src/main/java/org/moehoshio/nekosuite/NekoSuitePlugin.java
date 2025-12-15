@@ -309,8 +309,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         if (player == null || reward == null) {
             return;
         }
-        int amount = reward.getAmount() <= 0 ? 1 : reward.getAmount();
-        String itemName = reward.getName() == null ? "unknown_reward" : reward.getName();
+        int amount = reward.getAmount();
+        String rawItemName = reward.getName() == null ? "unknown_reward" : reward.getName();
+        String itemName = sanitizeItemName(rawItemName);
         String command = reward.getCommand();
         if (command != null && !command.trim().isEmpty()) {
             String cmd = command
@@ -327,6 +328,17 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         }
         String giveCommand = "minecraft:give " + player.getName() + " " + itemName + " " + amount;
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), giveCommand);
+    }
+
+    private static String sanitizeItemName(String raw) {
+        if (raw == null) {
+            return "unknown_reward";
+        }
+        String cleaned = raw.replaceAll("[^A-Za-z0-9:_.-]", "");
+        if (cleaned.isEmpty()) {
+            return "unknown_reward";
+        }
+        return cleaned;
     }
 
     private static class WishPool {
@@ -472,7 +484,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                 try {
                     probability = Double.parseDouble(rawValue.toString());
                 } catch (NumberFormatException e) {
-                    command = rawValue.toString();
+                    return null;
                 }
             }
             return new RewardEntry(key, probability, sub, command, minAmount, maxAmount);
@@ -508,12 +520,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                     } catch (NumberFormatException ignored) {
                     }
                 }
-            } else if (amountObj instanceof List) {
-                List<?> list = (List<?>) amountObj;
-                if (list.size() >= 2 && list.get(0) instanceof Number && list.get(1) instanceof Number) {
-                    min = ((Number) list.get(0)).intValue();
-                    max = ((Number) list.get(1)).intValue();
-                }
             }
             if (min <= 0) {
                 min = 1;
@@ -544,11 +550,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             }
             double chance = weight;
             if (chance > 1.0) {
+                // Values greater than 1 are treated as percentage inputs (e.g., 50 = 50%).
                 chance = chance / 100.0;
             }
-            if (chance >= 1.0) {
-                return true;
-            }
+            chance = Math.min(chance, 1.0);
             return random.nextDouble() < chance;
         }
 
@@ -790,13 +795,25 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             List<String> rewardNames = new ArrayList<String>();
             WeightedList rewardList = def.getRewards();
             if (rewardList != null) {
-                for (RewardEntry entry : rewardList.getEntries()) {
-                    if (!entry.shouldGrant(random)) {
-                        continue;
+                if (def.isGrantAll()) {
+                    for (RewardEntry entry : rewardList.getEntries()) {
+                        if (!entry.shouldGrant(random)) {
+                            continue;
+                        }
+                        RewardResult result = entry.resolve(random);
+                        dispatchReward(player, result, plugin);
+                        rewardNames.add(result.getDisplay());
                     }
-                    RewardResult result = entry.resolve(random);
-                    dispatchReward(player, result, plugin);
-                    rewardNames.add(result.getDisplay());
+                } else {
+                    int rolls = Math.max(1, def.getRewardRolls());
+                    for (int i = 0; i < rolls; i++) {
+                        RewardResult result = rewardList.pick(random);
+                        if (result == null) {
+                            continue;
+                        }
+                        dispatchReward(player, result, plugin);
+                        rewardNames.add(result.getDisplay());
+                    }
                 }
             }
             return rewardNames;
@@ -865,14 +882,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         private final TimeWindow window;
         private final EventLimit limit;
         private final WeightedList rewards;
+        private final boolean grantAll;
+        private final int rewardRolls;
 
-        EventDefinition(String id, String name, boolean enabled, TimeWindow window, EventLimit limit, WeightedList rewards) {
+        EventDefinition(String id, String name, boolean enabled, TimeWindow window, EventLimit limit, WeightedList rewards, boolean grantAll, int rewardRolls) {
             this.id = id;
             this.name = name;
             this.enabled = enabled;
             this.window = window;
             this.limit = limit;
             this.rewards = rewards;
+            this.grantAll = grantAll;
+            this.rewardRolls = rewardRolls;
         }
 
         static EventDefinition fromSection(String id, ConfigurationSection section, java.util.logging.Logger logger) {
@@ -881,7 +902,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             TimeWindow window = TimeWindow.fromSection(section.getConfigurationSection("duration"), logger);
             EventLimit limit = EventLimit.fromSection(section.getConfigurationSection("limit_modes"), logger);
             WeightedList rewards = WeightedList.fromSection(section.getConfigurationSection("rewards"));
-            return new EventDefinition(id, name, enabled, window, limit, rewards);
+            boolean grantAll = section.getBoolean("grant_all", true);
+            int rewardRolls = section.getInt("reward_rolls", 1);
+            if (rewardRolls <= 0) {
+                rewardRolls = 1;
+            }
+            return new EventDefinition(id, name, enabled, window, limit, rewards, grantAll, rewardRolls);
         }
 
         String getId() {
@@ -906,6 +932,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
 
         WeightedList getRewards() {
             return rewards;
+        }
+
+        boolean isGrantAll() {
+            return grantAll;
+        }
+
+        int getRewardRolls() {
+            return rewardRolls;
         }
     }
 

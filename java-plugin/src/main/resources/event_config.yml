@@ -1,5 +1,5 @@
 # event/config.yaml
-# 活動模塊配置文件 (直接 Java 發放獎勵)
+# 活動模塊配置文件 (透過指令與 minecraft:give 發放獎勵)
 
 # 數據存儲配置
 storage:
@@ -17,6 +17,7 @@ events:
         type: "daily_reward"
         enabled: true
         auto_claim: true
+        grant_all: true
         limit_modes:
             count: 1
             time: "1d"
@@ -41,6 +42,7 @@ events:
         type: "check_in"
         enabled: true
         auto_claim: false
+        grant_all: true
         limit_modes:
             count: 1
             time: "1d"
@@ -64,6 +66,7 @@ events:
         type: "daily_reward"
         enabled: true
         auto_claim: true
+        grant_all: true
         limit_modes:
             count: 1
             time: "1w"
@@ -92,6 +95,7 @@ events:
         type: "holiday"
         enabled: true
         auto_claim: false
+        grant_all: true
         limit_modes:
             count: 3
             time: "1d"
@@ -122,6 +126,7 @@ events:
         type: "daily_reward"
         enabled: true
         auto_claim: true
+        grant_all: true
         limit_modes:
             count: 1
             time: "1m"
@@ -150,6 +155,7 @@ events:
         type: "custom"
         enabled: false  # 默認禁用
         auto_claim: true
+        grant_all: true
         # 沒有 limit_modes 表示無限制
         duration:
             startDate: "2025-01-01T00:00:00Z"
