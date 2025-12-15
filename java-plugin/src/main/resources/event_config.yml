@@ -19,10 +19,12 @@ events:
         rewards:
             balance100:
                 probability: 1
-                command: "essentials:eco give {player} 100"
+                commands:
+                  - "essentials:eco give {player} 100"
             exp50:
                 probability: 1
-                command: "minecraft:xp add {player} 50 points"
+                commands:
+                  - "minecraft:xp add {player} 50 points"
 
     daily_checkin:
         name: "每日簽到"
@@ -40,7 +42,8 @@ events:
         rewards:
             balance200:
                 probability: 1
-                command: "essentials:eco give {player} 200"
+                commands:
+                  - "essentials:eco give {player} 200"
             diamond:
                 probability: 1
                 amount: 1
@@ -63,10 +66,12 @@ events:
         rewards:
             balance1000:
                 probability: 1
-                command: "essentials:eco give {player} 1000"
+                commands:
+                  - "essentials:eco give {player} 1000"
             exp500:
                 probability: 1
-                command: "minecraft:xp add {player} 500 points"
+                commands:
+                  - "minecraft:xp add {player} 500 points"
             netherite:
                 probability: 1
                 amount: 1
@@ -88,17 +93,20 @@ events:
         rewards:
             balance2026:
                 probability: 1
-                command: "essentials:eco give {player} 2026"
+                commands:
+                  - "essentials:eco give {player} 2026"
             exp2026:
                 probability: 1
-                command: "minecraft:xp add {player} 2026 points"
+                commands:
+                  - "minecraft:xp add {player} 2026 points"
             golden_apple:
                 probability: 1
                 amount: 3
                 name: "minecraft:enchanted_golden_apple"
             broadcast:
                 probability: 1
-                command: "broadcast 恭喜 {player} 獲得新年特別獎勵！"
+                commands:
+                  - "broadcast 恭喜 {player} 獲得新年特別獎勵！"
 
     monthly_reward:
         name: "月度獎勵"
@@ -117,10 +125,12 @@ events:
         rewards:
             balance5000:
                 probability: 1
-                command: "essentials:eco give {player} 5000"
+                commands:
+                  - "essentials:eco give {player} 5000"
             exp1000:
                 probability: 1
-                command: "minecraft:xp add {player} 1000 points"
+                commands:
+                  - "minecraft:xp add {player} 1000 points"
             diamond_block:
                 probability: 1
                 amount: 5
@@ -138,7 +148,9 @@ events:
         rewards:
             balance1:
                 probability: 1
-                command: "essentials:eco give {player} 1"
+                commands:
+                  - "essentials:eco give {player} 1"
             exp1:
                 probability: 1
-                command: "minecraft:xp add {player} 1 points"
+                commands:
+                  - "minecraft:xp add {player} 1 points"
