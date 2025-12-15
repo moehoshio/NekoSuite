@@ -27,6 +27,11 @@ import java.util.Set;
 
 public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
 
+    private static final String NON_DIGIT_PATTERN = "\\D+";
+    private static final int DAYS_PER_WEEK = 7;
+    private static final int DAYS_PER_MONTH = 30;
+    private static final int DAYS_PER_YEAR = 365;
+
     private WishManager wishManager;
     private EventManager eventManager;
 
@@ -271,7 +276,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             }
             if (normalized.toLowerCase().startsWith("exp")) {
                 try {
-                    int value = Integer.parseInt(normalized.replaceAll("\\D+", ""));
+                    int value = Integer.parseInt(normalized.replaceAll(NON_DIGIT_PATTERN, ""));
                     player.giveExp(value);
                     return;
                 } catch (NumberFormatException ignored) {
@@ -292,7 +297,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             if (ticketRule != null) {
                 ticketsLeft = data.getInt("wish.tickets." + ticketRule.getId(), 0);
             }
-            return new WishStatus(poolId, count, ticketsLeft);
+            return new WishStatus(poolId, count, ticketsLeft, true);
         }
 
         private TicketRule findTicket(String poolId) {
@@ -807,11 +812,11 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                 case 'd':
                     return Duration.ofDays(value).toMillis();
                 case 'w':
-                    return Duration.ofDays(value * 7).toMillis();
+                    return Duration.ofDays(value * DAYS_PER_WEEK).toMillis();
                 case 'm':
-                    return Duration.ofDays(value * 30).toMillis();
+                    return Duration.ofDays(value * DAYS_PER_MONTH).toMillis();
                 case 'y':
-                    return Duration.ofDays(value * 365).toMillis();
+                    return Duration.ofDays(value * DAYS_PER_YEAR).toMillis();
                 default:
                     logger.warning("未知時間單位: " + raw);
                     return 0L;
