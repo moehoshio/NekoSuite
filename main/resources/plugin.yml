@@ -1,9 +1,10 @@
 name: NekoSuite
-main: org.moehoshio.nekosuite.NekoSuitePlugin
+main: com.moehoshio.nekosuite.NekoSuitePlugin
 version: 0.1.0
+softdepend: [Vault]
 commands:
   wish:
-    description: Execute wish draws without HTTP
+    description: Execute wish draws
     usage: /wish <pool> [count] or /wish query <pool>
     permission: nekosuite.wish
   wishquery:
@@ -46,3 +47,11 @@ commands:
     description: Open privilege purchase menu
     usage: /buymenu
     permission: nekosuite.buy.menu
+  language:
+    description: Set preferred language
+    usage: /language <code|list|reset>
+    permission: nekosuite.language
+  nekoreload:
+    description: Reload NekoSuite configs
+    usage: /nekoreload
+    permission: nekosuite.reload

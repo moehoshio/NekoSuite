@@ -1,0 +1,93 @@
+common:
+  only_player: "&cThis command can only be used by players."
+
+wish:
+  usage: "&eUsage: /wish <pool> [count] or /wish query <pool>"
+  query:
+    usage: "&eUsage: /wish query <pool>"
+  success: "&a[NekoSuite] Wish succeeded: {rewards}"
+  failure: "&c[NekoSuite] Wish failed: {reason}"
+  pool_missing: "&cWish pool does not exist."
+  not_active: "&cWish pool is not active."
+  count_invalid: "&cInvalid wish count."
+  ticket_insufficient: "&cNot enough wish tickets ({owned}/{needed})"
+  limit_reached: "&cWish limit reached for this pool."
+  economy_missing: "&cEconomy plugin not found; cannot charge."
+  cost_insufficient: "&cInsufficient balance, need {needed}, you have {balance}."
+  cost_failure: "&cPayment failed, please try again."
+  status: "&b[NekoSuite] Pool: {pool} wished: {count} tickets left: {tickets}"
+
+event:
+  no_available: "&e[NekoSuite] No events are currently available."
+  header: "&b[NekoSuite] Available events:"
+  entry:
+    available: "&f- {name} ({id}): &aAvailable"
+    limited: "&f- {name} ({id}): &cLimit reached"
+  participate:
+    usage: "&eUsage: /eventparticipate <eventId>"
+  reward: "&a[NekoSuite] Event rewards: {rewards}"
+  failure: "&c[NekoSuite] Unable to participate: {reason}"
+  error:
+    not_found: "Event not found"
+    closed: "Event is not open"
+    limit: "Participation limit reached"
+
+exp:
+  usage: "&eUsage: /exp <balance|save|withdraw|pay|menu|exchange>"
+  balance: "&7Account: &d{stored} &7xp, carried: &d{carried} &7xp"
+  deposit:
+    success: "&aDeposited {amount} xp, balance {stored} xp"
+  withdraw:
+    success: "&aWithdrew {amount} xp, balance {stored} xp"
+  transfer:
+    success: "&aSent {target} {amount} xp, balance {stored} xp"
+    invalid_target: "&cPlayer not found."
+    self: "&cYou cannot pay yourself."
+  not_enough_player: "&cYou do not have enough experience."
+  not_enough_stored: "&cAccount experience is insufficient."
+  amount_invalid: "&cInvalid amount."
+  exchange:
+    success: "&aExchange success: {id}, cost {cost} xp, balance {stored} xp"
+    limit_daily: "&cDaily exchange limit reached."
+    limit_total: "&cTotal exchange limit reached."
+    insufficient: "&cNot enough experience, need {cost} xp."
+
+menu:
+  wish:
+    title: "&dWish Menu"
+  event:
+    title: "&dEvent Menu"
+  exp:
+    title: "&eExperience System"
+  buy:
+    title: "&6Perk Purchase"
+  close: "&cClose"
+
+cdk:
+  usage: "&eUsage: /cdk <code>"
+  success: "&aRedeemed: {rewards}"
+  failure: "&cRedeem failed: {reason}"
+  invalid: "&cInvalid CDK"
+  expired: "&cThis CDK has expired"
+  used: "&cYou already redeemed this CDK"
+  limit: "&cThis CDK is out of uses"
+  limit_user: "&cYou reached the limit for this CDK"
+  not_active: "&cThis CDK is currently unavailable"
+
+buy:
+  usage: "&eUsage: /buy <type> <level>"
+  not_found: "&cProduct not found"
+  already_active: "&cYou already own this perk and it is not expired"
+  success: "&aPurchased: {product}"
+  expired: "&eRemoved expired perk: {product}"
+  insufficient_balance: "&cInsufficient balance, need {cost}, you have {balance}."
+  economy_missing: "&cEconomy plugin not found; unable to complete purchase."
+  cost_failure: "&cPayment failed, please try again."
+
+i18n:
+  usage: "&eUsage: /language <code> | /language list | /language reset"
+  available: "&bAvailable languages: {languages}"
+  updated: "&aLanguage switched to: {language}"
+  unsupported: "&cUnsupported language: {language}"
+  current: "&7Current language: {language}"
+  default: "&7Default language: {language}"

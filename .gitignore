@@ -22,7 +22,7 @@ go.work
 go.work.sum
 
 # Java build artifacts
-java-plugin/target/
+/target/
 
 # env file
 .env

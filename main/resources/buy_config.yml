@@ -1,0 +1,200 @@
+storage:
+  data_dir: "userdata"
+
+products:
+  vip1:
+    duration_days: 31
+    price: 688
+    display_name: "&#ff66ccVIP I"
+    material: "GOLD_INGOT"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 688 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "vip_1"
+    grant_commands:
+      - "manuadd {player} vip_1"
+    revoke_commands:
+      - "manudel {player}"
+  vip2:
+    duration_days: 31
+    price: 1588
+    display_name: "&#ff66ccVIP II"
+    material: "GOLDEN_APPLE"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 1588 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "vip_2"
+    grant_commands:
+      - "manuadd {player} vip_2"
+    revoke_commands:
+      - "manudel {player}"
+  vip3:
+    duration_days: 31
+    price: 3399
+    display_name: "&#ff66ccVIP III"
+    material: "EMERALD"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 3399 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "vip_3"
+    grant_commands:
+      - "manuadd {player} vip_3"
+    revoke_commands:
+      - "manudel {player}"
+  vip4:
+    duration_days: 31
+    price: 7688
+    display_name: "&#ff66ccVIP IV"
+    material: "NETHER_STAR"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 7688 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "vip_4"
+    grant_commands:
+      - "manuadd {player} vip_4"
+    revoke_commands:
+      - "manudel {player}"
+  vip5:
+    duration_days: 31
+    price: 23999
+    display_name: "&#ff66ccVIP V"
+    material: "DIAMOND_BLOCK"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 23999 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "vip_5"
+    grant_commands:
+      - "manuadd {player} vip_5"
+    revoke_commands:
+      - "manudel {player}"
+  vip6:
+    duration_days: 31
+    price: 128888
+    display_name: "&#ff66ccVIP VI"
+    material: "NETHERITE_INGOT"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 128888 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "vip_6"
+    grant_commands:
+      - "manuadd {player} vip_6"
+    revoke_commands:
+      - "manudel {player}"
+  mcd1:
+    duration_days: 31
+    price: 799
+    display_name: "&#5cc3ff月卡 I"
+    material: "PAPER"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 799 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "mcd_1"
+    grant_commands:
+      - "manuaddsub {player} mcd_1"
+    revoke_commands:
+      - "manudelsub {player} mcd_1"
+  mcd2:
+    duration_days: 31
+    price: 2688
+    display_name: "&#5cc3ff月卡 II"
+    material: "MAP"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 2688 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a31 天"
+    groups:
+      - "mcd_2"
+    grant_commands:
+      - "manuaddsub {player} mcd_2"
+    revoke_commands:
+      - "manudelsub {player} mcd_2"
+  bag1:
+    duration_days: 0   # 0 = permanent
+    price: 360
+    display_name: "&#80ff8a背包 I"
+    material: "CHEST"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 360 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a永久"
+    groups:
+      - "bag_1"
+    grant_commands:
+      - "manuaddsub {player} bag_1"
+    revoke_commands:
+      - "manudelsub {player} bag_1"
+  bag2:
+    duration_days: 0
+    price: 1200
+    display_name: "&#80ff8a背包 II"
+    material: "CHEST_MINECART"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 1200 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a永久"
+    groups:
+      - "bag_2"
+    grant_commands:
+      - "manuaddsub {player} bag_2"
+    revoke_commands:
+      - "manudelsub {player} bag_2"
+  bag3:
+    duration_days: 0
+    price: 3600
+    display_name: "&#80ff8a背包 III"
+    material: "BARREL"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 3600 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a永久"
+    groups:
+      - "bag_3"
+    grant_commands:
+      - "manuaddsub {player} bag_3"
+    revoke_commands:
+      - "manudelsub {player} bag_3"
+  bag4:
+    duration_days: 0
+    price: 6888
+    display_name: "&#80ff8a背包 IV"
+    material: "SHULKER_BOX"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 6888 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a永久"
+    groups:
+      - "bag_4"
+    grant_commands:
+      - "manuaddsub {player} bag_4"
+    revoke_commands:
+      - "manudelsub {player} bag_4"
+  bag5:
+    duration_days: 0
+    price: 13999
+    display_name: "&#80ff8a背包 V"
+    material: "ENDER_CHEST"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 13999 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a永久"
+    groups:
+      - "bag_5"
+    grant_commands:
+      - "manuaddsub {player} bag_5"
+    revoke_commands:
+      - "manudelsub {player} bag_5"
+  bag6:
+    duration_days: 0
+    price: 36888
+    display_name: "&#80ff8a背包 VI"
+    material: "CHEST"
+    lore:
+      - "&#ffd166◆ &f價格 -> &6 36888 金幣"
+      - "&#06d6a0⏳ &f時長 -> &a永久"
+    groups:
+      - "bag_6"
+    grant_commands:
+      - "manuaddsub {player} bag_6"
+    revoke_commands:
+      - "manudelsub {player} bag_6"

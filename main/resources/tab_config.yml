@@ -1,0 +1,45 @@
+# Tab completion suggestions (arbitrary depth).
+# Use _root to list suggestions at that level; child keys represent fixed arguments that open a deeper level.
+# Example for 3-level: 
+# commands:
+#   wish:
+#     _root: [query, lucky]
+#     query:
+#       _root: [pool1, pool2]
+#       special:
+#         _root: [fast, slow]
+commands:
+  wish:
+    _root: [query]
+    query:
+      _root: []
+  wishquery:
+    _root: []
+  eventparticipate:
+    _root: []
+  exp:
+    _root: [menu, info, deposit, raw, pay, exchange]
+    deposit:
+      _root: ["存入经验数量"]
+    raw:
+      _root: ["取出经验数量"]
+    pay:
+      _root: ["转账的玩家名称", "转账的经验数量"]
+    transfer:
+      _root: ["转账的玩家名称"]
+    exchange:
+      _root: ["使用经验兑换物品"]
+  cdk:
+    _root: ["要兑换的cdk"]
+  buy:
+    _root: ["輸入特權類型 (vip/bag/mcd)"]
+    vip:
+      _root: ["輸入等級 1-6", "1", "2", "3", "4", "5", "6"]
+    bag:
+      _root: ["輸入等級 1-6", "1", "2", "3", "4", "5", "6"]
+    mcd:
+      _root: ["輸入等級 1-2", "1", "2"]
+  language:
+    _root: [list, reset]
+  nekoreload:
+    _root: [reload]

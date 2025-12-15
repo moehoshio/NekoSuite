@@ -1,4 +1,4 @@
-package org.moehoshio.nekosuite;
+package com.moehoshio.nekosuite;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -28,13 +28,15 @@ public class ExpManager {
     private final JavaPlugin plugin;
     private final Messages messages;
     private final File storageDir;
+    private final MenuLayout layout;
     private final List<Integer> depositAmounts = new ArrayList<Integer>();
     private final List<Integer> withdrawAmounts = new ArrayList<Integer>();
     private final List<ExchangeItem> exchanges = new ArrayList<ExchangeItem>();
 
-    ExpManager(JavaPlugin plugin, Messages messages, File configFile) {
+    ExpManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout layout) {
         this.plugin = plugin;
         this.messages = messages;
+        this.layout = layout == null ? new MenuLayout(plugin) : layout;
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         String dataDir = config.getString("storage.data_dir", "userdata");
         storageDir = new File(plugin.getDataFolder(), dataDir);
@@ -83,18 +85,26 @@ public class ExpManager {
         saveUserData(playerName, data);
     }
 
+    List<String> getExchangeIds() {
+        List<String> ids = new ArrayList<String>();
+        for (ExchangeItem item : exchanges) {
+            ids.add(item.getId());
+        }
+        return ids;
+    }
+
     public boolean deposit(Player player, long amount) {
         if (amount <= 0) {
-            player.sendMessage(messages.format("exp.amount_invalid"));
+            player.sendMessage(messages.format(player, "exp.amount_invalid"));
             return false;
         }
         if (amount > Integer.MAX_VALUE) {
-            player.sendMessage(messages.format("exp.amount_invalid"));
+                player.sendMessage(messages.format(player, "exp.amount_invalid"));
             return false;
         }
         int current = player.getTotalExperience();
         if (amount > current) {
-            player.sendMessage(messages.format("exp.not_enough_player"));
+                player.sendMessage(messages.format(player, "exp.not_enough_player"));
             return false;
         }
         player.giveExp((int) -amount);
@@ -103,22 +113,22 @@ public class ExpManager {
         Map<String, String> map = new HashMap<String, String>();
         map.put("amount", String.valueOf(amount));
         map.put("stored", String.valueOf(stored));
-        player.sendMessage(messages.format("exp.deposit.success", map));
+        player.sendMessage(messages.format(player, "exp.deposit.success", map));
         return true;
     }
 
     public boolean withdraw(Player player, long amount) {
         if (amount <= 0) {
-            player.sendMessage(messages.format("exp.amount_invalid"));
+            player.sendMessage(messages.format(player, "exp.amount_invalid"));
             return false;
         }
         if (amount > Integer.MAX_VALUE) {
-            player.sendMessage(messages.format("exp.amount_invalid"));
+                player.sendMessage(messages.format(player, "exp.amount_invalid"));
             return false;
         }
         long stored = getStored(player.getName());
         if (amount > stored) {
-            player.sendMessage(messages.format("exp.not_enough_stored"));
+                player.sendMessage(messages.format(player, "exp.not_enough_stored"));
             return false;
         }
         stored -= amount;
@@ -127,27 +137,27 @@ public class ExpManager {
         Map<String, String> map = new HashMap<String, String>();
         map.put("amount", String.valueOf(amount));
         map.put("stored", String.valueOf(stored));
-        player.sendMessage(messages.format("exp.withdraw.success", map));
+        player.sendMessage(messages.format(player, "exp.withdraw.success", map));
         return true;
     }
 
     public boolean transfer(Player player, String targetName, long amount) {
         if (amount <= 0) {
-            player.sendMessage(messages.format("exp.amount_invalid"));
+            player.sendMessage(messages.format(player, "exp.amount_invalid"));
             return false;
         }
         if (player.getName().equalsIgnoreCase(targetName)) {
-            player.sendMessage(messages.format("exp.transfer.self"));
+                player.sendMessage(messages.format(player, "exp.transfer.self"));
             return false;
         }
         long stored = getStored(player.getName());
         if (amount > stored) {
-            player.sendMessage(messages.format("exp.not_enough_stored"));
+                player.sendMessage(messages.format(player, "exp.not_enough_stored"));
             return false;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         if (target.getName() == null || target.getName().trim().isEmpty()) {
-            player.sendMessage(messages.format("exp.transfer.invalid_target"));
+                player.sendMessage(messages.format(player, "exp.transfer.invalid_target"));
             return false;
         }
         setStored(player.getName(), stored - amount);
@@ -157,7 +167,7 @@ public class ExpManager {
         map.put("target", target.getName());
         map.put("amount", String.valueOf(amount));
         map.put("stored", String.valueOf(stored - amount));
-        player.sendMessage(messages.format("exp.transfer.success", map));
+        player.sendMessage(messages.format(player, "exp.transfer.success", map));
         if (target.isOnline()) {
             Player online = target.getPlayer();
             if (online != null) {
@@ -165,7 +175,7 @@ public class ExpManager {
                 rev.put("target", player.getName());
                 rev.put("amount", String.valueOf(amount));
                 rev.put("stored", String.valueOf(targetStored));
-                online.sendMessage(messages.format("exp.transfer.success", rev));
+                online.sendMessage(messages.format(online, "exp.transfer.success", rev));
             }
         }
         return true;
@@ -181,7 +191,7 @@ public class ExpManager {
         if (stored < item.getCost()) {
             Map<String, String> map = new HashMap<String, String>();
             map.put("cost", String.valueOf(item.getCost()));
-            player.sendMessage(messages.format("exp.exchange.insufficient", map));
+                player.sendMessage(messages.format(player, "exp.exchange.insufficient", map));
             return false;
         }
         String base = "exp.exchange." + item.getId();
@@ -193,11 +203,11 @@ public class ExpManager {
             dailyUsed = 0;
         }
         if (item.getLimitDaily() > 0 && dailyUsed >= item.getLimitDaily()) {
-            player.sendMessage(messages.format("exp.exchange.limit_daily"));
+              player.sendMessage(messages.format(player, "exp.exchange.limit_daily"));
             return false;
         }
         if (item.getLimitTotal() > 0 && totalUsed >= item.getLimitTotal()) {
-            player.sendMessage(messages.format("exp.exchange.limit_total"));
+              player.sendMessage(messages.format(player, "exp.exchange.limit_total"));
             return false;
         }
         stored -= item.getCost();
@@ -207,42 +217,58 @@ public class ExpManager {
         data.set(base + ".daily.date", today);
         saveUserData(player.getName(), data);
 
-        String cmd = item.getCommand().replace("{player}", player.getName()).replace("{id}", item.getId());
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+        for (String raw : item.getCommands()) {
+            if (raw == null || raw.trim().isEmpty()) {
+                continue;
+            }
+            String cmd = raw.replace("{player}", player.getName()).replace("{id}", item.getId());
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+        }
 
         Map<String, String> map = new HashMap<String, String>();
         map.put("id", item.getId());
         map.put("cost", String.valueOf(item.getCost()));
         map.put("stored", String.valueOf(stored));
-        player.sendMessage(messages.format("exp.exchange.success", map));
+            player.sendMessage(messages.format(player, "exp.exchange.success", map));
         return true;
     }
 
     public void openMenu(Player player) {
-        Inventory inv = Bukkit.createInventory(new ExpMenuHolder(), 27, messages.format("menu.exp.title"));
-        int slot = 0;
+        MenuLayout.ExpLayout expLayout = layout.getExpLayout();
+        Inventory inv = Bukkit.createInventory(new ExpMenuHolder(), expLayout.getSize(), messages.format(player, "menu.exp.title"));
+        int slotIndex = 0;
         long stored = getStored(player.getName());
 
-        for (int i = 0; i < depositAmounts.size() && slot < 9; i++) {
+        for (int i = 0; i < depositAmounts.size() && i < expLayout.getDepositSlots().size(); i++) {
             int amount = depositAmounts.get(i);
             ItemStack stack = createItem(Material.LIME_DYE, "&a存入 " + amount + " xp", new String[]{"存入 " + amount + " xp"});
-            inv.setItem(slot++, stack);
+            safeSet(inv, expLayout.getDepositSlots().get(i), stack);
         }
-        for (int i = 0; i < withdrawAmounts.size() && slot < 18; i++) {
+        for (int i = 0; i < withdrawAmounts.size() && i < expLayout.getWithdrawSlots().size(); i++) {
             int amount = withdrawAmounts.get(i);
             ItemStack stack = createItem(Material.ORANGE_DYE, "&6取出 " + amount + " xp", new String[]{"取出 " + amount + " xp"});
-            inv.setItem(slot++, stack);
+            safeSet(inv, expLayout.getWithdrawSlots().get(i), stack);
         }
 
         for (ExchangeItem item : exchanges) {
+            if (slotIndex >= expLayout.getExchangeSlots().size()) {
+                break;
+            }
             ItemStack stack = createItem(item.getMaterial(), item.getDisplay(), new String[]{"Cost: " + item.getCost() + " xp", "ID: " + item.getId()});
-            inv.setItem(slot++, stack);
+            safeSet(inv, expLayout.getExchangeSlots().get(slotIndex++), stack);
         }
 
-        ItemStack balance = createItem(Material.BOOK, messages.format("exp.balance", createMap("stored", String.valueOf(stored), "carried", String.valueOf(player.getTotalExperience()))), new String[]{"EXP"});
-        inv.setItem(25, balance);
-        inv.setItem(26, createItem(Material.BARRIER, messages.format("menu.close"), new String[0]));
+        ItemStack balance = createItem(Material.BOOK, messages.format(player, "exp.balance", createMap("stored", String.valueOf(stored), "carried", String.valueOf(player.getTotalExperience()))), new String[]{"EXP"});
+        safeSet(inv, expLayout.getBalanceSlot(), balance);
+        safeSet(inv, expLayout.getCloseSlot(), createItem(Material.BARRIER, messages.format(player, "menu.close"), new String[0]));
         player.openInventory(inv);
+    }
+
+    private void safeSet(Inventory inv, int slot, ItemStack item) {
+        if (slot < 0 || slot >= inv.getSize()) {
+            return;
+        }
+        inv.setItem(slot, item);
     }
 
     private ItemStack createItem(Material mat, String name, String[] loreArr) {
@@ -369,16 +395,16 @@ public class ExpManager {
         private final String id;
         private final String display;
         private final long cost;
-        private final String command;
+        private final List<String> commands;
         private final int limitDaily;
         private final int limitTotal;
         private final Material material;
 
-        ExchangeItem(String id, String display, long cost, String command, int limitDaily, int limitTotal, Material material) {
+        ExchangeItem(String id, String display, long cost, List<String> commands, int limitDaily, int limitTotal, Material material) {
             this.id = id;
             this.display = display == null ? id : display;
             this.cost = cost;
-            this.command = command == null ? "" : command;
+            this.commands = commands == null ? new ArrayList<String>() : new ArrayList<String>(commands);
             this.limitDaily = limitDaily;
             this.limitTotal = limitTotal;
             this.material = material == null ? Material.PAPER : material;
@@ -398,7 +424,7 @@ public class ExpManager {
                 } catch (NumberFormatException ignored) {
                 }
             }
-            String cmd = raw.get("command") == null ? "" : raw.get("command").toString();
+            List<String> cmds = parseCommands(raw.get("commands"), raw.get("command"));
             int limitDaily = parseInt(raw.get("limit_daily"));
             int limitTotal = parseInt(raw.get("limit_total"));
             Material mat = Material.PAPER;
@@ -408,7 +434,33 @@ public class ExpManager {
                     mat = Material.PAPER;
                 }
             }
-            return new ExchangeItem(id, display, cost, cmd, limitDaily, limitTotal, mat);
+            return new ExchangeItem(id, display, cost, cmds, limitDaily, limitTotal, mat);
+        }
+
+        private static List<String> parseCommands(Object commands, Object fallbackCommand) {
+            List<String> out = new ArrayList<String>();
+            if (commands instanceof List) {
+                for (Object o : (List<?>) commands) {
+                    if (o != null) {
+                        String s = o.toString().trim();
+                        if (!s.isEmpty()) {
+                            out.add(s);
+                        }
+                    }
+                }
+            } else if (commands instanceof String) {
+                String s = commands.toString().trim();
+                if (!s.isEmpty()) {
+                    out.add(s);
+                }
+            }
+            if (out.isEmpty() && fallbackCommand != null) {
+                String s = fallbackCommand.toString().trim();
+                if (!s.isEmpty()) {
+                    out.add(s);
+                }
+            }
+            return out;
         }
 
         private static int parseInt(Object o) {
@@ -434,8 +486,8 @@ public class ExpManager {
             return cost;
         }
 
-        String getCommand() {
-            return command;
+        List<String> getCommands() {
+            return new ArrayList<String>(commands);
         }
 
         int getLimitDaily() {

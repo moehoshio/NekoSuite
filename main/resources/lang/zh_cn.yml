@@ -1,0 +1,93 @@
+common:
+  only_player: "&c该指令只能由玩家使用。"
+
+wish:
+  usage: "&e用法: /wish <pool> [count] 或 /wish query <pool>"
+  query:
+    usage: "&e用法: /wish query <pool>"
+  success: "&a[NekoSuite] 祈愿成功: {rewards}"
+  failure: "&c[NekoSuite] 祈愿失败: {reason}"
+  pool_missing: "&c祈愿池不存在。"
+  not_active: "&c祈愿池未激活。"
+  count_invalid: "&c无效的祈愿次数。"
+  ticket_insufficient: "&c祈愿券不足 ({owned}/{needed})"
+  limit_reached: "&c已达到该祈愿池的次数限制。"
+  economy_missing: "&c未找到经济插件，无法扣款。"
+  cost_insufficient: "&c余额不足，需 {needed} ，当前 {balance}。"
+  cost_failure: "&c扣款失败，请稍后再试。"
+  status: "&b[NekoSuite] 池: {pool} 已祈愿: {count} 剩余券: {tickets}"
+
+event:
+  no_available: "&e[NekoSuite] 当前没有可用的活动。"
+  header: "&b[NekoSuite] 可用活动列表:"
+  entry:
+    available: "&f- {name} ({id}): &a可参与"
+    limited: "&f- {name} ({id}): &c已达上限"
+  participate:
+    usage: "&e用法: /eventparticipate <eventId>"
+  reward: "&a[NekoSuite] 活动奖励: {rewards}"
+  failure: "&c[NekoSuite] 无法参与: {reason}"
+  error:
+    not_found: "活动未找到"
+    closed: "活动未开放"
+    limit: "参与次数已达上限"
+
+exp:
+  usage: "&e用法: /exp <balance|save|withdraw|pay|menu|exchange>"
+  balance: "&7账户: &d{stored} &7经验, 携带: &d{carried} &7经验"
+  deposit:
+    success: "&a已存入 {amount} 经验, 余额 {stored} 经验"
+  withdraw:
+    success: "&a已取出 {amount} 经验, 余额 {stored} 经验"
+  transfer:
+    success: "&a已发送 {target} {amount} 经验, 余额 {stored} 经验"
+    invalid_target: "&c未找到该玩家。"
+    self: "&c不能给自己转账。"
+  not_enough_player: "&c你的经验不足。"
+  not_enough_stored: "&c账户经验不足。"
+  amount_invalid: "&c无效的数量。"
+  exchange:
+    success: "&a兑换成功: {id}, 消耗 {cost} 经验, 余额 {stored} 经验"
+    limit_daily: "&c已达每日兑换上限。"
+    limit_total: "&c已达总兑换上限。"
+    insufficient: "&c经验不足, 需要 {cost} 经验。"
+
+menu:
+  wish:
+    title: "&d祈愿菜单"
+  event:
+    title: "&d活动菜单"
+  exp:
+    title: "&e经验系统"
+  buy:
+    title: "&6特权购买"
+  close: "&c关闭"
+
+cdk:
+  usage: "&e用法: /cdk <code>"
+  success: "&a兑换成功: {rewards}"
+  failure: "&c兑换失败: {reason}"
+  invalid: "&c无效的兑换码"
+  expired: "&c该兑换码已过期"
+  used: "&c你已兑换过该兑换码"
+  limit: "&c该兑换码已被用完"
+  limit_user: "&c你已达到该兑换码的兑换上限"
+  not_active: "&c该兑换码当前不可用"
+
+buy:
+  usage: "&e用法: /buy <类型> <等级>"
+  not_found: "&c未找到该商品"
+  already_active: "&c你已拥有该特权且未过期"
+  success: "&a购买成功: {product}"
+  expired: "&e已移除过期特权: {product}"
+  insufficient_balance: "&c余额不足，需 {cost} ，当前 {balance}。"
+  economy_missing: "&c未找到经济插件，无法完成购买。"
+  cost_failure: "&c扣款失败，请稍后再试。"
+
+i18n:
+  usage: "&e用法: /language <code> | /language list | /language reset"
+  available: "&b可用语言: {languages}"
+  updated: "&a已切换语言: {language}"
+  unsupported: "&c不支持的语言: {language}"
+  current: "&7当前语言: {language}"
+  default: "&7默认语言: {language}"

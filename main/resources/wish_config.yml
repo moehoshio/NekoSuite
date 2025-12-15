@@ -6,14 +6,16 @@
 #   <minecraft:item>:
 #     probability: 概率 (大於1時視為百分比，0-1 視為直接機率)
 #     amount: 数量 (支持单值或范围 "1-3")
-#     command: "/abc {player} {amount}" # 如果存在则执行命令，不直接 give 物品
+#     commands: 
+#       - "/abc {player} {amount}" # 如果存在则执行命令，不直接 give 物品
+#       - ...
 #     subList: # 可选，继续使用相同格式
 #       <minecraft:item>:
 #         probability: ...
 
 # 數據存儲配置
 storage:
-    # 存儲類型: yaml, sqlite (未來支持)
+    # 存儲類型: yaml, sqlite 和 mysql (未來支持)
     type: "yaml"
     # 數據存儲目錄
     data_dir: "userdata"
@@ -66,7 +68,8 @@ pools:
             minecraft:experience_bottle:
                 probability: 20.0
                 amount: 50
-                command: "minecraft:xp add {player} {amount} points"
+                commands:
+                    - "minecraft:xp add {player} {amount} points"
             minecraft:gold_ingot:
                 probability: 18.0
                 amount: 5
@@ -78,12 +81,14 @@ pools:
             p_point:
                 probability: 12.0
                 amount: 5
-                command: "scoreboard players add {player} p_point {amount}"
+                commands:
+                    - "scoreboard players add {player} p_point {amount}"
             minecraft:netherite_scrap:
                 probability: 5.0
             potion_power:
                 probability: 5.0
-                command: "minecraft:effect give {player} strength 180 1"
+                commands:
+                    - "minecraft:effect give {player} strength 180 1"
             goety:recallfocus:
                 probability: 2.0
             KirinOverlordBlazingArmor:
@@ -111,7 +116,8 @@ pools:
             minecraft:experience_bottle:
                 probability: 20.0
                 amount: 100
-                command: "minecraft:xp add {player} {amount} points"
+                commands:
+                    - "minecraft:xp add {player} {amount} points"
             minecraft:end_rod:
                 probability: 18.0
                 amount: 12
@@ -178,7 +184,8 @@ pools:
             minecraft:experience_bottle:
                 probability: 20.0
                 amount: 20
-                command: "minecraft:xp add {player} {amount} points"
+                commands:
+                    - "minecraft:xp add {player} {amount} points"
             minecraft:quartz_block:
                 probability: 10.0
                 amount: 10
@@ -188,7 +195,8 @@ pools:
                 probability: 3.0
             potion_revive:
                 probability: 3.0
-                command: "minecraft:effect give {player} instant_health 1 1"
+                commands:
+                    - "minecraft:effect give {player} instant_health 1 1"
             UnrivaledCrimsonFeatherBow:
                 probability: 0.246
         guarantee_items:
@@ -213,51 +221,63 @@ pools:
             bal:
                 probability: 25.0
                 amount: 5
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_high:
                 probability: 20.0
                 amount: 10
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_mid:
                 probability: 10.0
                 amount: 30
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_rich:
                 probability: 5.0
                 amount: 50
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_rare:
                 probability: 2.0
                 amount: 100
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_360:
                 probability: 0.5
                 amount: 360
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_1k:
                 probability: 0.2
                 amount: 1000
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_5k:
                 probability: 0.1
                 amount: 5000
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             bal_10k:
                 probability: 0.01
                 amount: 10000
-                command: "eco give {player} {amount}"
+                commands:
+                    - "eco give {player} {amount}"
             xp_low:
                 probability: 20.0
                 amount: 20
-                command: "minecraft:xp add {player} {amount} points"
+                commands:
+                    - "minecraft:xp add {player} {amount} points"
             xp_high:
                 probability: 10.0
                 amount: 100
-                command: "minecraft:xp add {player} {amount} points"
+                commands:
+                    - "minecraft:xp add {player} {amount} points"
             ppoint:
                 probability: 10.0
                 amount: 5
-                command: "scoreboard players add {player} p_point {amount}"
+                commands:
+                    - "scoreboard players add {player} p_point {amount}"
             op_equip:
                 probability: 0.01
                 subList:

@@ -1,5 +1,7 @@
 common:
   only_player: "&c此命令僅玩家可用。"
+  no_permission: "&c您沒有權限使用此命令。"
+  reload_success: "&a[NekoSuite] 配置已重載。"
 
 wish:
   usage: "&e用法: /wish <pool> [count] 或 /wish query <pool>"
@@ -11,6 +13,10 @@ wish:
   not_active: "&c祈願池未開啟或已結束"
   count_invalid: "&c祈願次數無效。"
   ticket_insufficient: "&c祈願券不足 ({owned}/{needed})"
+  limit_reached: "&c已達到該祈願池的次數限制。"
+  economy_missing: "&c未找到經濟插件，無法扣款。"
+  cost_insufficient: "&c餘額不足，需 {needed} ，當前 {balance}。"
+  cost_failure: "&c扣款失敗，請稍後再試。"
   status: "&b[NekoSuite] 池: {pool} 已祈願: {count} 剩餘券: {tickets}"
 
 event:
@@ -55,7 +61,10 @@ menu:
     title: "&d活動選單"
   exp:
     title: "&e經驗系統"
+  buy:
+    title: "&6特權購買"
   close: "&c關閉"
+
 cdk:
   usage: "&e用法: /cdk <cdk代碼>"
   success: "&a兌換成功: {rewards}"
@@ -66,12 +75,92 @@ cdk:
   limit: "&c該cdk已被兌換完"
   limit_user: "&c您已達到此cdk的兌換次數限制"
   not_active: "&c該cdk當前不可用"
+
 buy:
-  usage: "&e用法: /buy <productId>"
+  usage: "&e用法: /buy <類型> <等級>"
   not_found: "&c未找到此商品"
   already_active: "&c您已經擁有該特權，尚未過期"
   success: "&a購買成功: {product}"
   expired: "&e已移除過期特權: {product}"
-menu:
-  buy:
-    title: "&6特權購買"
+  insufficient_balance: "&c餘額不足，需 {cost} ，當前 {balance}。"
+  economy_missing: "&c未找到經濟插件，無法完成購買。"
+  cost_failure: "&c扣款失敗，請稍後再試。"
+  product:
+    vip1:
+      name: "&dVIP I"
+      lore:
+        - "&7價格: 688 金幣"
+        - "&7時長: 31 天"
+    vip2:
+      name: "&dVIP II"
+      lore:
+        - "&7價格: 1588 金幣"
+        - "&7時長: 31 天"
+    vip3:
+      name: "&dVIP III"
+      lore:
+        - "&7價格: 3399 金幣"
+        - "&7時長: 31 天"
+    vip4:
+      name: "&dVIP IV"
+      lore:
+        - "&7價格: 7688 金幣"
+        - "&7時長: 31 天"
+    vip5:
+      name: "&dVIP V"
+      lore:
+        - "&7價格: 23999 金幣"
+        - "&7時長: 31 天"
+    vip6:
+      name: "&dVIP VI"
+      lore:
+        - "&7價格: 128888 金幣"
+        - "&7時長: 31 天"
+    mcd1:
+      name: "&b月卡 I"
+      lore:
+        - "&7價格: 799 金幣"
+        - "&7時長: 31 天"
+    mcd2:
+      name: "&b月卡 II"
+      lore:
+        - "&7價格: 2688 金幣"
+        - "&7時長: 31 天"
+    bag1:
+      name: "&a背包 I"
+      lore:
+        - "&7價格: 360 金幣"
+        - "&7時長: 永久"
+    bag2:
+      name: "&a背包 II"
+      lore:
+        - "&7價格: 1200 金幣"
+        - "&7時長: 永久"
+    bag3:
+      name: "&a背包 III"
+      lore:
+        - "&7價格: 3600 金幣"
+        - "&7時長: 永久"
+    bag4:
+      name: "&a背包 IV"
+      lore:
+        - "&7價格: 6888 金幣"
+        - "&7時長: 永久"
+    bag5:
+      name: "&a背包 V"
+      lore:
+        - "&7價格: 13999 金幣"
+        - "&7時長: 永久"
+    bag6:
+      name: "&a背包 VI"
+      lore:
+        - "&7價格: 36888 金幣"
+        - "&7時長: 永久"
+
+
+usage: "&e用法: /language <代碼> | /language list | /language reset"
+available: "&b可用語言: {languages}"
+updated: "&a已切換語言至: {language}"
+unsupported: "&c不支援的語言: {language}"
+current: "&7當前語言: {language}"
+default: "&7默認語言: {language}"
