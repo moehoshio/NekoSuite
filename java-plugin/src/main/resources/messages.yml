@@ -56,3 +56,13 @@ menu:
   exp:
     title: "&e經驗系統"
   close: "&c關閉"
+cdk:
+  usage: "&e用法: /cdk <cdk代碼>"
+  success: "&a兌換成功: {rewards}"
+  failure: "&c兌換失敗: {reason}"
+  invalid: "&c無效的cdk"
+  expired: "&c該cdk已過期"
+  used: "&c您已兌換過此cdk"
+  limit: "&c該cdk已被兌換完"
+  limit_user: "&c您已達到此cdk的兌換次數限制"
+  not_active: "&c該cdk當前不可用"

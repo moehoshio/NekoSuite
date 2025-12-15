@@ -54,6 +54,15 @@ public class Messages {
         DEFAULTS.put("menu.event.title", "&d活動選單");
         DEFAULTS.put("menu.exp.title", "&e經驗系統");
         DEFAULTS.put("menu.close", "&c關閉");
+        DEFAULTS.put("cdk.usage", "&e用法: /cdk <cdk代碼>");
+        DEFAULTS.put("cdk.success", "&a兌換成功: {rewards}");
+        DEFAULTS.put("cdk.failure", "&c兌換失敗: {reason}");
+        DEFAULTS.put("cdk.invalid", "&c無效的cdk");
+        DEFAULTS.put("cdk.expired", "&c該cdk已過期");
+        DEFAULTS.put("cdk.used", "&c您已兌換過此cdk");
+        DEFAULTS.put("cdk.limit", "&c該cdk已被兌換完");
+        DEFAULTS.put("cdk.limit_user", "&c您已達到此cdk的兌換次數限制");
+        DEFAULTS.put("cdk.not_active", "&c該cdk當前不可用");
     }
 
     private final JavaPlugin plugin;

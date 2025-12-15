@@ -34,3 +34,7 @@ commands:
     description: Open experience GUI
     usage: /expmenu
     permission: nekosuite.exp.menu
+  cdk:
+    description: Redeem CDK code
+    usage: /cdk <code>
+    permission: nekosuite.cdk

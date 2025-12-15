@@ -39,6 +39,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
     private WishManager wishManager;
     private EventManager eventManager;
     private ExpManager expManager;
+    private CdkManager cdkManager;
 
     @Override
     public void onEnable() {
@@ -46,10 +47,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         saveResource("event_config.yml", false);
         saveResource("messages.yml", false);
         saveResource("exp_config.yml", false);
+        saveResource("cdk_config.yml", false);
         messages = new Messages(this);
         wishManager = new WishManager(this, messages, new File(getDataFolder(), "wish_config.yml"));
         eventManager = new EventManager(this, messages, new File(getDataFolder(), "event_config.yml"));
         expManager = new ExpManager(this, messages, new File(getDataFolder(), "exp_config.yml"));
+        cdkManager = new CdkManager(this, messages, new File(getDataFolder(), "cdk_config.yml"));
         getServer().getPluginManager().registerEvents(this, this);
 
         if (getCommand("wish") != null) {
@@ -76,6 +79,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         if (getCommand("expmenu") != null) {
             getCommand("expmenu").setExecutor(this);
         }
+        if (getCommand("cdk") != null) {
+            getCommand("cdk").setExecutor(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -100,6 +106,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
                 return handleExp(sender, args);
             case "expmenu":
                 return handleExpMenu(sender);
+            case "cdk":
+                return handleCdk(sender, args);
             default:
                 return false;
         }
@@ -314,6 +322,29 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         } catch (NumberFormatException e) {
             return -1;
         }
+    }
+
+    private boolean handleCdk(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        if (args.length < 1) {
+            sender.sendMessage(messages.format("cdk.usage"));
+            return true;
+        }
+        Player player = (Player) sender;
+        try {
+            List<String> rewards = cdkManager.redeem(player, args[0]);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("rewards", String.join(", ", rewards));
+            sender.sendMessage(messages.format("cdk.success", map));
+        } catch (CdkException e) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("reason", e.getMessage());
+            sender.sendMessage(messages.format("cdk.failure", map));
+        }
+        return true;
     }
 
     private String extractIdFromMeta(ItemMeta meta) {
@@ -619,25 +650,32 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         if (player == null || reward == null) {
             return;
         }
-        int amount = reward.getAmount();
-        String rawItemName = reward.getName() == null ? "unknown_reward" : reward.getName();
-        String itemName = sanitizeItemName(rawItemName);
-        String command = reward.getCommand();
-        if (command != null && !command.trim().isEmpty()) {
-            String cmd = command
-                    .replace("{player}", player.getName())
-                    .replace("%player%", player.getName())
-                    .replace("$player", player.getName())
-                    .replace("{amount}", String.valueOf(amount))
-                    .replace("{item}", itemName);
-            if (cmd.startsWith("/")) {
-                cmd = cmd.substring(1);
+        for (RewardAction action : reward.getActions()) {
+            int amount = action.getAmount();
+            String rawItemName = action.getName() == null ? "unknown_reward" : action.getName();
+            String itemName = sanitizeItemName(rawItemName);
+            List<String> commands = action.getCommands();
+            if (commands != null && !commands.isEmpty()) {
+                for (String command : commands) {
+                    if (command == null || command.trim().isEmpty()) {
+                        continue;
+                    }
+                    String cmd = command
+                            .replace("{player}", player.getName())
+                            .replace("%player%", player.getName())
+                            .replace("$player", player.getName())
+                            .replace("{amount}", String.valueOf(amount))
+                            .replace("{item}", itemName);
+                    if (cmd.startsWith("/")) {
+                        cmd = cmd.substring(1);
+                    }
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+                }
+                continue;
             }
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
-            return;
+            String giveCommand = "minecraft:give " + player.getName() + " " + itemName + " " + amount;
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), giveCommand);
         }
-        String giveCommand = "minecraft:give " + player.getName() + " " + itemName + " " + amount;
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), giveCommand);
     }
 
     private static String sanitizeItemName(String raw) {
@@ -762,51 +800,67 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
     }
 
     private static class RewardEntry {
-        private final String name;
         private final double weight;
         private final WeightedList subList;
-        private final String command;
-        private final int minAmount;
-        private final int maxAmount;
+        private final List<RewardAction> actions;
 
-        RewardEntry(String name, double weight, WeightedList subList, String command, int minAmount, int maxAmount) {
-            this.name = name;
+        RewardEntry(double weight, WeightedList subList, List<RewardAction> actions) {
             this.weight = weight;
             this.subList = subList;
-            this.command = command;
-            this.minAmount = minAmount;
-            this.maxAmount = maxAmount;
+            this.actions = actions;
         }
 
         static RewardEntry fromConfig(String key, Object rawValue, ConfigurationSection sectionValue) {
             double probability = 0.0;
             WeightedList sub = null;
-            String command = null;
-            int minAmount = 1;
-            int maxAmount = 1;
-            String name = key;
+            List<RewardAction> actions = new ArrayList<RewardAction>();
 
             if (sectionValue != null) {
                 probability = sectionValue.getDouble("probability", 0.0);
-                command = sectionValue.getString("command");
-                int[] range = parseAmount(sectionValue.get("amount"));
-                minAmount = range[0];
-                maxAmount = range[1];
                 sub = WeightedList.fromSection(sectionValue.getConfigurationSection("subList"));
-                String configuredName = sectionValue.getString("name");
-                if (configuredName != null && configuredName.trim().length() > 0) {
-                    name = configuredName;
+                List<Map<?, ?>> items = sectionValue.getMapList("items");
+                if (items != null && !items.isEmpty()) {
+                    for (Map<?, ?> item : items) {
+                        RewardAction action = RewardAction.fromMap(item, key);
+                        if (action != null) {
+                            actions.add(action);
+                        }
+                    }
+                }
+                if (actions.isEmpty()) {
+                    int[] range = parseAmount(sectionValue.get("amount"));
+                    List<String> cmds = parseCommands(sectionValue.get("commands"), sectionValue.getString("command"));
+                    actions.add(new RewardAction(sectionValue.getString("name", key), range[0], range[1], cmds));
                 }
             } else if (rawValue instanceof Number) {
                 probability = ((Number) rawValue).doubleValue();
+                actions.add(new RewardAction(key, 1, 1, null));
             } else if (rawValue instanceof String) {
                 try {
                     probability = Double.parseDouble(rawValue.toString());
+                    actions.add(new RewardAction(key, 1, 1, null));
                 } catch (NumberFormatException e) {
                     return null;
                 }
             }
-            return new RewardEntry(name, probability, sub, command, minAmount, maxAmount);
+            if (actions.isEmpty()) {
+                actions.add(new RewardAction(key, 1, 1, null));
+            }
+            return new RewardEntry(probability, sub, actions);
+        }
+
+        private static List<String> parseCommands(Object commandsObj, String singleCommand) {
+            List<String> list = new ArrayList<String>();
+            if (commandsObj instanceof List) {
+                for (Object o : (List<?>) commandsObj) {
+                    if (o != null) {
+                        list.add(o.toString());
+                    }
+                }
+            } else if (singleCommand != null && singleCommand.trim().length() > 0) {
+                list.add(singleCommand);
+            }
+            return list;
         }
 
         private static int[] parseAmount(Object amountObj) {
@@ -853,14 +907,11 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
             if (subList != null) {
                 return subList.pick(random);
             }
-            int amount = minAmount;
-            if (maxAmount > minAmount) {
-                amount = minAmount + random.nextInt(maxAmount - minAmount + 1);
+            List<RewardAction> resolved = new ArrayList<RewardAction>();
+            for (RewardAction action : actions) {
+                resolved.add(action.resolve(random));
             }
-            if (amount <= 0) {
-                amount = 1;
-            }
-            return new RewardResult(name, amount, command);
+            return new RewardResult(resolved);
         }
 
         boolean shouldGrant(Random random) {
@@ -869,7 +920,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
             }
             double chance = weight;
             if (chance > 1.0) {
-                // Values greater than 1 are treated as percentage inputs (e.g., 50 = 50%).
                 chance = chance / 100.0;
             }
             chance = Math.min(chance, 1.0);
@@ -881,19 +931,35 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         }
     }
 
-    private static class RewardResult {
+    private static class RewardAction {
         private final String name;
-        private final int amount;
-        private final String command;
+        private final int minAmount;
+        private final int maxAmount;
+        private final List<String> commands;
 
-        RewardResult(String name, int amount, String command) {
-            this.name = name;
-            this.amount = amount <= 0 ? 1 : amount;
-            this.command = command;
+        RewardAction(String name, int minAmount, int maxAmount, List<String> commands) {
+            this.name = name == null ? "no_reward" : name;
+            this.minAmount = minAmount <= 0 ? 1 : minAmount;
+            this.maxAmount = maxAmount < this.minAmount ? this.minAmount : maxAmount;
+            this.commands = commands == null ? new ArrayList<String>() : commands;
         }
 
-        static RewardResult empty() {
-            return new RewardResult("no_reward", 1, null);
+        static RewardAction fromMap(Map<?, ?> map, String fallbackName) {
+            if (map == null) {
+                return null;
+            }
+            String name = map.get("name") == null ? fallbackName : map.get("name").toString();
+            int[] range = RewardEntry.parseAmount(map.get("amount"));
+            List<String> commands = RewardEntry.parseCommands(map.get("commands"), map.get("command") == null ? null : map.get("command").toString());
+            return new RewardAction(name, range[0], range[1], commands);
+        }
+
+        RewardAction resolve(Random random) {
+            int amount = minAmount;
+            if (maxAmount > minAmount) {
+                amount = minAmount + random.nextInt(maxAmount - minAmount + 1);
+            }
+            return new RewardAction(name, amount, amount, commands);
         }
 
         String getName() {
@@ -901,18 +967,37 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         }
 
         int getAmount() {
-            return amount;
+            return minAmount;
         }
 
-        String getCommand() {
-            return command;
+        List<String> getCommands() {
+            return commands;
+        }
+    }
+
+    private static class RewardResult {
+        private final List<RewardAction> actions;
+
+        RewardResult(List<RewardAction> actions) {
+            this.actions = actions == null ? new ArrayList<RewardAction>() : actions;
+        }
+
+        static RewardResult empty() {
+            List<RewardAction> list = new ArrayList<RewardAction>();
+            list.add(new RewardAction("no_reward", 1, 1, null));
+            return new RewardResult(list);
+        }
+
+        List<RewardAction> getActions() {
+            return actions;
         }
 
         String getDisplay() {
-            if (command != null && !command.trim().isEmpty()) {
-                return name + " x" + amount + " (command)";
+            List<String> parts = new ArrayList<String>();
+            for (RewardAction action : actions) {
+                parts.add(action.getName() + " x" + action.getAmount());
             }
-            return name + " x" + amount;
+            return String.join(", ", parts);
         }
     }
 
@@ -1034,7 +1119,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
             return new TimeWindow(start, end);
         }
 
-        private static Instant parseInstant(String raw, java.util.logging.Logger logger) {
+        static Instant parseInstant(String raw, java.util.logging.Logger logger) {
             if (raw == null || raw.trim().isEmpty()) {
                 return null;
             }
@@ -1324,6 +1409,217 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         }
     }
 
+    // ---------------------- CDK Module ----------------------
+
+    private static class CdkManager {
+        private final JavaPlugin plugin;
+        private final Messages messages;
+        private final File storageDir;
+        private final File globalFile;
+        private final Map<String, CdkCode> codes = new HashMap<String, CdkCode>();
+        private final Random random = new Random();
+
+        CdkManager(JavaPlugin plugin, Messages messages, File configFile) {
+            this.plugin = plugin;
+            this.messages = messages;
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+            String dataDir = config.getString("storage.data_dir", "userdata");
+            storageDir = new File(plugin.getDataFolder(), dataDir);
+            if (!storageDir.exists() && !storageDir.mkdirs()) {
+                plugin.getLogger().warning("無法創建數據目錄: " + storageDir.getAbsolutePath());
+            }
+            globalFile = new File(storageDir, "cdk.yml");
+            loadCodes(config.getConfigurationSection("codes"));
+        }
+
+        private void loadCodes(ConfigurationSection section) {
+            codes.clear();
+            if (section == null) {
+                return;
+            }
+            for (String id : section.getKeys(false)) {
+                ConfigurationSection cs = section.getConfigurationSection(id);
+                if (cs == null) {
+                    continue;
+                }
+                CdkCode code = CdkCode.fromSection(id, cs, plugin.getLogger());
+                codes.put(id.toLowerCase(), code);
+            }
+        }
+
+        List<String> redeem(Player player, String codeRaw) throws CdkException {
+            String codeKey = codeRaw.toLowerCase();
+            CdkCode code = codes.get(codeKey);
+            if (code == null || !code.isEnabled()) {
+                throw new CdkException(messages.format("cdk.invalid"));
+            }
+            Instant now = Instant.now();
+            if (!code.isActive(now)) {
+                throw new CdkException(messages.format("cdk.not_active"));
+            }
+
+            YamlConfiguration userData = loadUserData(player.getName());
+            int usedByUser = userData.getInt("cdk.used." + codeKey, 0);
+            if (code.getPerUserLimit() > 0 && usedByUser >= code.getPerUserLimit()) {
+                throw new CdkException(messages.format("cdk.limit_user"));
+            }
+
+            YamlConfiguration global = loadGlobal();
+            int used = global.getInt("codes." + codeKey + ".used", 0);
+            if (code.getLimit() > 0 && used >= code.getLimit()) {
+                throw new CdkException(messages.format("cdk.limit"));
+            }
+
+            List<String> rewardNames = new ArrayList<String>();
+            WeightedList rewardList = code.getRewards();
+            if (rewardList != null) {
+                if (code.isGrantAll()) {
+                    for (RewardEntry entry : rewardList.getEntries()) {
+                        if (!entry.shouldGrant(random)) {
+                            continue;
+                        }
+                        RewardResult result = entry.resolve(random);
+                        dispatchReward(player, result, plugin);
+                        rewardNames.add(result.getDisplay());
+                    }
+                } else {
+                    int rolls = Math.max(1, code.getRewardRolls());
+                    for (int i = 0; i < rolls; i++) {
+                        RewardResult result = rewardList.pick(random);
+                        if (result == null) {
+                            continue;
+                        }
+                        dispatchReward(player, result, plugin);
+                        rewardNames.add(result.getDisplay());
+                    }
+                }
+            }
+
+            userData.set("cdk.used." + codeKey, usedByUser + 1);
+            saveUserData(player.getName(), userData);
+            global.set("codes." + codeKey + ".used", used + 1);
+            saveGlobal(global);
+            return rewardNames;
+        }
+
+        private YamlConfiguration loadUserData(String playerName) {
+            File file = new File(storageDir, playerName + ".yml");
+            if (!file.exists()) {
+                try {
+                    file.getParentFile().mkdirs();
+                    file.createNewFile();
+                } catch (IOException e) {
+                    plugin.getLogger().warning("無法創建用戶數據文件: " + e.getMessage());
+                }
+            }
+            return YamlConfiguration.loadConfiguration(file);
+        }
+
+        private void saveUserData(String playerName, YamlConfiguration data) {
+            File file = new File(storageDir, playerName + ".yml");
+            try {
+                data.save(file);
+            } catch (IOException e) {
+                plugin.getLogger().warning("保存用戶數據失敗: " + e.getMessage());
+            }
+        }
+
+        private YamlConfiguration loadGlobal() {
+            if (!globalFile.exists()) {
+                try {
+                    globalFile.getParentFile().mkdirs();
+                    globalFile.createNewFile();
+                } catch (IOException e) {
+                    plugin.getLogger().warning("無法創建CDK全局文件: " + e.getMessage());
+                }
+            }
+            return YamlConfiguration.loadConfiguration(globalFile);
+        }
+
+        private void saveGlobal(YamlConfiguration data) {
+            try {
+                data.save(globalFile);
+            } catch (IOException e) {
+                plugin.getLogger().warning("保存CDK全局數據失敗: " + e.getMessage());
+            }
+        }
+    }
+
+    private static class CdkCode {
+        private final String id;
+        private final boolean enabled;
+        private final int limit;
+        private final TimeWindow window;
+        private final int perUserLimit;
+        private final WeightedList rewards;
+        private final boolean grantAll;
+        private final int rewardRolls;
+
+        CdkCode(String id, boolean enabled, int limit, TimeWindow window, int perUserLimit, WeightedList rewards, boolean grantAll, int rewardRolls) {
+            this.id = id;
+            this.enabled = enabled;
+            this.limit = limit;
+            this.window = window;
+            this.perUserLimit = perUserLimit;
+            this.rewards = rewards;
+            this.grantAll = grantAll;
+            this.rewardRolls = rewardRolls <= 0 ? 1 : rewardRolls;
+        }
+
+        static CdkCode fromSection(String id, ConfigurationSection section, java.util.logging.Logger logger) {
+            boolean enabled = section.getBoolean("enabled", true);
+            int limit = section.getInt("limit", 0);
+            TimeWindow window = TimeWindow.fromSection(section.getConfigurationSection("duration"), logger);
+            if (window == null) {
+                Instant expires = TimeWindow.parseInstant(section.getString("expires"), logger);
+                if (expires != null) {
+                    window = new TimeWindow(null, expires);
+                }
+            }
+            int perUser = section.getInt("per_user_limit", 1);
+            WeightedList rewards = WeightedList.fromSection(section.getConfigurationSection("rewards"));
+            boolean grantAll = section.getBoolean("grant_all", true);
+            int rewardRolls = section.getInt("reward_rolls", 1);
+            if (rewardRolls <= 0) {
+                rewardRolls = 1;
+            }
+            return new CdkCode(id, enabled, limit, window, perUser, rewards, grantAll, rewardRolls);
+        }
+
+        boolean isEnabled() {
+            return enabled;
+        }
+
+        int getLimit() {
+            return limit;
+        }
+
+        int getPerUserLimit() {
+            return perUserLimit;
+        }
+
+        WeightedList getRewards() {
+            return rewards;
+        }
+
+        boolean isGrantAll() {
+            return grantAll;
+        }
+
+        int getRewardRolls() {
+            return rewardRolls;
+        }
+
+        boolean isActive(Instant now) {
+            return window == null || window.contains(now);
+        }
+        }
+
+    private static class CdkException extends Exception {
+        CdkException(String message) {
+            super(message);
+        }
+    }
     private static class EventAvailability {
         private final String id;
         private final String displayName;
