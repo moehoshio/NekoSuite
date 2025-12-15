@@ -1,0 +1,33 @@
+storage:
+  type: "yaml"
+  data_dir: "userdata"
+
+menu:
+  deposit_amounts:
+    - 10
+    - 100
+    - 1000
+  withdraw_amounts:
+    - 10
+    - 100
+    - 1000
+
+exchanges:
+  - id: "CloudspringAzureBlade"
+    display: "碧波云泉劍"
+    cost: 300000
+    limit_total: 1
+    command: "artifact_rewards CloudspringAzureBlade"
+    material: "DIAMOND_SWORD"
+  - id: "bal100"
+    display: "100 金幣"
+    cost: 10000
+    limit_daily: 1
+    command: "essentials:eco give {player} 100"
+    material: "EMERALD"
+  - id: "enchantedGoldenApple3"
+    display: "附魔金蘋果 x3"
+    cost: 5000
+    limit_total: 100
+    command: "minecraft:give {player} minecraft:enchanted_golden_apple 3"
+    material: "ENCHANTED_GOLDEN_APPLE"

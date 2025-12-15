@@ -1,0 +1,43 @@
+storage:
+  type: "yaml"
+  data_dir: "userdata"
+
+codes:
+  NekoServer2025:
+    enabled: true
+    mode: "single" # 一次性
+    limit: 1
+    per_user_limit: 1
+    duration:
+      endDate: "2026-12-31T23:59:59Z"
+    grant_all: true
+    rewards:
+      gift:
+        probability: 1
+        commands:
+          - "essentials:eco give {player} 360"
+          - "broadcast 恭喜 {player} 獲得新年禮包！"
+  GoVIP7d:
+    enabled: true
+    mode: "limited" # 總次數限制
+    limit: 1000
+    per_user_limit: 1
+    rewards:
+      vip:
+        probability: 1
+        commands:
+          - "do_buy {player} vip 2 7"
+      token:
+        probability: 100
+        commands:
+          - "essentials:give {player} minecraft:diamond 3"
+  UnlimitedSample:
+    enabled: true
+    mode: "unlimited" # 無限制
+    limit: 0
+    per_user_limit: 0
+    rewards:
+      token:
+        probability: 100
+        commands:
+          - "minecraft:give {player} minecraft:apple 1"
