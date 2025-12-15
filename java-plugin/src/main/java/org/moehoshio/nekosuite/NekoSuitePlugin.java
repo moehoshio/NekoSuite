@@ -316,6 +316,23 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         }
     }
 
+    private String extractIdFromMeta(ItemMeta meta) {
+        if (meta == null || meta.getLore() == null) {
+            return null;
+        }
+        List<String> lore = meta.getLore();
+        for (String line : lore) {
+            if (line == null) {
+                continue;
+            }
+            String cleaned = ChatColor.stripColor(line);
+            if (cleaned.contains("ID:")) {
+                return cleaned.substring(cleaned.indexOf("ID:") + 3).trim();
+            }
+        }
+        return null;
+    }
+
     private void openWishMenu(Player player) {
         Inventory inv = Bukkit.createInventory(new WishMenuHolder(), 27, messages.format("menu.wish.title"));
         int slot = 0;
@@ -386,23 +403,19 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
                 return;
             }
             ItemMeta meta = clicked.getItemMeta();
-            if (meta != null && meta.getLore() != null) {
-                for (String line : meta.getLore()) {
-                    if (line.contains("ID:")) {
-                        String id = ChatColor.stripColor(line.substring(line.indexOf("ID:") + 3).trim());
-                        try {
-                            List<String> rewards = wishManager.performWish(player, id, 1);
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("rewards", String.join(", ", rewards));
-                            player.sendMessage(messages.format("wish.success", map));
-                        } catch (WishException e) {
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("reason", e.getMessage());
-                            player.sendMessage(messages.format("wish.failure", map));
-                        }
-                        return;
-                    }
+            String id = extractIdFromMeta(meta);
+            if (id != null) {
+                try {
+                    List<String> rewards = wishManager.performWish(player, id, 1);
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("rewards", String.join(", ", rewards));
+                    player.sendMessage(messages.format("wish.success", map));
+                } catch (WishException e) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("reason", e.getMessage());
+                    player.sendMessage(messages.format("wish.failure", map));
                 }
+                return;
             }
             return;
         }
@@ -417,23 +430,19 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
                 return;
             }
             ItemMeta meta = clicked.getItemMeta();
-            if (meta != null && meta.getLore() != null) {
-                for (String line : meta.getLore()) {
-                    if (line.contains("ID:")) {
-                        String id = ChatColor.stripColor(line.substring(line.indexOf("ID:") + 3).trim());
-                        try {
-                            List<String> rewards = eventManager.participate(player, id);
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("rewards", String.join(", ", rewards));
-                            player.sendMessage(messages.format("event.reward", map));
-                        } catch (EventException e) {
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("reason", e.getMessage());
-                            player.sendMessage(messages.format("event.failure", map));
-                        }
-                        return;
-                    }
+            String id = extractIdFromMeta(meta);
+            if (id != null) {
+                try {
+                    List<String> rewards = eventManager.participate(player, id);
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("rewards", String.join(", ", rewards));
+                    player.sendMessage(messages.format("event.reward", map));
+                } catch (EventException e) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("reason", e.getMessage());
+                    player.sendMessage(messages.format("event.failure", map));
                 }
+                return;
             }
             return;
         }

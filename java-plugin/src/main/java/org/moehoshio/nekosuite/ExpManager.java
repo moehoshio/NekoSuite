@@ -88,6 +88,10 @@ public class ExpManager {
             player.sendMessage(messages.format("exp.amount_invalid"));
             return false;
         }
+        if (amount > Integer.MAX_VALUE) {
+            player.sendMessage(messages.format("exp.amount_invalid"));
+            return false;
+        }
         int current = player.getTotalExperience();
         if (amount > current) {
             player.sendMessage(messages.format("exp.not_enough_player"));
@@ -105,6 +109,10 @@ public class ExpManager {
 
     public boolean withdraw(Player player, long amount) {
         if (amount <= 0) {
+            player.sendMessage(messages.format("exp.amount_invalid"));
+            return false;
+        }
+        if (amount > Integer.MAX_VALUE) {
             player.sendMessage(messages.format("exp.amount_invalid"));
             return false;
         }
@@ -138,7 +146,7 @@ public class ExpManager {
             return false;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || (target.getName() == null)) {
+        if (target.getName() == null || target.getName().trim().isEmpty()) {
             player.sendMessage(messages.format("exp.transfer.invalid_target"));
             return false;
         }
@@ -283,7 +291,8 @@ public class ExpManager {
         if (lore != null) {
             for (String line : lore) {
                 if (line != null && line.contains("ID:")) {
-                    String id = line.substring(line.indexOf("ID:") + 3).trim();
+                    String cleaned = ChatColor.stripColor(line);
+                    String id = cleaned.substring(cleaned.indexOf("ID:") + 3).trim();
                     exchange(player, id);
                     return true;
                 }

@@ -5,7 +5,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -102,17 +101,4 @@ public class Messages {
         return ChatColor.translateAlternateColorCodes('&', text);
     }
 
-    public void saveIfMissing() {
-        File file = new File(plugin.getDataFolder(), "messages.yml");
-        if (file.exists()) {
-            return;
-        }
-        try {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-            config.save(file);
-        } catch (IOException e) {
-            plugin.getLogger().warning("Unable to create messages.yml: " + e.getMessage());
-        }
-    }
 }
