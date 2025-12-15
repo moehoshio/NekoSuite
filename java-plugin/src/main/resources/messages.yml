@@ -1,0 +1,58 @@
+common:
+  only_player: "&c此命令僅玩家可用。"
+
+wish:
+  usage: "&e用法: /wish <pool> [count] 或 /wish query <pool>"
+  query:
+    usage: "&e用法: /wish query <pool>"
+  success: "&a[NekoSuite] 祈願成功，獲得: {rewards}"
+  failure: "&c[NekoSuite] 祈願失敗: {reason}"
+  pool_missing: "&c祈願池不存在。"
+  not_active: "&c祈願池未開啟或已結束"
+  count_invalid: "&c祈願次數無效。"
+  ticket_insufficient: "&c祈願券不足 ({owned}/{needed})"
+  status: "&b[NekoSuite] 池: {pool} 已祈願: {count} 剩餘券: {tickets}"
+
+event:
+  no_available: "&e[NekoSuite] 當前沒有可用的活動。"
+  header: "&b[NekoSuite] 可參與活動:"
+  entry:
+    available: "&f- {name} ({id}): &a可參與"
+    limited: "&f- {name} ({id}): &c已達上限"
+  participate:
+    usage: "&e用法: /eventparticipate <eventId>"
+  reward: "&a[NekoSuite] 活動獎勵: {rewards}"
+  failure: "&c[NekoSuite] 無法參與: {reason}"
+  error:
+    not_found: "活動不存在"
+    closed: "活動未開啟"
+    limit: "已達到參與限制"
+
+exp:
+  usage: "&e用法: /exp <balance|save|withdraw|pay|menu|exchange>"
+  balance: "&7系統賬戶: &d{stored} &7xp ，身上: &d{carried} &7xp"
+  deposit:
+    success: "&a已存入 {amount} xp ，賬戶餘額 {stored} xp"
+  withdraw:
+    success: "&a已取出 {amount} xp ，賬戶餘額 {stored} xp"
+  transfer:
+    success: "&a已向 {target} 轉帳 {amount} xp ，餘額 {stored} xp"
+    invalid_target: "&c無法找到該玩家。"
+    self: "&c不能轉帳給自己。"
+  not_enough_player: "&c您沒有足夠的經驗。"
+  not_enough_stored: "&c賬戶經驗不足。"
+  amount_invalid: "&c數量無效。"
+  exchange:
+    success: "&a兌換成功: {id} ，消耗 {cost} xp ，餘額 {stored} xp"
+    limit_daily: "&c達到每日兌換上限。"
+    limit_total: "&c達到總兌換上限。"
+    insufficient: "&c經驗不足，需 {cost} xp。"
+
+menu:
+  wish:
+    title: "&d祈願選單"
+  event:
+    title: "&d活動選單"
+  exp:
+    title: "&e經驗系統"
+  close: "&c關閉"

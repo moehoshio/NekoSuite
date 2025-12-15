@@ -10,6 +10,10 @@ commands:
     description: Query wish status
     usage: /wishquery <pool>
     permission: nekosuite.wish.query
+  wishmenu:
+    description: Open wish GUI
+    usage: /wishmenu
+    permission: nekosuite.wish.menu
   eventcheck:
     description: Check available events
     usage: /eventcheck
@@ -18,3 +22,15 @@ commands:
     description: Participate in an event
     usage: /eventparticipate <eventId>
     permission: nekosuite.event.participate
+  eventmenu:
+    description: Open event GUI
+    usage: /eventmenu
+    permission: nekosuite.event.menu
+  exp:
+    description: Experience account operations
+    usage: /exp <balance|save|withdraw|pay|menu|exchange>
+    permission: nekosuite.exp
+  expmenu:
+    description: Open experience GUI
+    usage: /expmenu
+    permission: nekosuite.exp.menu

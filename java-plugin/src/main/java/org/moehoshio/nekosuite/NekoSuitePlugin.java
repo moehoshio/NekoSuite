@@ -8,6 +8,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -22,21 +29,28 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
+public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, Listener {
 
     private static final int DAYS_PER_WEEK = 7;
     private static final int DAYS_PER_MONTH = 30;
     private static final int DAYS_PER_YEAR = 365;
 
+    private Messages messages;
     private WishManager wishManager;
     private EventManager eventManager;
+    private ExpManager expManager;
 
     @Override
     public void onEnable() {
         saveResource("wish_config.yml", false);
         saveResource("event_config.yml", false);
-        wishManager = new WishManager(this, new File(getDataFolder(), "wish_config.yml"));
-        eventManager = new EventManager(this, new File(getDataFolder(), "event_config.yml"));
+        saveResource("messages.yml", false);
+        saveResource("exp_config.yml", false);
+        messages = new Messages(this);
+        wishManager = new WishManager(this, messages, new File(getDataFolder(), "wish_config.yml"));
+        eventManager = new EventManager(this, messages, new File(getDataFolder(), "event_config.yml"));
+        expManager = new ExpManager(this, messages, new File(getDataFolder(), "exp_config.yml"));
+        getServer().getPluginManager().registerEvents(this, this);
 
         if (getCommand("wish") != null) {
             getCommand("wish").setExecutor(this);
@@ -44,11 +58,23 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         if (getCommand("wishquery") != null) {
             getCommand("wishquery").setExecutor(this);
         }
+        if (getCommand("wishmenu") != null) {
+            getCommand("wishmenu").setExecutor(this);
+        }
         if (getCommand("eventcheck") != null) {
             getCommand("eventcheck").setExecutor(this);
         }
         if (getCommand("eventparticipate") != null) {
             getCommand("eventparticipate").setExecutor(this);
+        }
+        if (getCommand("eventmenu") != null) {
+            getCommand("eventmenu").setExecutor(this);
+        }
+        if (getCommand("exp") != null) {
+            getCommand("exp").setExecutor(this);
+        }
+        if (getCommand("expmenu") != null) {
+            getCommand("expmenu").setExecutor(this);
         }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
@@ -62,10 +88,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                 return handleWish(sender, args);
             case "wishquery":
                 return handleWishQuery(sender, args);
+            case "wishmenu":
+                return handleWishMenu(sender);
             case "eventcheck":
                 return handleEventCheck(sender);
             case "eventparticipate":
                 return handleEventParticipate(sender, args);
+            case "eventmenu":
+                return handleEventMenu(sender);
+            case "exp":
+                return handleExp(sender, args);
+            case "expmenu":
+                return handleExpMenu(sender);
             default:
                 return false;
         }
@@ -73,17 +107,17 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleWish(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "此命令僅玩家可用。");
+            sender.sendMessage(messages.format("common.only_player"));
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.YELLOW + "用法: /wish <pool> [count] 或 /wish query <pool>");
+            sender.sendMessage(messages.format("wish.usage"));
             return true;
         }
         Player player = (Player) sender;
         if ("query".equalsIgnoreCase(args[0])) {
             if (args.length < 2) {
-                sender.sendMessage(ChatColor.YELLOW + "用法: /wish query <pool>");
+                sender.sendMessage(messages.format("wish.query.usage"));
                 return true;
             }
             return handleWishQuery(sender, new String[]{args[1]});
@@ -94,89 +128,349 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             try {
                 count = Integer.parseInt(args[1]);
             } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED + "祈願次數無效。");
+                sender.sendMessage(messages.format("wish.count_invalid"));
                 return true;
             }
         }
 
         try {
             List<String> rewards = wishManager.performWish(player, pool, count);
-            sender.sendMessage(ChatColor.GREEN + "[NekoSuite] 祈願成功，獲得: " + String.join(", ", rewards));
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("rewards", String.join(", ", rewards));
+            sender.sendMessage(messages.format("wish.success", map));
         } catch (WishException e) {
-            sender.sendMessage(ChatColor.RED + "[NekoSuite] 祈願失敗: " + e.getMessage());
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("reason", e.getMessage());
+            sender.sendMessage(messages.format("wish.failure", map));
         }
         return true;
     }
 
     private boolean handleWishQuery(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "此命令僅玩家可用。");
+            sender.sendMessage(messages.format("common.only_player"));
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.YELLOW + "用法: /wishquery <pool>");
+            sender.sendMessage(messages.format("wish.query.usage"));
             return true;
         }
         Player player = (Player) sender;
         WishStatus status = wishManager.queryStatus(player.getName(), args[0]);
         if (!status.isValidPool()) {
-            sender.sendMessage(ChatColor.RED + "祈願池不存在。");
+            sender.sendMessage(messages.format("wish.pool_missing"));
             return true;
         }
-        sender.sendMessage(ChatColor.AQUA + "[NekoSuite] 池: " + status.getPool()
-                + " 已祈願: " + status.getCount()
-                + " 剩餘券: " + status.getTicketCount());
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("pool", status.getPool());
+        map.put("count", String.valueOf(status.getCount()));
+        map.put("tickets", String.valueOf(status.getTicketCount()));
+        sender.sendMessage(messages.format("wish.status", map));
         return true;
     }
 
     private boolean handleEventCheck(CommandSender sender) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "此命令僅玩家可用。");
+            sender.sendMessage(messages.format("common.only_player"));
             return true;
         }
         Player player = (Player) sender;
         List<EventAvailability> events = eventManager.listAvailableEvents(player);
         if (events.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + "[NekoSuite] 當前沒有可用的活動。");
+            sender.sendMessage(messages.format("event.no_available"));
             return true;
         }
-        sender.sendMessage(ChatColor.AQUA + "[NekoSuite] 可參與活動:");
+        sender.sendMessage(messages.format("event.header"));
         for (EventAvailability availability : events) {
-            String statusText = availability.isCanParticipate() ? ChatColor.GREEN + "可參與" : ChatColor.RED + "已達上限";
-            sender.sendMessage(ChatColor.WHITE + "- " + availability.getDisplayName() + " (" + availability.getId() + "): " + statusText);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("name", availability.getDisplayName());
+            map.put("id", availability.getId());
+            if (availability.isCanParticipate()) {
+                sender.sendMessage(messages.format("event.entry.available", map));
+            } else {
+                sender.sendMessage(messages.format("event.entry.limited", map));
+            }
         }
         return true;
     }
 
     private boolean handleEventParticipate(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "此命令僅玩家可用。");
+            sender.sendMessage(messages.format("common.only_player"));
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.YELLOW + "用法: /eventparticipate <eventId>");
+            sender.sendMessage(messages.format("event.participate.usage"));
             return true;
         }
         Player player = (Player) sender;
         try {
             List<String> rewards = eventManager.participate(player, args[0]);
-            sender.sendMessage(ChatColor.GREEN + "[NekoSuite] 活動獎勵: " + String.join(", ", rewards));
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("rewards", String.join(", ", rewards));
+            sender.sendMessage(messages.format("event.reward", map));
         } catch (EventException e) {
-            sender.sendMessage(ChatColor.RED + "[NekoSuite] 無法參與: " + e.getMessage());
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("reason", e.getMessage());
+            sender.sendMessage(messages.format("event.failure", map));
         }
         return true;
     }
 
+    private boolean handleWishMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        openWishMenu(player);
+        return true;
+    }
+
+    private boolean handleEventMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        openEventMenu(player);
+        return true;
+    }
+
+    private boolean handleExpMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        expManager.openMenu(player);
+        return true;
+    }
+
+    private boolean handleExp(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length == 0) {
+            sender.sendMessage(messages.format("exp.usage"));
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        if ("balance".equals(sub) || "info".equals(sub)) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("stored", String.valueOf(expManager.getStored(player.getName())));
+            map.put("carried", String.valueOf(player.getTotalExperience()));
+            sender.sendMessage(messages.format("exp.balance", map));
+            return true;
+        }
+        if ("save".equals(sub) || "deposit".equals(sub)) {
+            long amount = player.getTotalExperience();
+            if (args.length > 1 && !"all".equalsIgnoreCase(args[1])) {
+                amount = parseLong(args[1]);
+            }
+            expManager.deposit(player, amount);
+            return true;
+        }
+        if ("withdraw".equals(sub) || "raw".equals(sub)) {
+            if (args.length < 2) {
+                sender.sendMessage(messages.format("exp.usage"));
+                return true;
+            }
+            long amount = parseLong(args[1]);
+            expManager.withdraw(player, amount);
+            return true;
+        }
+        if ("pay".equals(sub) || "transfer".equals(sub)) {
+            if (args.length < 3) {
+                sender.sendMessage(messages.format("exp.usage"));
+                return true;
+            }
+            String target = args[1];
+            long amount = parseLong(args[2]);
+            expManager.transfer(player, target, amount);
+            return true;
+        }
+        if ("menu".equals(sub) || "shop".equals(sub)) {
+            expManager.openMenu(player);
+            return true;
+        }
+        if ("exchange".equals(sub)) {
+            if (args.length < 2) {
+                sender.sendMessage(messages.format("exp.usage"));
+                return true;
+            }
+            expManager.exchange(player, args[1]);
+            return true;
+        }
+        sender.sendMessage(messages.format("exp.usage"));
+        return true;
+    }
+
+    private long parseLong(String raw) {
+        try {
+            return Long.parseLong(raw);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private void openWishMenu(Player player) {
+        Inventory inv = Bukkit.createInventory(new WishMenuHolder(), 27, messages.format("menu.wish.title"));
+        int slot = 0;
+        for (WishPool pool : wishManager.getPools().values()) {
+            ItemStack stack = new ItemStack(org.bukkit.Material.NETHER_STAR);
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.LIGHT_PURPLE + pool.getId());
+                List<String> lore = new ArrayList<String>();
+                lore.add(ChatColor.GRAY + "ID: " + pool.getId());
+                meta.setLore(lore);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(slot++, stack);
+        }
+        inv.setItem(26, createCloseItem());
+        player.openInventory(inv);
+    }
+
+    private void openEventMenu(Player player) {
+        Inventory inv = Bukkit.createInventory(new EventMenuHolder(), 27, messages.format("menu.event.title"));
+        int slot = 0;
+        List<EventAvailability> events = eventManager.listAvailableEvents(player);
+        for (EventAvailability availability : events) {
+            ItemStack stack = new ItemStack(org.bukkit.Material.PAPER);
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.AQUA + availability.getDisplayName());
+                List<String> lore = new ArrayList<String>();
+                lore.add(ChatColor.GRAY + "ID: " + availability.getId());
+                meta.setLore(lore);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(slot++, stack);
+        }
+        inv.setItem(26, createCloseItem());
+        player.openInventory(inv);
+    }
+
+    private ItemStack createCloseItem() {
+        ItemStack item = new ItemStack(org.bukkit.Material.BARRIER);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(messages.format("menu.close"));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory() == null) {
+            return;
+        }
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (!(event.getWhoClicked() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getWhoClicked();
+        if (holder instanceof WishMenuHolder) {
+            event.setCancelled(true);
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line.contains("ID:")) {
+                        String id = ChatColor.stripColor(line.substring(line.indexOf("ID:") + 3).trim());
+                        try {
+                            List<String> rewards = wishManager.performWish(player, id, 1);
+                            Map<String, String> map = new HashMap<String, String>();
+                            map.put("rewards", String.join(", ", rewards));
+                            player.sendMessage(messages.format("wish.success", map));
+                        } catch (WishException e) {
+                            Map<String, String> map = new HashMap<String, String>();
+                            map.put("reason", e.getMessage());
+                            player.sendMessage(messages.format("wish.failure", map));
+                        }
+                        return;
+                    }
+                }
+            }
+            return;
+        }
+        if (holder instanceof EventMenuHolder) {
+            event.setCancelled(true);
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line.contains("ID:")) {
+                        String id = ChatColor.stripColor(line.substring(line.indexOf("ID:") + 3).trim());
+                        try {
+                            List<String> rewards = eventManager.participate(player, id);
+                            Map<String, String> map = new HashMap<String, String>();
+                            map.put("rewards", String.join(", ", rewards));
+                            player.sendMessage(messages.format("event.reward", map));
+                        } catch (EventException e) {
+                            Map<String, String> map = new HashMap<String, String>();
+                            map.put("reason", e.getMessage());
+                            player.sendMessage(messages.format("event.failure", map));
+                        }
+                        return;
+                    }
+                }
+            }
+            return;
+        }
+        if (holder instanceof ExpManager.ExpMenuHolder) {
+            event.setCancelled(true);
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null) {
+                return;
+            }
+            expManager.handleMenuClick(player, clicked);
+        }
+    }
+
+    private static class WishMenuHolder implements InventoryHolder {
+        public Inventory getInventory() {
+            return null;
+        }
+    }
+
+    private static class EventMenuHolder implements InventoryHolder {
+        public Inventory getInventory() {
+            return null;
+        }
+    }
+
     private static class WishManager {
         private final JavaPlugin plugin;
+        private final Messages messages;
         private final File configFile;
         private final File storageDir;
         private final Random random = new Random();
         private final Map<String, WishPool> pools = new HashMap<String, WishPool>();
         private final List<TicketRule> tickets = new ArrayList<TicketRule>();
 
-        WishManager(JavaPlugin plugin, File configFile) {
+        WishManager(JavaPlugin plugin, Messages messages, File configFile) {
             this.plugin = plugin;
+            this.messages = messages;
             this.configFile = configFile;
             YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
             String dataDir = config.getString("storage.data_dir", "userdata");
@@ -214,14 +508,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
 
         List<String> performWish(Player player, String poolId, int count) throws WishException {
             if (count <= 0) {
-                throw new WishException("祈願次數必須大於0");
+                throw new WishException(messages.format("wish.count_invalid"));
             }
             WishPool pool = pools.get(poolId);
             if (pool == null) {
-                throw new WishException("祈願池不存在");
+                throw new WishException(messages.format("wish.pool_missing"));
             }
             if (!pool.isActive(Instant.now())) {
-                throw new WishException("祈願池未開啟或已結束");
+                throw new WishException(messages.format("wish.not_active"));
             }
             YamlConfiguration data = loadUserData(player.getName());
             String countsName = pool.getCountsName();
@@ -232,7 +526,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                 int owned = data.getInt("wish.tickets." + ticketRule.getId(), 0);
                 int needed = ticketRule.getDeductCount() * count;
                 if (owned < needed) {
-                    throw new WishException("祈願券不足 (" + owned + "/" + needed + ")");
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("owned", String.valueOf(owned));
+                    map.put("needed", String.valueOf(needed));
+                    throw new WishException(messages.format("wish.ticket_insufficient", map));
                 }
                 data.set("wish.tickets." + ticketRule.getId(), owned - needed);
             }
@@ -302,6 +599,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             } catch (IOException e) {
                 plugin.getLogger().warning("保存用戶數據失敗: " + e.getMessage());
             }
+        }
+
+        Map<String, WishPool> getPools() {
+            return pools;
         }
     }
 
@@ -389,6 +690,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             return countsName;
         }
 
+        String getId() {
+            return id;
+        }
+
         boolean isActive(Instant now) {
             return window == null || window.contains(now);
         }
@@ -470,6 +775,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             String command = null;
             int minAmount = 1;
             int maxAmount = 1;
+            String name = key;
 
             if (sectionValue != null) {
                 probability = sectionValue.getDouble("probability", 0.0);
@@ -478,6 +784,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                 minAmount = range[0];
                 maxAmount = range[1];
                 sub = WeightedList.fromSection(sectionValue.getConfigurationSection("subList"));
+                String configuredName = sectionValue.getString("name");
+                if (configuredName != null && configuredName.trim().length() > 0) {
+                    name = configuredName;
+                }
             } else if (rawValue instanceof Number) {
                 probability = ((Number) rawValue).doubleValue();
             } else if (rawValue instanceof String) {
@@ -487,7 +797,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                     return null;
                 }
             }
-            return new RewardEntry(key, probability, sub, command, minAmount, maxAmount);
+            return new RewardEntry(name, probability, sub, command, minAmount, maxAmount);
         }
 
         private static int[] parseAmount(Object amountObj) {
@@ -732,12 +1042,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
 
     private static class EventManager {
         private final JavaPlugin plugin;
+        private final Messages messages;
         private final File storageDir;
         private final Map<String, EventDefinition> events = new HashMap<String, EventDefinition>();
         private final Random random = new Random();
 
-        EventManager(JavaPlugin plugin, File configFile) {
+        EventManager(JavaPlugin plugin, Messages messages, File configFile) {
             this.plugin = plugin;
+            this.messages = messages;
             YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
             String dataDir = config.getString("storage.data_dir", "userdata");
             storageDir = new File(plugin.getDataFolder(), dataDir);
@@ -779,15 +1091,15 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         List<String> participate(Player player, String eventId) throws EventException {
             EventDefinition def = events.get(eventId);
             if (def == null) {
-                throw new EventException("活動不存在");
+                throw new EventException(messages.format("event.error.not_found"));
             }
             long now = System.currentTimeMillis();
             if (!def.isEnabled() || !def.isActive(now)) {
-                throw new EventException("活動未開啟");
+                throw new EventException(messages.format("event.error.closed"));
             }
             YamlConfiguration data = loadUserData(player.getName());
             if (!canParticipate(def, data, now)) {
-                throw new EventException("已達到參與限制");
+                throw new EventException(messages.format("event.error.limit"));
             }
             markParticipation(def, data, now);
             saveUserData(player.getName(), data);
