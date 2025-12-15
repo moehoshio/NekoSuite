@@ -13,6 +13,12 @@ NekoSuite 是一個模塊化的 Minecraft Server 擴展功能專案
 | exp | 🔄 PHP實現 | 經驗系統 | exp/ |
 | tools | 🔄 PHP實現 | 工具系統 | tools/ |
 
+## Java Bukkit 直接實現
+
+- 位置：`java-plugin/`
+- 構建：`mvn package`（JDK 1.8，需可訪問 Paper/Spigot Maven 倉庫）
+- 功能：在 Bukkit 端直接提供 wish 與 event 模塊命令，無需 HTTP API
+
 ## 架構
 
 - **前端**: [MyCommand](https://dev.bukkit.org/projects/mycommand) 腳本，負責遊戲內命令處理

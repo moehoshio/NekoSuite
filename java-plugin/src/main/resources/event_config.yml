@@ -1,0 +1,142 @@
+# event/config.yaml
+# 活動模塊配置文件
+
+# 數據存儲配置
+storage:
+    # 存儲類型: yaml, sqlite (未來支持)
+    type: "yaml"
+    # 數據存儲目錄
+    data_dir: "userdata"
+
+# 活動配置
+events:
+    # 每日登錄獎勵
+    daily_login:
+        name: "每日登錄獎勵"
+        description: "每天登錄遊戲即可獲得獎勵"
+        type: "daily_reward"
+        enabled: true
+        auto_claim: true
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            - type: "balance"
+              value: 100
+            - type: "exp"
+              value: 50
+
+    # 每日簽到
+    daily_checkin:
+        name: "每日簽到"
+        description: "每日簽到可獲得連續獎勵"
+        type: "check_in"
+        enabled: true
+        auto_claim: false
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "06:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            - type: "balance"
+              value: 200
+            - type: "item"
+              value: "minecraft:diamond"
+              amount: 1
+
+    # 週日特別活動
+    sunday_special:
+        name: "週日特別活動"
+        description: "每週日的特別獎勵"
+        type: "daily_reward"
+        enabled: true
+        auto_claim: true
+        limit_modes:
+            count: 1
+            time: "1w"
+            refresh_at_time: "00:00"
+            refresh_at_week: 7  # 週日
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            - type: "balance"
+              value: 1000
+            - type: "exp"
+              value: 500
+            - type: "item"
+              value: "minecraft:netherite_ingot"
+              amount: 1
+
+    # 新年活動
+    new_year_2026:
+        name: "2026新年活動"
+        description: "新年特別活動，僅在新年期間可用"
+        type: "holiday"
+        enabled: true
+        auto_claim: false
+        limit_modes:
+            count: 3
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2026-01-01T00:00:00Z"
+            endDate: "2026-01-07T23:59:59Z"
+        rewards:
+            - type: "balance"
+              value: 2026
+            - type: "exp"
+              value: 2026
+            - type: "item"
+              value: "minecraft:enchanted_golden_apple"
+              amount: 3
+            - type: "command"
+              value: "broadcast 恭喜 $player 獲得新年特別獎勵！"
+
+    # 月度獎勵
+    monthly_reward:
+        name: "月度獎勵"
+        description: "每月1號的特別獎勵"
+        type: "daily_reward"
+        enabled: true
+        auto_claim: true
+        limit_modes:
+            count: 1
+            time: "1m"
+            refresh_at_time: "00:00"
+            refresh_at_month: 1  # 每月1號
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            - type: "balance"
+              value: 5000
+            - type: "exp"
+              value: 1000
+            - type: "item"
+              value: "minecraft:diamond_block"
+              amount: 5
+
+    # 測試活動（無限制）
+    test_unlimited:
+        name: "測試活動"
+        description: "用於測試的無限制活動"
+        type: "custom"
+        enabled: false  # 默認禁用
+        auto_claim: true
+        # 沒有 limit_modes 表示無限制
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            - type: "balance"
+              value: 1
+            - type: "exp"
+              value: 1

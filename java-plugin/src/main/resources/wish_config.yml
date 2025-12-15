@@ -1,0 +1,242 @@
+# wish/config.yaml
+# 祈愿模块配置文件
+
+
+# 奖励配置：
+# 在每个祈愿池的items下配置物品和概率
+# 格式为 奖励: 概率
+
+# 如果有子列表（如potions），可使用复合类型，使用subList配置，选中此奖励后的子物品和概率
+# 格式为：
+# 奖励:
+#     probability: 概率
+#     subList:
+#         "子物品": 概率1
+#         "子物品2": 概率2
+#         ...
+
+# 配置保底和取消保底：
+# 保底： 当祈愿次数达到 max_count 时，必定获得 guarantee_items 中的物品
+# 配置保底： 设定 max_count > 0 ，并且存在 guarantee_items （与items相同）
+# 取消保底： 设定 max_count = 0 ，或max_count 和 guarantee_items 都不存在
+
+
+# Limit Modes
+
+# 周期限制：
+# 每个祈愿池可以配置周期限制
+# 格式为：
+# limit_modes:
+#     count: 每个周期的次数限制
+#     time: 周期时间（h, d, w, m, y）
+#     refresh_at_time: 每天的刷新时间，格式为 HH:mm
+#     refresh_at_week: 每周的刷新时间，1-7表示周一到周日
+#     refresh_at_month: 每月的刷新时间，1-31表示每月的某天
+
+# 例如，每日可抽取一次，00:00 刷新：
+# limit_modes:
+#     count: 1
+#     time: 1d
+#     refresh_at_time: "00:00"
+
+# 每周可抽取10次，周三 10:00刷新：
+# limit_modes:
+#     count: 10
+#     time: 1w
+#     refresh_at_time: "10:00"
+#     refresh_at_week: 3
+
+# 注意：如果不需要周期限制，可以移除limit_modes键
+
+
+# 活动时间：
+# 每个祈愿池可以配置活动时间
+# 格式为：
+# duration:
+#     startDate: 活动开始时间，格式为 ISO 8601（如 "2025-01-01T00:00:00Z"）
+#     endDate: 活动结束时间，格式为 ISO 8601（如 "2025-12-31T23:59:59Z"）
+# 未开始或已结束的祈愿池无法进行祈愿
+# 如果不需要可以移除duration
+
+# 數據存儲配置
+storage:
+    # 存儲類型: yaml, sqlite (未來支持)
+    type: "yaml"
+    # 數據存儲目錄
+    data_dir: "userdata"
+
+history:
+    max_size: 100 # 祈愿历史记录最大条数。当你使用yaml存储时不要设定太多，这会造成性能问题。
+    expiration: 30d # 超过多久的记录会被清理
+
+# 祈愿券配置
+tickets:
+
+    # deduct_mode:
+    # flexible: 以次数抵扣，如： 券有10次，抽多少就减多少
+    # fixed: 只能用于特定次数的祈愿券，如十连券
+    
+    - id: "Sigil of Stars"
+      applicable_pools:
+          - "StarPath"
+          - "StarryMirage"
+      deduct_count: 1
+      deduct_mode: "flexible"
+
+    - id: "Token of Crimson Vow"
+      applicable_pools:
+          - "OathOfTheRedRose"
+      deduct_count: 1
+      deduct_mode: "flexible"
+
+    - id: "Dawnlight Slip"
+      applicable_pools:
+          - "StarPath"
+          - "StarryMirage"
+      deduct_count: 1
+      deduct_mode: "flexible"
+
+# 祈愿池配置
+pools:
+    # 星途
+    StarPath:
+        counts_name: "StarPath" # 如果所有祈愿池填写相同名即可共享计数
+        max_count: 200
+        cost:
+            "1": 80
+            "5": 400
+        auto_cost: false
+        items:
+            iron_ingot5: 25.0
+            exp50: 20.0
+            gold_ingot5: 18.0
+            diamond2: 15.0
+            purified_water_canteen: 12.0
+            p_point5: 12.0
+            netherite_scrap: 5.0
+            potion_power: 5.0
+            goety:recallfocus: 2.0
+            KirinOverlordBlazingArmor: 0.246
+        guarantee_items:
+            KirinOverlordBlazingArmor_guarantee: 1
+
+    # 星光如梦
+    StarryMirage:
+        limit_modes:
+            count: 999
+            time: 24h
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2025-08-01T00:00:00Z"
+            endDate: "2025-08-31T23:59:59Z"
+        counts_name: "StarryMirage"
+        max_count: 200
+        cost:
+            "1": 80
+            "5": 400
+        auto_cost: false
+        items:
+            exp100: 20.0
+            end_rod12: 18.0
+            phantom_membrane3: 16.0
+            mysteryCardPack3: 16.0
+            diamond3: 16.0
+            focusBag: 5.0
+            nether_star: 2.0
+            iceologyfocus: 1.0
+            launchfocus: 1.0
+            star_amulet: 1.0
+            CelestineBreezeHelm: 0.246
+            SkywhisperBoots: 0.246
+            CloudspringAzureBlade: 0.246
+        guarantee_items:
+            CelestineBreezeHelm_guarantee: 1
+            SkywhisperBoots_guarantee: 1
+            CloudspringAzureBlade_guarantee: 1
+
+    # 红玫的誓约 (情人节)
+    OathOfTheRedRose:
+        limit_modes:
+            count: 999
+            time: 24h
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2026-02-14T00:00:00Z"
+            endDate: "2026-03-31T23:59:59Z"
+        counts_name: "OathOfTheRedRose"
+        max_count: 200
+        cost:
+            "1": 80
+            "5": 400
+        auto_cost: false
+        items:
+            prismarine_crystals5: 20.0
+            quartz5: 10.0
+            flower_pie3: 10.0
+            enchanted_golden_apple: 5.0
+            exp20: 20.0
+            quartz10: 10.0
+            pink_cherry_sapling: 5.0
+            amethyst_chimes: 3.0
+            potion_revive: 3.0
+            UnrivaledCrimsonFeatherBow: 0.246
+        guarantee_items:
+            UnrivaledCrimsonFeatherBow_guarantee: 1
+
+    # 微光之愿 (每日)
+    GlimmeringPrayer:
+        limit_modes:
+            count: 1
+            time: 1d
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        counts_name: "GlimmeringPrayer"
+        max_count: 100
+        cost:
+            "1": 0
+        auto_cost: false
+        items:
+            bal5: 25.0
+            bal10: 20.0
+            bal30: 10.0
+            bal50: 5.0
+            bal100: 2.0
+            bal360: 0.5
+            bal1k: 0.2
+            bal5k: 0.1
+            bal10k: 0.01
+            exp20: 20.0
+            exp100: 10.0
+            ppoint5: 10.0
+            op_equip:
+                probability: 0.01
+                subList:
+                    CloudspringAzureBlade: 1
+                    UnrivaledCrimsonFeatherBow: 1
+                    KirinOverlordBlazingArmor: 1
+            potions:
+                probability: 20.0
+                subList:
+                    minecraft:speed: 1
+                    minecraft:haste: 1
+                    minecraft:strength: 1
+                    minecraft:instant_health: 1
+                    minecraft:jump_boost: 1
+                    minecraft:regeneration: 1
+                    minecraft:resistance: 1
+                    minecraft:fire_resistance: 1
+                    minecraft:water_breathing: 1
+                    minecraft:invisibility: 1
+                    minecraft:night_vision: 1
+                    minecraft:health_boost: 1
+                    minecraft:absorption: 1
+                    minecraft:saturation: 1
+                    minecraft:glowing: 1
+                    minecraft:levitation: 1
+                    minecraft:luck: 1
+        guarantee_items:
+            CloudspringAzureBlade_guarantee: 1
+            UnrivaledCrimsonFeatherBow_guarantee: 1
+            KirinOverlordBlazingArmor_guarantee: 1
