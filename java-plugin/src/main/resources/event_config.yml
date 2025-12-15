@@ -1,5 +1,5 @@
 # event/config.yaml
-# 活動模塊配置文件
+# 活動模塊配置文件 (直接 Java 發放獎勵)
 
 # 數據存儲配置
 storage:
@@ -25,10 +25,14 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            - type: "balance"
-              value: 100
-            - type: "exp"
-              value: 50
+            login_balance:
+                probability: 100
+                amount: 100
+                command: "eco give {player} {amount}"
+            login_exp:
+                probability: 100
+                amount: 50
+                command: "minecraft:xp add {player} {amount} points"
 
     # 每日簽到
     daily_checkin:
@@ -45,11 +49,13 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            - type: "balance"
-              value: 200
-            - type: "item"
-              value: "minecraft:diamond"
-              amount: 1
+            checkin_balance:
+                probability: 100
+                amount: 200
+                command: "eco give {player} {amount}"
+            minecraft:diamond:
+                probability: 100
+                amount: 1
 
     # 週日特別活動
     sunday_special:
@@ -67,13 +73,17 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            - type: "balance"
-              value: 1000
-            - type: "exp"
-              value: 500
-            - type: "item"
-              value: "minecraft:netherite_ingot"
-              amount: 1
+            sunday_balance:
+                probability: 100
+                amount: 1000
+                command: "eco give {player} {amount}"
+            sunday_exp:
+                probability: 100
+                amount: 500
+                command: "minecraft:xp add {player} {amount} points"
+            minecraft:netherite_ingot:
+                probability: 100
+                amount: 1
 
     # 新年活動
     new_year_2026:
@@ -90,15 +100,20 @@ events:
             startDate: "2026-01-01T00:00:00Z"
             endDate: "2026-01-07T23:59:59Z"
         rewards:
-            - type: "balance"
-              value: 2026
-            - type: "exp"
-              value: 2026
-            - type: "item"
-              value: "minecraft:enchanted_golden_apple"
-              amount: 3
-            - type: "command"
-              value: "broadcast 恭喜 $player 獲得新年特別獎勵！"
+            new_year_balance:
+                probability: 100
+                amount: 2026
+                command: "eco give {player} {amount}"
+            new_year_exp:
+                probability: 100
+                amount: 2026
+                command: "minecraft:xp add {player} {amount} points"
+            minecraft:enchanted_golden_apple:
+                probability: 100
+                amount: 3
+            new_year_broadcast:
+                probability: 100
+                command: "broadcast 恭喜 {player} 獲得新年特別獎勵！"
 
     # 月度獎勵
     monthly_reward:
@@ -116,13 +131,17 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            - type: "balance"
-              value: 5000
-            - type: "exp"
-              value: 1000
-            - type: "item"
-              value: "minecraft:diamond_block"
-              amount: 5
+            monthly_balance:
+                probability: 100
+                amount: 5000
+                command: "eco give {player} {amount}"
+            monthly_exp:
+                probability: 100
+                amount: 1000
+                command: "minecraft:xp add {player} {amount} points"
+            minecraft:diamond_block:
+                probability: 100
+                amount: 5
 
     # 測試活動（無限制）
     test_unlimited:
@@ -136,7 +155,11 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            - type: "balance"
-              value: 1
-            - type: "exp"
-              value: 1
+            test_balance:
+                probability: 100
+                amount: 1
+                command: "eco give {player} {amount}"
+            test_exp:
+                probability: 100
+                amount: 1
+                command: "minecraft:xp add {player} {amount} points"

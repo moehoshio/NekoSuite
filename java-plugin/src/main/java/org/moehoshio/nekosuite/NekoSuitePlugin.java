@@ -2,14 +2,12 @@ package org.moehoshio.nekosuite;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -18,7 +16,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +24,6 @@ import java.util.Set;
 
 public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
 
-    private static final String NON_DIGIT_PATTERN = "\\D+";
     private static final int DAYS_PER_WEEK = 7;
     private static final int DAYS_PER_MONTH = 30;
     private static final int DAYS_PER_YEAR = 365;
@@ -245,44 +241,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             int updatedCount = currentCount;
             for (int i = 0; i < count; i++) {
                 updatedCount++;
+                RewardResult rewardResult;
                 if (pool.shouldGuarantee(updatedCount)) {
-                    rewards.add(pool.pickGuarantee(random));
+                    rewardResult = pool.pickGuarantee(random);
                     updatedCount = 0;
                 } else {
-                    rewards.add(pool.pickReward(random));
+                    rewardResult = pool.pickReward(random);
+                }
+                if (rewardResult != null) {
+                    dispatchReward(player, rewardResult, plugin);
+                    rewards.add(rewardResult.getDisplay());
                 }
             }
             data.set("wish.counts." + countsName, updatedCount);
             saveUserData(player.getName(), data);
-            for (String reward : rewards) {
-                deliverReward(player, reward);
-            }
             return rewards;
-        }
-
-        private void deliverReward(Player player, String reward) {
-            if (reward == null || reward.trim().isEmpty()) {
-                return;
-            }
-            String normalized = reward.trim();
-            Material material = Material.matchMaterial(normalized.replace("minecraft:", "").toUpperCase());
-            if (material != null) {
-                ItemStack itemStack = new ItemStack(material, 1);
-                HashMap<Integer, ItemStack> overflow = player.getInventory().addItem(itemStack);
-                if (!overflow.isEmpty()) {
-                    player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
-                }
-                return;
-            }
-            if (normalized.toLowerCase().startsWith("exp")) {
-                try {
-                    int value = Integer.parseInt(normalized.replaceAll(NON_DIGIT_PATTERN, ""));
-                    player.giveExp(value);
-                    return;
-                } catch (NumberFormatException ignored) {
-                }
-            }
-            player.sendMessage(ChatColor.GREEN + "[NekoSuite] 獎勵: " + normalized);
         }
 
         WishStatus queryStatus(String playerName, String poolId) {
@@ -332,6 +305,30 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         }
     }
 
+    private static void dispatchReward(Player player, RewardResult reward, JavaPlugin plugin) {
+        if (player == null || reward == null) {
+            return;
+        }
+        int amount = reward.getAmount() <= 0 ? 1 : reward.getAmount();
+        String itemName = reward.getName() == null ? "unknown_reward" : reward.getName();
+        String command = reward.getCommand();
+        if (command != null && !command.trim().isEmpty()) {
+            String cmd = command
+                    .replace("{player}", player.getName())
+                    .replace("%player%", player.getName())
+                    .replace("$player", player.getName())
+                    .replace("{amount}", String.valueOf(amount))
+                    .replace("{item}", itemName);
+            if (cmd.startsWith("/")) {
+                cmd = cmd.substring(1);
+            }
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+            return;
+        }
+        String giveCommand = "minecraft:give " + player.getName() + " " + itemName + " " + amount;
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), giveCommand);
+    }
+
     private static class WishPool {
         private final String id;
         private final String countsName;
@@ -362,14 +359,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             return maxCount > 0 && guaranteeItems != null && currentCount >= maxCount;
         }
 
-        String pickReward(Random random) {
+        RewardResult pickReward(Random random) {
             if (items == null) {
-                return "no_reward";
+                return RewardResult.empty();
             }
             return items.pick(random);
         }
 
-        String pickGuarantee(Random random) {
+        RewardResult pickGuarantee(Random random) {
             if (guaranteeItems == null) {
                 return pickReward(random);
             }
@@ -386,14 +383,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
     }
 
     private static class WeightedList {
-        private final List<Entry> entries;
+        private final List<RewardEntry> entries;
         private final double totalWeight;
 
-        WeightedList(List<Entry> entries) {
+        WeightedList(List<RewardEntry> entries) {
             this.entries = entries;
             double total = 0.0;
-            for (Entry entry : entries) {
-                total += entry.weight;
+            for (RewardEntry entry : entries) {
+                if (entry.getWeight() > 0.0) {
+                    total += entry.getWeight();
+                }
             }
             this.totalWeight = total;
         }
@@ -402,56 +401,194 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             if (section == null) {
                 return null;
             }
-            List<Entry> entries = new ArrayList<Entry>();
+            List<RewardEntry> entries = new ArrayList<RewardEntry>();
             for (String key : section.getKeys(false)) {
-                Object value = section.get(key);
-                if (value instanceof ConfigurationSection) {
-                    ConfigurationSection cs = section.getConfigurationSection(key);
-                    if (cs != null) {
-                        double probability = cs.getDouble("probability", 0.0);
-                        WeightedList sub = WeightedList.fromSection(cs.getConfigurationSection("subList"));
-                        entries.add(new Entry(key, probability, sub));
-                    }
-                } else {
-                    double probability = section.getDouble(key, 0.0);
-                    entries.add(new Entry(key, probability, null));
+                RewardEntry entry = RewardEntry.fromConfig(key, section.get(key), section.getConfigurationSection(key));
+                if (entry != null) {
+                    entries.add(entry);
                 }
             }
             return new WeightedList(entries);
         }
 
-        String pick(Random random) {
+        RewardResult pick(Random random) {
             if (entries.isEmpty() || totalWeight <= 0.0) {
-                return "no_reward";
+                return RewardResult.empty();
             }
             double target = random.nextDouble() * totalWeight;
             double cumulative = 0.0;
-            for (Entry entry : entries) {
-                cumulative += entry.weight;
+            RewardEntry fallback = entries.get(entries.size() - 1);
+            for (RewardEntry entry : entries) {
+                if (entry.getWeight() <= 0.0) {
+                    continue;
+                }
+                cumulative += entry.getWeight();
                 if (target <= cumulative) {
-                    if (entry.subList != null) {
-                        return entry.subList.pick(random);
-                    }
-                    return entry.name;
+                    return entry.resolve(random);
                 }
             }
-            Entry fallback = entries.get(entries.size() - 1);
-            if (fallback.subList != null) {
-                return fallback.subList.pick(random);
-            }
-            return fallback.name;
+            return fallback.resolve(random);
         }
 
-        private static class Entry {
-            final String name;
-            final double weight;
-            final WeightedList subList;
+        List<RewardEntry> getEntries() {
+            return entries;
+        }
+    }
 
-            Entry(String name, double weight, WeightedList subList) {
-                this.name = name;
-                this.weight = weight;
-                this.subList = subList;
+    private static class RewardEntry {
+        private final String name;
+        private final double weight;
+        private final WeightedList subList;
+        private final String command;
+        private final int minAmount;
+        private final int maxAmount;
+
+        RewardEntry(String name, double weight, WeightedList subList, String command, int minAmount, int maxAmount) {
+            this.name = name;
+            this.weight = weight;
+            this.subList = subList;
+            this.command = command;
+            this.minAmount = minAmount;
+            this.maxAmount = maxAmount;
+        }
+
+        static RewardEntry fromConfig(String key, Object rawValue, ConfigurationSection sectionValue) {
+            double probability = 0.0;
+            WeightedList sub = null;
+            String command = null;
+            int minAmount = 1;
+            int maxAmount = 1;
+
+            if (sectionValue != null) {
+                probability = sectionValue.getDouble("probability", 0.0);
+                command = sectionValue.getString("command");
+                int[] range = parseAmount(sectionValue.get("amount"));
+                minAmount = range[0];
+                maxAmount = range[1];
+                sub = WeightedList.fromSection(sectionValue.getConfigurationSection("subList"));
+            } else if (rawValue instanceof Number) {
+                probability = ((Number) rawValue).doubleValue();
+            } else if (rawValue instanceof String) {
+                try {
+                    probability = Double.parseDouble(rawValue.toString());
+                } catch (NumberFormatException e) {
+                    command = rawValue.toString();
+                }
             }
+            return new RewardEntry(key, probability, sub, command, minAmount, maxAmount);
+        }
+
+        private static int[] parseAmount(Object amountObj) {
+            int min = 1;
+            int max = 1;
+            if (amountObj instanceof Number) {
+                int value = ((Number) amountObj).intValue();
+                if (value > 0) {
+                    min = value;
+                    max = value;
+                }
+            } else if (amountObj instanceof String) {
+                String raw = ((String) amountObj).trim();
+                if (raw.contains("-")) {
+                    String[] parts = raw.split("-");
+                    if (parts.length >= 2) {
+                        try {
+                            min = Integer.parseInt(parts[0].trim());
+                            max = Integer.parseInt(parts[1].trim());
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                } else {
+                    try {
+                        int parsed = Integer.parseInt(raw);
+                        if (parsed > 0) {
+                            min = parsed;
+                            max = parsed;
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            } else if (amountObj instanceof List) {
+                List<?> list = (List<?>) amountObj;
+                if (list.size() >= 2 && list.get(0) instanceof Number && list.get(1) instanceof Number) {
+                    min = ((Number) list.get(0)).intValue();
+                    max = ((Number) list.get(1)).intValue();
+                }
+            }
+            if (min <= 0) {
+                min = 1;
+            }
+            if (max < min) {
+                max = min;
+            }
+            return new int[]{min, max};
+        }
+
+        RewardResult resolve(Random random) {
+            if (subList != null) {
+                return subList.pick(random);
+            }
+            int amount = minAmount;
+            if (maxAmount > minAmount) {
+                amount = minAmount + random.nextInt(maxAmount - minAmount + 1);
+            }
+            if (amount <= 0) {
+                amount = 1;
+            }
+            return new RewardResult(name, amount, command);
+        }
+
+        boolean shouldGrant(Random random) {
+            if (weight <= 0.0) {
+                return false;
+            }
+            double chance = weight;
+            if (chance > 1.0) {
+                chance = chance / 100.0;
+            }
+            if (chance >= 1.0) {
+                return true;
+            }
+            return random.nextDouble() < chance;
+        }
+
+        double getWeight() {
+            return weight;
+        }
+    }
+
+    private static class RewardResult {
+        private final String name;
+        private final int amount;
+        private final String command;
+
+        RewardResult(String name, int amount, String command) {
+            this.name = name;
+            this.amount = amount <= 0 ? 1 : amount;
+            this.command = command;
+        }
+
+        static RewardResult empty() {
+            return new RewardResult("no_reward", 1, null);
+        }
+
+        String getName() {
+            return name;
+        }
+
+        int getAmount() {
+            return amount;
+        }
+
+        String getCommand() {
+            return command;
+        }
+
+        String getDisplay() {
+            if (command != null && !command.trim().isEmpty()) {
+                return name + " x" + amount + " (command)";
+            }
+            return name + " x" + amount;
         }
     }
 
@@ -592,6 +729,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         private final JavaPlugin plugin;
         private final File storageDir;
         private final Map<String, EventDefinition> events = new HashMap<String, EventDefinition>();
+        private final Random random = new Random();
 
         EventManager(JavaPlugin plugin, File configFile) {
             this.plugin = plugin;
@@ -650,9 +788,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             saveUserData(player.getName(), data);
 
             List<String> rewardNames = new ArrayList<String>();
-            for (EventReward reward : def.getRewards()) {
-                reward.apply(player, plugin);
-                rewardNames.add(reward.getDisplay());
+            WeightedList rewardList = def.getRewards();
+            if (rewardList != null) {
+                for (RewardEntry entry : rewardList.getEntries()) {
+                    if (!entry.shouldGrant(random)) {
+                        continue;
+                    }
+                    RewardResult result = entry.resolve(random);
+                    dispatchReward(player, result, plugin);
+                    rewardNames.add(result.getDisplay());
+                }
             }
             return rewardNames;
         }
@@ -719,9 +864,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
         private final boolean enabled;
         private final TimeWindow window;
         private final EventLimit limit;
-        private final List<EventReward> rewards;
+        private final WeightedList rewards;
 
-        EventDefinition(String id, String name, boolean enabled, TimeWindow window, EventLimit limit, List<EventReward> rewards) {
+        EventDefinition(String id, String name, boolean enabled, TimeWindow window, EventLimit limit, WeightedList rewards) {
             this.id = id;
             this.name = name;
             this.enabled = enabled;
@@ -735,7 +880,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             boolean enabled = section.getBoolean("enabled", true);
             TimeWindow window = TimeWindow.fromSection(section.getConfigurationSection("duration"), logger);
             EventLimit limit = EventLimit.fromSection(section.getConfigurationSection("limit_modes"), logger);
-            List<EventReward> rewards = EventReward.fromList(section.getMapList("rewards"));
+            WeightedList rewards = WeightedList.fromSection(section.getConfigurationSection("rewards"));
             return new EventDefinition(id, name, enabled, window, limit, rewards);
         }
 
@@ -759,7 +904,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
             return limit;
         }
 
-        List<EventReward> getRewards() {
+        WeightedList getRewards() {
             return rewards;
         }
     }
@@ -820,116 +965,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor {
                 default:
                     logger.warning("未知時間單位: " + raw);
                     return 0L;
-            }
-        }
-    }
-
-    private static class EventReward {
-        private final RewardType type;
-        private final String value;
-        private final int amount;
-
-        EventReward(RewardType type, String value, int amount) {
-            this.type = type;
-            this.value = value;
-            this.amount = amount;
-        }
-
-        static List<EventReward> fromList(List<Map<?, ?>> list) {
-            if (list == null) {
-                return Collections.emptyList();
-            }
-            List<EventReward> rewards = new ArrayList<EventReward>();
-            for (Map<?, ?> raw : list) {
-                String typeStr = raw.get("type") == null ? null : raw.get("type").toString();
-                if (typeStr == null) {
-                    continue;
-                }
-                RewardType type = RewardType.fromString(typeStr);
-                String value = raw.get("value") == null ? "" : raw.get("value").toString();
-                int amount = 1;
-                Object amountObj = raw.get("amount");
-                if (amountObj != null) {
-                    try {
-                        amount = Integer.parseInt(amountObj.toString());
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-                rewards.add(new EventReward(type, value, amount));
-            }
-            return rewards;
-        }
-
-        void apply(Player player, JavaPlugin plugin) {
-            switch (type) {
-                case BALANCE:
-                    player.sendMessage(ChatColor.GREEN + "[NekoSuite] 金錢獎勵: " + value);
-                    break;
-                case EXP:
-                    try {
-                        int exp = Integer.parseInt(value);
-                        player.giveExp(exp);
-                    } catch (NumberFormatException e) {
-                        player.sendMessage(ChatColor.RED + "[NekoSuite] 經驗值格式錯誤: " + value);
-                    }
-                    break;
-                case ITEM:
-                    Material material = Material.matchMaterial(value.replace("minecraft:", "").toUpperCase());
-                    if (material != null) {
-                        ItemStack itemStack = new ItemStack(material, amount <= 0 ? 1 : amount);
-                        Map<Integer, ItemStack> overflow = player.getInventory().addItem(itemStack);
-                        if (!overflow.isEmpty()) {
-                            player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
-                        }
-                        player.sendMessage(ChatColor.GREEN + "[NekoSuite] 物品獎勵: " + material.name());
-                    } else {
-                        player.sendMessage(ChatColor.RED + "[NekoSuite] 物品無法識別: " + value);
-                    }
-                    break;
-                case COMMAND:
-                    String command = value.replace("$player", player.getName()).replace("%player%", player.getName());
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-                    player.sendMessage(ChatColor.GREEN + "[NekoSuite] 已觸發命令獎勵。");
-                    break;
-                default:
-                    player.sendMessage(ChatColor.YELLOW + "[NekoSuite] 獎勵: " + value);
-                    break;
-            }
-        }
-
-        String getDisplay() {
-            switch (type) {
-                case EXP:
-                    return "exp:" + value;
-                case ITEM:
-                    return "item:" + value + "x" + amount;
-                case COMMAND:
-                    return "command";
-                case BALANCE:
-                    return "balance:" + value;
-                default:
-                    return value;
-            }
-        }
-
-        private enum RewardType {
-            BALANCE, EXP, ITEM, COMMAND, UNKNOWN;
-
-            static RewardType fromString(String raw) {
-                String normalized = raw.toLowerCase();
-                if (normalized.equals("balance")) {
-                    return BALANCE;
-                }
-                if (normalized.equals("exp")) {
-                    return EXP;
-                }
-                if (normalized.equals("item")) {
-                    return ITEM;
-                }
-                if (normalized.equals("command")) {
-                    return COMMAND;
-                }
-                return UNKNOWN;
             }
         }
     }
