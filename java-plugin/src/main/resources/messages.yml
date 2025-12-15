@@ -72,3 +72,6 @@ buy:
   already_active: "&c您已經擁有該特權，尚未過期"
   success: "&a購買成功: {product}"
   expired: "&e已移除過期特權: {product}"
+menu:
+  buy:
+    title: "&6特權購買"

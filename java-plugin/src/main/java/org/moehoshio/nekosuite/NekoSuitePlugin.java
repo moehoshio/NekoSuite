@@ -88,6 +88,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         if (getCommand("buy") != null) {
             getCommand("buy").setExecutor(this);
         }
+        if (getCommand("buymenu") != null) {
+            getCommand("buymenu").setExecutor(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -116,6 +119,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
                 return handleCdk(sender, args);
             case "buy":
                 return handleBuy(sender, args);
+            case "buymenu":
+                return handleBuyMenu(sender);
             default:
                 return false;
         }
@@ -376,6 +381,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         return true;
     }
 
+    private boolean handleBuyMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        buyManager.openMenu(player);
+        return true;
+    }
+
     private String extractIdFromMeta(ItemMeta meta) {
         if (meta == null || meta.getLore() == null) {
             return null;
@@ -514,7 +529,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
             }
             expManager.handleMenuClick(player, clicked);
         }
-        // buy uses commands only; no GUI handling
+        if (holder instanceof BuyManager.BuyMenuHolder) {
+            event.setCancelled(true);
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null) {
+                return;
+            }
+            buyManager.handleMenuClick(player, clicked);
+        }
     }
 
     private static class WishMenuHolder implements InventoryHolder {

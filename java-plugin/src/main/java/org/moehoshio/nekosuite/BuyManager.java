@@ -4,6 +4,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -93,6 +98,47 @@ public class BuyManager {
         return granted;
     }
 
+    public void openMenu(Player player) {
+        Inventory inv = Bukkit.createInventory(new BuyMenuHolder(), 27, messages.format("menu.buy.title"));
+        int slot = 0;
+        for (Product product : products.values()) {
+            if (slot >= inv.getSize()) {
+                break;
+            }
+            ItemStack stack = new ItemStack(product.getMaterial());
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(product.getDisplayName());
+                List<String> lore = new ArrayList<String>(product.getLore());
+                lore.add("ID: " + product.getId());
+                meta.setLore(lore);
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(slot++, stack);
+        }
+        player.openInventory(inv);
+    }
+
+    boolean handleMenuClick(Player player, ItemStack clicked) {
+        if (clicked == null || clicked.getType().isAir() || !clicked.hasItemMeta() || clicked.getItemMeta().getLore() == null) {
+            return true;
+        }
+        for (String line : clicked.getItemMeta().getLore()) {
+            if (line != null && line.contains("ID:")) {
+                String id = line.substring(line.indexOf("ID:") + 3).trim();
+                try {
+                    purchase(player, id);
+                    player.sendMessage(messages.format("buy.success", singleton("product", id)));
+                } catch (BuyException e) {
+                    player.sendMessage(e.getMessage());
+                }
+                return true;
+            }
+        }
+        return true;
+    }
+
     public void check(Player player) {
         YamlConfiguration data = loadUserData(player.getName());
         boolean changed = false;
@@ -170,13 +216,19 @@ public class BuyManager {
         private final List<String> costCommands;
         private final List<String> grantCommands;
         private final List<String> revokeCommands;
+        private final String displayName;
+        private final List<String> lore;
+        private final org.bukkit.Material material;
 
-        Product(String id, long durationDays, List<String> costCommands, List<String> grantCommands, List<String> revokeCommands) {
+        Product(String id, long durationDays, List<String> costCommands, List<String> grantCommands, List<String> revokeCommands, String displayName, List<String> lore, org.bukkit.Material material) {
             this.id = id;
             this.durationDays = durationDays;
             this.costCommands = costCommands;
             this.grantCommands = grantCommands;
             this.revokeCommands = revokeCommands;
+            this.displayName = displayName;
+            this.lore = lore;
+            this.material = material;
         }
 
         static Product fromSection(String id, ConfigurationSection section) {
@@ -184,7 +236,13 @@ public class BuyManager {
             List<String> cost = section.getStringList("cost_commands");
             List<String> grant = section.getStringList("grant_commands");
             List<String> revoke = section.getStringList("revoke_commands");
-            return new Product(id, duration, cost, grant, revoke);
+            String name = section.getString("display_name", id);
+            List<String> lore = section.getStringList("lore");
+            org.bukkit.Material material = org.bukkit.Material.matchMaterial(section.getString("material", "PAPER"));
+            if (material == null) {
+                material = org.bukkit.Material.PAPER;
+            }
+            return new Product(id, duration, cost, grant, revoke, name, lore, material);
         }
 
         String getId() {
@@ -206,11 +264,29 @@ public class BuyManager {
         List<String> getRevokeCommands() {
             return revokeCommands;
         }
+
+        String getDisplayName() {
+            return displayName;
+        }
+
+        List<String> getLore() {
+            return lore;
+        }
+
+        org.bukkit.Material getMaterial() {
+            return material;
+        }
     }
 
     static class BuyException extends Exception {
         BuyException(String message) {
             super(message);
+        }
+    }
+
+    static class BuyMenuHolder implements InventoryHolder {
+        public Inventory getInventory() {
+            return null;
         }
     }
 }

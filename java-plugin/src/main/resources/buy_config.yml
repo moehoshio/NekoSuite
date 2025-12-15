@@ -4,6 +4,11 @@ storage:
 products:
   vip1:
     duration_days: 31
+    display_name: "&dVIP I"
+    material: "GOLD_INGOT"
+    lore:
+      - "&7價格: 688 金幣"
+      - "&7時長: 31 天"
     cost_commands:
       - "essentials:eco take {player} 688"
     grant_commands:
@@ -12,6 +17,11 @@ products:
       - "manudel {player}"
   mcd1:
     duration_days: 31
+    display_name: "&b月卡 I"
+    material: "PAPER"
+    lore:
+      - "&7價格: 799 金幣"
+      - "&7時長: 31 天"
     cost_commands:
       - "essentials:eco take {player} 799"
     grant_commands:
@@ -20,6 +30,11 @@ products:
       - "manudelsub {player} mcd_1"
   bag1:
     duration_days: 0   # 0 = permanent
+    display_name: "&a背包 I"
+    material: "CHEST"
+    lore:
+      - "&7價格: 360 金幣"
+      - "&7時長: 永久"
     cost_commands:
       - "essentials:eco take {player} 360"
     grant_commands:

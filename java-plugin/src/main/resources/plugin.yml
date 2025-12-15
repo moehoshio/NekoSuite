@@ -42,3 +42,7 @@ commands:
     description: Purchase privileges
     usage: /buy <productId>
     permission: nekosuite.buy
+  buymenu:
+    description: Open privilege purchase menu
+    usage: /buymenu
+    permission: nekosuite.buy.menu

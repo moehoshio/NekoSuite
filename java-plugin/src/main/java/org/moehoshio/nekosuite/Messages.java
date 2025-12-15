@@ -68,6 +68,7 @@ public class Messages {
         DEFAULTS.put("buy.already_active", "&c您已經擁有該特權，尚未過期");
         DEFAULTS.put("buy.success", "&a購買成功: {product}");
         DEFAULTS.put("buy.expired", "&e已移除過期特權: {product}");
+        DEFAULTS.put("menu.buy.title", "&6特權購買");
     }
 
     private final JavaPlugin plugin;
