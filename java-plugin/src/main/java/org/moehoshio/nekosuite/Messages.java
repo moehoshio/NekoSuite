@@ -63,6 +63,11 @@ public class Messages {
         DEFAULTS.put("cdk.limit", "&c該cdk已被兌換完");
         DEFAULTS.put("cdk.limit_user", "&c您已達到此cdk的兌換次數限制");
         DEFAULTS.put("cdk.not_active", "&c該cdk當前不可用");
+        DEFAULTS.put("buy.usage", "&e用法: /buy <productId>");
+        DEFAULTS.put("buy.not_found", "&c未找到此商品");
+        DEFAULTS.put("buy.already_active", "&c您已經擁有該特權，尚未過期");
+        DEFAULTS.put("buy.success", "&a購買成功: {product}");
+        DEFAULTS.put("buy.expired", "&e已移除過期特權: {product}");
     }
 
     private final JavaPlugin plugin;

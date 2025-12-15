@@ -38,3 +38,7 @@ commands:
     description: Redeem CDK code
     usage: /cdk <code>
     permission: nekosuite.cdk
+  buy:
+    description: Purchase privileges
+    usage: /buy <productId>
+    permission: nekosuite.buy

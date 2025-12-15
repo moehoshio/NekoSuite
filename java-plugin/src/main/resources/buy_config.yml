@@ -1,0 +1,28 @@
+storage:
+  data_dir: "userdata"
+
+products:
+  vip1:
+    duration_days: 31
+    cost_commands:
+      - "essentials:eco take {player} 688"
+    grant_commands:
+      - "manuadd {player} vip_1"
+    revoke_commands:
+      - "manudel {player}"
+  mcd1:
+    duration_days: 31
+    cost_commands:
+      - "essentials:eco take {player} 799"
+    grant_commands:
+      - "manuaddsub {player} mcd_1"
+    revoke_commands:
+      - "manudelsub {player} mcd_1"
+  bag1:
+    duration_days: 0   # 0 = permanent
+    cost_commands:
+      - "essentials:eco take {player} 360"
+    grant_commands:
+      - "manuaddsub {player} bag_1"
+    revoke_commands:
+      - "manudelsub {player} bag_1"

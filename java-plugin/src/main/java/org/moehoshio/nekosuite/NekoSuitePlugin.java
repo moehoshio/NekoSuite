@@ -40,6 +40,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
     private EventManager eventManager;
     private ExpManager expManager;
     private CdkManager cdkManager;
+    private BuyManager buyManager;
 
     @Override
     public void onEnable() {
@@ -48,11 +49,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         saveResource("messages.yml", false);
         saveResource("exp_config.yml", false);
         saveResource("cdk_config.yml", false);
+        saveResource("buy_config.yml", false);
         messages = new Messages(this);
         wishManager = new WishManager(this, messages, new File(getDataFolder(), "wish_config.yml"));
         eventManager = new EventManager(this, messages, new File(getDataFolder(), "event_config.yml"));
         expManager = new ExpManager(this, messages, new File(getDataFolder(), "exp_config.yml"));
         cdkManager = new CdkManager(this, messages, new File(getDataFolder(), "cdk_config.yml"));
+        buyManager = new BuyManager(this, messages, new File(getDataFolder(), "buy_config.yml"));
         getServer().getPluginManager().registerEvents(this, this);
 
         if (getCommand("wish") != null) {
@@ -82,6 +85,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         if (getCommand("cdk") != null) {
             getCommand("cdk").setExecutor(this);
         }
+        if (getCommand("buy") != null) {
+            getCommand("buy").setExecutor(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -108,6 +114,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
                 return handleExpMenu(sender);
             case "cdk":
                 return handleCdk(sender, args);
+            case "buy":
+                return handleBuy(sender, args);
             default:
                 return false;
         }
@@ -347,6 +355,27 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
         return true;
     }
 
+    private boolean handleBuy(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format("common.only_player"));
+            return true;
+        }
+        if (args.length < 1) {
+            sender.sendMessage(messages.format("buy.usage"));
+            return true;
+        }
+        Player player = (Player) sender;
+        try {
+            List<String> purchased = buyManager.purchase(player, args[0]);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("product", String.join(", ", purchased));
+            sender.sendMessage(messages.format("buy.success", map));
+        } catch (BuyManager.BuyException e) {
+            sender.sendMessage(e.getMessage());
+        }
+        return true;
+    }
+
     private String extractIdFromMeta(ItemMeta meta) {
         if (meta == null || meta.getLore() == null) {
             return null;
@@ -485,6 +514,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, List
             }
             expManager.handleMenuClick(player, clicked);
         }
+        // buy uses commands only; no GUI handling
     }
 
     private static class WishMenuHolder implements InventoryHolder {
