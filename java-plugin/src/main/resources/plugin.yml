@@ -1,0 +1,20 @@
+name: NekoSuite
+main: org.moehoshio.nekosuite.NekoSuitePlugin
+version: 0.1.0
+commands:
+  wish:
+    description: Execute wish draws without HTTP
+    usage: /wish <pool> [count] or /wish query <pool>
+    permission: nekosuite.wish
+  wishquery:
+    description: Query wish status
+    usage: /wishquery <pool>
+    permission: nekosuite.wish.query
+  eventcheck:
+    description: Check available events
+    usage: /eventcheck
+    permission: nekosuite.event.check
+  eventparticipate:
+    description: Participate in an event
+    usage: /eventparticipate <eventId>
+    permission: nekosuite.event.participate

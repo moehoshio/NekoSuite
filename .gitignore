@@ -21,6 +21,9 @@ vendor/
 go.work
 go.work.sum
 
+# Java build artifacts
+java-plugin/target/
+
 # env file
 .env
 
