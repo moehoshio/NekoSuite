@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +132,47 @@ public class BuyManager {
         MenuLayout.BuyLayout buyLayout = layout.getBuyLayout();
         Inventory inv = Bukkit.createInventory(new BuyMenuHolder(), buyLayout.getSize(), messages.format(player, "menu.buy.title"));
         int slotIndex = 0;
-        for (Product product : products.values()) {
+        
+        // Sort products by type (vip, mcd, bag) and level
+        List<Product> sortedProducts = new ArrayList<Product>(products.values());
+        Collections.sort(sortedProducts, new java.util.Comparator<Product>() {
+            public int compare(Product a, Product b) {
+                int typeOrderA = getTypeOrder(a.getId());
+                int typeOrderB = getTypeOrder(b.getId());
+                if (typeOrderA != typeOrderB) {
+                    return typeOrderA - typeOrderB;
+                }
+                // Same type, sort by level number
+                int levelA = extractLevel(a.getId());
+                int levelB = extractLevel(b.getId());
+                return levelA - levelB;
+            }
+            
+            private int getTypeOrder(String id) {
+                String lower = id.toLowerCase();
+                if (lower.startsWith("vip")) return 0;
+                if (lower.startsWith("mcd")) return 1;
+                if (lower.startsWith("bag")) return 2;
+                return 3;
+            }
+            
+            private int extractLevel(String id) {
+                // Extract trailing digits from the id
+                int end = id.length();
+                int start = end;
+                while (start > 0 && Character.isDigit(id.charAt(start - 1))) {
+                    start--;
+                }
+                if (start == end) return 0;
+                try {
+                    return Integer.parseInt(id.substring(start, end));
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
+            }
+        });
+        
+        for (Product product : sortedProducts) {
             if (slotIndex >= buyLayout.getProductSlots().size()) {
                 break;
             }
@@ -150,7 +191,7 @@ public class BuyManager {
                     lore = product.getLore();
                 }
                 lore = messages.colorize(lore);
-                lore.add("ID: " + product.getId());
+                lore.add(ChatColor.DARK_GRAY + "ID: " + product.getId());
                 meta.setLore(lore);
                 meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 stack.setItemMeta(meta);

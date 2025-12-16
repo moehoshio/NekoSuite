@@ -241,12 +241,18 @@ public class ExpManager {
 
         for (int i = 0; i < depositAmounts.size() && i < expLayout.getDepositSlots().size(); i++) {
             int amount = depositAmounts.get(i);
-            ItemStack stack = createItem(Material.LIME_DYE, "&a存入 " + amount + " xp", new String[]{"存入 " + amount + " xp"});
+            Map<String, String> map = createMap("amount", String.valueOf(amount), "stored", String.valueOf(stored));
+            String buttonText = messages.format(player, "exp.deposit.button", map);
+            String loreText = messages.format(player, "exp.deposit.lore", map);
+            ItemStack stack = createItem(Material.LIME_DYE, buttonText, new String[]{loreText, "ID:deposit_" + amount});
             safeSet(inv, expLayout.getDepositSlots().get(i), stack);
         }
         for (int i = 0; i < withdrawAmounts.size() && i < expLayout.getWithdrawSlots().size(); i++) {
             int amount = withdrawAmounts.get(i);
-            ItemStack stack = createItem(Material.ORANGE_DYE, "&6取出 " + amount + " xp", new String[]{"取出 " + amount + " xp"});
+            Map<String, String> map = createMap("amount", String.valueOf(amount), "stored", String.valueOf(stored));
+            String buttonText = messages.format(player, "exp.withdraw.button", map);
+            String loreText = messages.format(player, "exp.withdraw.lore", map);
+            ItemStack stack = createItem(Material.ORANGE_DYE, buttonText, new String[]{loreText, "ID:withdraw_" + amount});
             safeSet(inv, expLayout.getWithdrawSlots().get(i), stack);
         }
 
@@ -254,11 +260,20 @@ public class ExpManager {
             if (slotIndex >= expLayout.getExchangeSlots().size()) {
                 break;
             }
-            ItemStack stack = createItem(item.getMaterial(), item.getDisplay(), new String[]{"Cost: " + item.getCost() + " xp", "ID: " + item.getId()});
+            Map<String, String> costMap = new HashMap<String, String>();
+            costMap.put("cost", String.valueOf(item.getCost()));
+            String costLore = messages.format(player, "exp.exchange.cost_lore", costMap);
+            ItemStack stack = createItem(item.getMaterial(), item.getDisplay(), new String[]{costLore, "ID:exchange_" + item.getId()});
             safeSet(inv, expLayout.getExchangeSlots().get(slotIndex++), stack);
         }
 
-        ItemStack balance = createItem(Material.BOOK, messages.format(player, "exp.balance", createMap("stored", String.valueOf(stored), "carried", String.valueOf(player.getTotalExperience()))), new String[]{"EXP"});
+        Map<String, String> balanceMap = createMap(
+                "stored", String.valueOf(stored),
+                "carried", String.valueOf(player.getTotalExperience()));
+        ItemStack balance = createItem(
+                Material.BOOK,
+                messages.format(player, "exp.balance", balanceMap),
+                new String[0]);
         safeSet(inv, expLayout.getBalanceSlot(), balance);
         safeSet(inv, expLayout.getCloseSlot(), createItem(Material.BARRIER, messages.format(player, "menu.close"), new String[0]));
         player.openInventory(inv);
@@ -291,26 +306,8 @@ public class ExpManager {
         if (clicked == null || clicked.getType() == Material.AIR) {
             return true;
         }
-        String name = "";
-        if (clicked.hasItemMeta() && clicked.getItemMeta().getDisplayName() != null) {
-            name = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
-        }
         if (clicked.getType() == Material.BARRIER) {
             player.closeInventory();
-            return true;
-        }
-        if (name.contains("存入")) {
-            long amount = parseLastNumber(name);
-            if (amount > 0) {
-                deposit(player, amount);
-            }
-            return true;
-        }
-        if (name.contains("取出")) {
-            long amount = parseLastNumber(name);
-            if (amount > 0) {
-                withdraw(player, amount);
-            }
             return true;
         }
         List<String> lore = clicked.getItemMeta() != null ? clicked.getItemMeta().getLore() : null;
@@ -319,29 +316,37 @@ public class ExpManager {
                 if (line != null && line.contains("ID:")) {
                     String cleaned = ChatColor.stripColor(line);
                     String id = cleaned.substring(cleaned.indexOf("ID:") + 3).trim();
-                    exchange(player, id);
-                    return true;
+                    if (id.startsWith("deposit_")) {
+                        long amount = parseNumber(id.substring(8));
+                        if (amount > 0) {
+                            deposit(player, amount);
+                        }
+                        return true;
+                    }
+                    if (id.startsWith("withdraw_")) {
+                        long amount = parseNumber(id.substring(9));
+                        if (amount > 0) {
+                            withdraw(player, amount);
+                        }
+                        return true;
+                    }
+                    if (id.startsWith("exchange_")) {
+                        String exchangeId = id.substring(9);
+                        exchange(player, exchangeId);
+                        return true;
+                    }
                 }
             }
         }
         return true;
     }
 
-    private long parseLastNumber(String text) {
-        String digits = "";
-        for (int i = text.length() - 1; i >= 0; i--) {
-            char c = text.charAt(i);
-            if (Character.isDigit(c)) {
-                digits = c + digits;
-            } else if (!digits.isEmpty()) {
-                break;
-            }
-        }
-        if (digits.isEmpty()) {
+    private long parseNumber(String text) {
+        if (text == null || text.isEmpty()) {
             return 0;
         }
         try {
-            return Long.parseLong(digits);
+            return Long.parseLong(text.trim());
         } catch (NumberFormatException e) {
             return 0;
         }
