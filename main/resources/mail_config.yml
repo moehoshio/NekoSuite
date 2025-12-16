@@ -1,0 +1,32 @@
+# NekoSuite Mail Module Configuration
+
+storage:
+  data_dir: "userdata"
+
+settings:
+  # Maximum number of mails a player can have
+  max_mails_per_player: 50
+  # Days before mail expires (0 = never expire)
+  mail_expiry_days: 30
+  # Allow players to send mail to each other
+  allow_player_sending: true
+  # Items that cannot be sent via mail
+  blocked_items:
+    - "command_block"
+    - "barrier"
+    - "bedrock"
+    - "structure_block"
+
+# System mail templates (can be sent via admin commands)
+templates:
+  welcome:
+    subject: "歡迎來到伺服器！"
+    content: "感謝您加入我們的伺服器，祝您遊戲愉快！"
+    commands:
+      - "minecraft:give {player} minecraft:diamond 5"
+  
+  daily_reward:
+    subject: "每日獎勵"
+    content: "這是您今天的每日獎勵，感謝您的支持！"
+    commands:
+      - "minecraft:give {player} minecraft:gold_ingot 10"

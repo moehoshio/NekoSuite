@@ -20,6 +20,7 @@ public class MenuLayout {
     private final EventLayout eventLayout;
     private final ExpLayout expLayout;
     private final BuyLayout buyLayout;
+    private final MailLayout mailLayout;
 
     public MenuLayout(JavaPlugin plugin) {
         File file = new File(plugin.getDataFolder(), "menu_layout.yml");
@@ -31,6 +32,7 @@ public class MenuLayout {
         this.eventLayout = new EventLayout(config.getConfigurationSection("event"));
         this.expLayout = new ExpLayout(config.getConfigurationSection("exp"));
         this.buyLayout = new BuyLayout(config.getConfigurationSection("buy"));
+        this.mailLayout = new MailLayout(config.getConfigurationSection("mail"));
     }
 
     public WishLayout getWishLayout() {
@@ -47,6 +49,10 @@ public class MenuLayout {
 
     public BuyLayout getBuyLayout() {
         return buyLayout;
+    }
+
+    public MailLayout getMailLayout() {
+        return mailLayout;
     }
 
     public static class WishLayout {
@@ -156,6 +162,48 @@ public class MenuLayout {
 
         public List<Integer> getProductSlots() {
             return productSlots;
+        }
+
+        public int getCloseSlot() {
+            return closeSlot;
+        }
+    }
+
+    public static class MailLayout {
+        private final int size;
+        private final List<Integer> itemSlots;
+        private final int prevSlot;
+        private final int nextSlot;
+        private final int infoSlot;
+        private final int closeSlot;
+
+        MailLayout(ConfigurationSection section) {
+            this.size = section != null ? section.getInt("size", 54) : 54;
+            this.itemSlots = safeIntList(section, "item_slots", defaultRange(0, 44));
+            this.prevSlot = section != null ? section.getInt("prev_slot", 45) : 45;
+            this.nextSlot = section != null ? section.getInt("next_slot", 53) : 53;
+            this.infoSlot = section != null ? section.getInt("info_slot", 49) : 49;
+            this.closeSlot = section != null ? section.getInt("close_slot", 50) : 50;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public List<Integer> getItemSlots() {
+            return itemSlots;
+        }
+
+        public int getPrevSlot() {
+            return prevSlot;
+        }
+
+        public int getNextSlot() {
+            return nextSlot;
+        }
+
+        public int getInfoSlot() {
+            return infoSlot;
         }
 
         public int getCloseSlot() {

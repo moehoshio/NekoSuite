@@ -50,6 +50,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private ExpManager expManager;
     private CdkManager cdkManager;
     private BuyManager buyManager;
+    private MailManager mailManager;
     private MenuLayout menuLayout;
 
     @Override
@@ -61,6 +62,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("exp_config.yml", false);
         saveResource("cdk_config.yml", false);
         saveResource("buy_config.yml", false);
+        saveResource("mail_config.yml", false);
         saveResource("menu_layout.yml", false);
         setupEconomy();
         setupPermission();
@@ -111,6 +113,22 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("buymenu").setExecutor(this);
             getCommand("buymenu").setTabCompleter(this);
         }
+        if (getCommand("mail") != null) {
+            getCommand("mail").setExecutor(this);
+            getCommand("mail").setTabCompleter(this);
+        }
+        if (getCommand("mailmenu") != null) {
+            getCommand("mailmenu").setExecutor(this);
+            getCommand("mailmenu").setTabCompleter(this);
+        }
+        if (getCommand("mailsend") != null) {
+            getCommand("mailsend").setExecutor(this);
+            getCommand("mailsend").setTabCompleter(this);
+        }
+        if (getCommand("mailadmin") != null) {
+            getCommand("mailadmin").setExecutor(this);
+            getCommand("mailadmin").setTabCompleter(this);
+        }
         if (getCommand("language") != null) {
             getCommand("language").setTabCompleter(this);
         }
@@ -151,6 +169,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleBuy(sender, args);
             case "buymenu":
                 return handleBuyMenu(sender);
+            case "mail":
+                return handleMail(sender, args);
+            case "mailmenu":
+                return handleMailMenu(sender);
+            case "mailsend":
+                return handleMailSend(sender, args);
+            case "mailadmin":
+                return handleMailAdmin(sender, args);
             case "language":
                 return handleLanguage(sender, args);
             case "nekoreload":
@@ -431,6 +457,179 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         return true;
     }
 
+    private boolean handleMail(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length == 0) {
+            sender.sendMessage(messages.format(sender, "mail.usage"));
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        if ("list".equals(sub)) {
+            List<MailManager.Mail> mails = mailManager.getMails(player.getName());
+            if (mails.isEmpty()) {
+                sender.sendMessage(messages.format(sender, "mail.list_empty"));
+                return true;
+            }
+            sender.sendMessage(messages.format(sender, "mail.list_header"));
+            for (MailManager.Mail mail : mails) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("subject", mail.getSubject());
+                map.put("sender", mail.getSender());
+                String status;
+                if (!mail.isRead()) {
+                    status = messages.format(sender, "mail.list_status_unread");
+                } else if (mail.hasCommands() && !mail.isClaimed()) {
+                    status = messages.format(sender, "mail.list_status_unclaimed");
+                } else {
+                    status = messages.format(sender, "mail.list_status_read");
+                }
+                map.put("status", status);
+                sender.sendMessage(messages.format(sender, "mail.list_entry", map));
+            }
+            return true;
+        }
+        if ("claim".equals(sub)) {
+            if (args.length < 2) {
+                sender.sendMessage(messages.format(sender, "mail.usage"));
+                return true;
+            }
+            try {
+                mailManager.claimMail(player, args[1]);
+                sender.sendMessage(messages.format(sender, "mail.claimed"));
+            } catch (MailManager.MailException e) {
+                sender.sendMessage(e.getMessage());
+            }
+            return true;
+        }
+        if ("delete".equals(sub)) {
+            if (args.length < 2) {
+                sender.sendMessage(messages.format(sender, "mail.usage"));
+                return true;
+            }
+            try {
+                mailManager.deleteMail(player, args[1]);
+                sender.sendMessage(messages.format(sender, "mail.deleted"));
+            } catch (MailManager.MailException e) {
+                sender.sendMessage(e.getMessage());
+            }
+            return true;
+        }
+        sender.sendMessage(messages.format(sender, "mail.usage"));
+        return true;
+    }
+
+    private boolean handleMailMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        mailManager.openMenu(player);
+        return true;
+    }
+
+    private boolean handleMailSend(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length < 2) {
+            sender.sendMessage(messages.format(sender, "mail.send_usage"));
+            return true;
+        }
+        String recipient = args[0];
+        String subject = args[1];
+        StringBuilder contentBuilder = new StringBuilder();
+        for (int i = 2; i < args.length; i++) {
+            if (contentBuilder.length() > 0) {
+                contentBuilder.append(" ");
+            }
+            contentBuilder.append(args[i]);
+        }
+        String content = contentBuilder.toString();
+        
+        try {
+            mailManager.sendPlayerMail(player, recipient, subject, content, null, 0);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("recipient", recipient);
+            sender.sendMessage(messages.format(sender, "mail.sent", map));
+        } catch (MailManager.MailException e) {
+            sender.sendMessage(e.getMessage());
+        }
+        return true;
+    }
+
+    private boolean handleMailAdmin(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("nekosuite.mail.admin")) {
+            sender.sendMessage(messages.format(sender, "common.no_permission"));
+            return true;
+        }
+        if (args.length < 3) {
+            sender.sendMessage(messages.format(sender, "mail.admin_usage"));
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        String recipient = args[1];
+        
+        if ("send".equals(sub)) {
+            String subject = args[2];
+            StringBuilder contentBuilder = new StringBuilder();
+            List<String> commands = new ArrayList<String>();
+            boolean parsingCommands = false;
+            
+            for (int i = 3; i < args.length; i++) {
+                String arg = args[i];
+                // Commands start with / or minecraft:
+                if (arg.startsWith("/") || arg.startsWith("minecraft:")) {
+                    parsingCommands = true;
+                }
+                if (parsingCommands) {
+                    commands.add(arg);
+                } else {
+                    if (contentBuilder.length() > 0) {
+                        contentBuilder.append(" ");
+                    }
+                    contentBuilder.append(arg);
+                }
+            }
+            
+            boolean success = mailManager.sendSystemMail(recipient, subject, contentBuilder.toString(), commands);
+            if (success) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("recipient", recipient);
+                sender.sendMessage(messages.format(sender, "mail.sent", map));
+            } else {
+                sender.sendMessage(messages.format(sender, "mail.mailbox_full"));
+            }
+            return true;
+        }
+        
+        if ("template".equals(sub)) {
+            // Load template from config and send
+            // For now, just send a basic template
+            String templateId = args[2];
+            List<String> commands = new ArrayList<String>();
+            commands.add("minecraft:give " + recipient + " minecraft:diamond 1");
+            boolean success = mailManager.sendSystemMail(recipient, "Template: " + templateId, "This is a template mail.", commands);
+            if (success) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("recipient", recipient);
+                sender.sendMessage(messages.format(sender, "mail.sent", map));
+            } else {
+                sender.sendMessage(messages.format(sender, "mail.mailbox_full"));
+            }
+            return true;
+        }
+        
+        sender.sendMessage(messages.format(sender, "mail.admin_usage"));
+        return true;
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         String name = command.getName().toLowerCase();
@@ -529,6 +728,46 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return filter(options, args[0]);
                 }
                 break;
+            case "mail":
+                if (args.length == 1) {
+                    List<String> actions = new ArrayList<String>(Arrays.asList("list", "claim", "delete"));
+                    actions.add(messages.getRaw(sender, "tab.mail.action"));
+                    return filter(actions, args[0]);
+                }
+                break;
+            case "mailsend":
+                if (args.length == 1) {
+                    // Suggest online players
+                    List<String> players = new ArrayList<String>();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        players.add(p.getName());
+                    }
+                    players.add(messages.getRaw(sender, "tab.mail.player"));
+                    return filter(players, args[0]);
+                }
+                if (args.length == 2) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.mail.subject"));
+                }
+                if (args.length >= 3) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.mail.content"));
+                }
+                break;
+            case "mailadmin":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("send", "template"), args[0]);
+                }
+                if (args.length == 2) {
+                    List<String> players = new ArrayList<String>();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        players.add(p.getName());
+                    }
+                    players.add(messages.getRaw(sender, "tab.mail.player"));
+                    return filter(players, args[1]);
+                }
+                if (args.length == 3) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.mail.subject"));
+                }
+                break;
             case "nekoreload":
                 if (args.length <= 1) {
                     String prefix = args.length == 0 ? "" : args[0];
@@ -593,6 +832,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         expManager = new ExpManager(this, messages, new File(getDataFolder(), "exp_config.yml"), menuLayout);
         cdkManager = new CdkManager(this, messages, new File(getDataFolder(), "cdk_config.yml"));
         buyManager = new BuyManager(this, messages, new File(getDataFolder(), "buy_config.yml"), menuLayout, economy, permission);
+        mailManager = new MailManager(this, messages, new File(getDataFolder(), "mail_config.yml"), menuLayout);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -829,12 +1069,35 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             buyManager.handleMenuClick(player, clicked);
         }
+        if (holder instanceof MailManager.MailMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null) {
+                return;
+            }
+            MailManager.MailMenuHolder mailHolder = (MailManager.MailMenuHolder) holder;
+            mailManager.handleMenuClick(player, clicked, event.isShiftClick(), mailHolder.getCurrentPage());
+        }
     }
 
     @EventHandler
     public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
         if (buyManager != null) {
             buyManager.check(event.getPlayer());
+        }
+        if (mailManager != null) {
+            // Delay notification slightly to allow player to fully join
+            final Player player = event.getPlayer();
+            Bukkit.getScheduler().runTaskLater(this, new Runnable() {
+                public void run() {
+                    if (player.isOnline()) {
+                        mailManager.notifyUnreadMail(player);
+                    }
+                }
+            }, 40L); // 2 seconds delay
         }
     }
 
