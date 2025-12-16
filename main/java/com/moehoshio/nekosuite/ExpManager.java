@@ -267,7 +267,13 @@ public class ExpManager {
             safeSet(inv, expLayout.getExchangeSlots().get(slotIndex++), stack);
         }
 
-        ItemStack balance = createItem(Material.BOOK, messages.format(player, "exp.balance", createMap("stored", String.valueOf(stored), "carried", String.valueOf(player.getTotalExperience()))), new String[0]);
+        Map<String, String> balanceMap = createMap(
+                "stored", String.valueOf(stored),
+                "carried", String.valueOf(player.getTotalExperience()));
+        ItemStack balance = createItem(
+                Material.BOOK,
+                messages.format(player, "exp.balance", balanceMap),
+                new String[0]);
         safeSet(inv, expLayout.getBalanceSlot(), balance);
         safeSet(inv, expLayout.getCloseSlot(), createItem(Material.BARRIER, messages.format(player, "menu.close"), new String[0]));
         player.openInventory(inv);

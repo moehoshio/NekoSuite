@@ -157,18 +157,15 @@ public class BuyManager {
             }
             
             private int extractLevel(String id) {
-                StringBuilder sb = new StringBuilder();
-                for (int i = id.length() - 1; i >= 0; i--) {
-                    char c = id.charAt(i);
-                    if (Character.isDigit(c)) {
-                        sb.insert(0, c);
-                    } else if (sb.length() > 0) {
-                        break;
-                    }
+                // Extract trailing digits from the id
+                int end = id.length();
+                int start = end;
+                while (start > 0 && Character.isDigit(id.charAt(start - 1))) {
+                    start--;
                 }
-                if (sb.length() == 0) return 0;
+                if (start == end) return 0;
                 try {
-                    return Integer.parseInt(sb.toString());
+                    return Integer.parseInt(id.substring(start, end));
                 } catch (NumberFormatException e) {
                     return 0;
                 }
