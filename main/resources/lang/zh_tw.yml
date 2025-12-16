@@ -39,8 +39,12 @@ exp:
   balance: "&7系統賬戶: &d{stored} &7xp ，身上: &d{carried} &7xp"
   deposit:
     success: "&a已存入 {amount} xp ，賬戶餘額 {stored} xp"
+    button: "&a存入 {amount} xp"
+    lore: "&7點擊存入 {amount} xp"
   withdraw:
     success: "&a已取出 {amount} xp ，賬戶餘額 {stored} xp"
+    button: "&6取出 {amount} xp"
+    lore: "&7點擊取出 {amount} xp"
   transfer:
     success: "&a已向 {target} 轉帳 {amount} xp ，餘額 {stored} xp"
     invalid_target: "&c無法找到該玩家。"
@@ -53,6 +57,7 @@ exp:
     limit_daily: "&c達到每日兌換上限。"
     limit_total: "&c達到總兌換上限。"
     insufficient: "&c經驗不足，需 {cost} xp。"
+    cost_lore: "&7消耗: {cost} xp"
 
 menu:
   wish:

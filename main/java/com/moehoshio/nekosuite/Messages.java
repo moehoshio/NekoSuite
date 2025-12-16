@@ -50,7 +50,11 @@ public class Messages {
         DEFAULTS.put("exp.usage", "&e用法: /exp <balance|save|withdraw|pay|menu|exchange>");
         DEFAULTS.put("exp.balance", "&#7dd3fc帳戶 &f{stored}xp  &#a3e635身上 &f{carried}xp");
         DEFAULTS.put("exp.deposit.success", "&a已存入 {amount} xp ，賬戶餘額 {stored} xp");
+        DEFAULTS.put("exp.deposit.button", "&a存入 {amount} xp");
+        DEFAULTS.put("exp.deposit.lore", "&7點擊存入 {amount} xp");
         DEFAULTS.put("exp.withdraw.success", "&a已取出 {amount} xp ，賬戶餘額 {stored} xp");
+        DEFAULTS.put("exp.withdraw.button", "&6取出 {amount} xp");
+        DEFAULTS.put("exp.withdraw.lore", "&7點擊取出 {amount} xp");
         DEFAULTS.put("exp.transfer.success", "&a已向 {target} 轉帳 {amount} xp ，餘額 {stored} xp");
         DEFAULTS.put("exp.transfer.invalid_target", "&c無法找到該玩家。");
         DEFAULTS.put("exp.transfer.self", "&c不能轉帳給自己。");
@@ -61,6 +65,7 @@ public class Messages {
         DEFAULTS.put("exp.exchange.limit_daily", "&c達到每日兌換上限。");
         DEFAULTS.put("exp.exchange.limit_total", "&c達到總兌換上限。");
         DEFAULTS.put("exp.exchange.insufficient", "&c經驗不足，需 {cost} xp。");
+        DEFAULTS.put("exp.exchange.cost_lore", "&7消耗: {cost} xp");
         DEFAULTS.put("menu.wish.title", "&#c084fc祈願選單");
         DEFAULTS.put("menu.event.title", "&#60a5fa活動選單");
         DEFAULTS.put("menu.exp.title", "&#fbbf24經驗系統");

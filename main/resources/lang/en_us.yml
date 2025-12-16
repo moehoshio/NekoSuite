@@ -37,8 +37,12 @@ exp:
   balance: "&7Account: &d{stored} &7xp, carried: &d{carried} &7xp"
   deposit:
     success: "&aDeposited {amount} xp, balance {stored} xp"
+    button: "&aDeposit {amount} xp"
+    lore: "&7Click to deposit {amount} xp"
   withdraw:
     success: "&aWithdrew {amount} xp, balance {stored} xp"
+    button: "&6Withdraw {amount} xp"
+    lore: "&7Click to withdraw {amount} xp"
   transfer:
     success: "&aSent {target} {amount} xp, balance {stored} xp"
     invalid_target: "&cPlayer not found."
@@ -51,6 +55,7 @@ exp:
     limit_daily: "&cDaily exchange limit reached."
     limit_total: "&cTotal exchange limit reached."
     insufficient: "&cNot enough experience, need {cost} xp."
+    cost_lore: "&7Cost: {cost} xp"
 
 menu:
   wish:

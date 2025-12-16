@@ -37,8 +37,12 @@ exp:
   balance: "&7账户: &d{stored} &7经验, 携带: &d{carried} &7经验"
   deposit:
     success: "&a已存入 {amount} 经验, 余额 {stored} 经验"
+    button: "&a存入 {amount} xp"
+    lore: "&7点击存入 {amount} xp"
   withdraw:
     success: "&a已取出 {amount} 经验, 余额 {stored} 经验"
+    button: "&6取出 {amount} xp"
+    lore: "&7点击取出 {amount} xp"
   transfer:
     success: "&a已发送 {target} {amount} 经验, 余额 {stored} 经验"
     invalid_target: "&c未找到该玩家。"
@@ -51,6 +55,7 @@ exp:
     limit_daily: "&c已达每日兑换上限。"
     limit_total: "&c已达总兑换上限。"
     insufficient: "&c经验不足, 需要 {cost} 经验。"
+    cost_lore: "&7消耗: {cost} xp"
 
 menu:
   wish:

@@ -51,7 +51,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private CdkManager cdkManager;
     private BuyManager buyManager;
     private MenuLayout menuLayout;
-    private TabConfig tabConfig;
 
     @Override
     public void onEnable() {
@@ -63,7 +62,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("cdk_config.yml", false);
         saveResource("buy_config.yml", false);
         saveResource("menu_layout.yml", false);
-        saveResource("tab_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -441,39 +439,52 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 if (args.length == 1) {
                     List<String> dynamic = new ArrayList<String>(wishManager.getPools().keySet());
                     dynamic.add("query");
-                    return filter(merge(tabConfig.suggest(name, args), dynamic), args[0]);
+                    return filter(dynamic, args[0]);
                 }
-                if (args.length == 2 && "query".equalsIgnoreCase(args[0])) {
-                    return filter(merge(tabConfig.suggest(name, args), new ArrayList<String>(wishManager.getPools().keySet())), args[1]);
+                if (args.length == 2) {
+                    if ("query".equalsIgnoreCase(args[0])) {
+                        return filter(new ArrayList<String>(wishManager.getPools().keySet()), args[1]);
+                    }
+                    // Suggest counts for wish pool
+                    return filter(Arrays.asList("1", "5", "10"), args[1]);
                 }
                 break;
             case "wishquery":
                 if (args.length == 1) {
-                    return filter(merge(tabConfig.suggest(name, args), new ArrayList<String>(wishManager.getPools().keySet())), args[0]);
+                    return filter(new ArrayList<String>(wishManager.getPools().keySet()), args[0]);
                 }
                 break;
             case "eventparticipate":
                 if (args.length == 1) {
-                    return filter(merge(tabConfig.suggest(name, args), new ArrayList<String>(eventManager.getEventIds())), args[0]);
+                    return filter(new ArrayList<String>(eventManager.getEventIds()), args[0]);
                 }
                 break;
             case "exp":
                 if (args.length == 1) {
                     List<String> dynamic = Arrays.asList("balance", "info", "save", "deposit", "withdraw", "pay", "transfer", "menu", "shop", "exchange");
-                    return filter(merge(tabConfig.suggest(name, args), new ArrayList<String>(dynamic)), args[0]);
+                    return filter(dynamic, args[0]);
                 }
                 if (args.length == 2 && "exchange".equalsIgnoreCase(args[0])) {
-                    return filter(merge(tabConfig.suggest(name, args), expManager.getExchangeIds()), args[1]);
+                    return filter(expManager.getExchangeIds(), args[1]);
                 }
                 break;
             case "cdk":
                 if (args.length == 1) {
-                    return filter(merge(tabConfig.suggest(name, args), new ArrayList<String>(cdkManager.getCodeIds())), args[0]);
+                    return filter(new ArrayList<String>(cdkManager.getCodeIds()), args[0]);
                 }
                 break;
             case "buy":
                 if (args.length == 1) {
-                    return filter(merge(tabConfig.suggest(name, args), new ArrayList<String>(buyManager.getProducts().keySet())), args[0]);
+                    // Suggest product types: vip, bag, mcd
+                    return filter(Arrays.asList("vip", "bag", "mcd"), args[0]);
+                }
+                if (args.length == 2) {
+                    String type = args[0].toLowerCase();
+                    if ("vip".equals(type) || "bag".equals(type)) {
+                        return filter(Arrays.asList("1", "2", "3", "4", "5", "6"), args[1]);
+                    } else if ("mcd".equals(type)) {
+                        return filter(Arrays.asList("1", "2"), args[1]);
+                    }
                 }
                 break;
             case "language":
@@ -482,38 +493,19 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     options.add("list");
                     options.add("reset");
                     options.add("default");
-                    return filter(merge(tabConfig.suggest(name, args), options), args[0]);
+                    return filter(options, args[0]);
                 }
                 break;
             case "nekoreload":
                 if (args.length <= 1) {
                     String prefix = args.length == 0 ? "" : args[0];
-                    return filter(tabConfig.suggest(name, args), prefix);
+                    return filter(Arrays.asList("reload"), prefix);
                 }
                 break;
             default:
                 break;
         }
         return Collections.emptyList();
-    }
-
-    private List<String> merge(List<String> primary, List<String> secondary) {
-        List<String> out = new ArrayList<String>();
-        if (primary != null) {
-            for (String s : primary) {
-                if (s != null && !out.contains(s)) {
-                    out.add(s);
-                }
-            }
-        }
-        if (secondary != null) {
-            for (String s : secondary) {
-                if (s != null && !out.contains(s)) {
-                    out.add(s);
-                }
-            }
-        }
-        return out;
     }
 
     private List<String> filter(List<String> options, String prefix) {
@@ -563,7 +555,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private void loadManagers() {
         messages = new Messages(this);
         menuLayout = new MenuLayout(this);
-        tabConfig = new TabConfig(this);
         wishManager = new WishManager(this, messages, new File(getDataFolder(), "wish_config.yml"), economy);
         eventManager = new EventManager(this, messages, new File(getDataFolder(), "event_config.yml"));
         expManager = new ExpManager(this, messages, new File(getDataFolder(), "exp_config.yml"), menuLayout);
