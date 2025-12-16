@@ -33,7 +33,7 @@ event:
     limit: "参与次数已达上限"
 
 exp:
-  usage: "&7用法: &f/exp &6<balance|save|withdraw|pay|menu|exchange>"
+  usage: "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
   balance: "&7账户: &6{stored} &7经验 &8| &7携带: &6{carried} &7经验"
   deposit:
     success: "&a✔ &7已存入 &6{amount} &7经验，余额 &6{stored} &7经验"
@@ -54,7 +54,7 @@ exp:
     success: "&a✔ &7兑换成功: &6{id}&7，消耗 &c{cost} &7经验，余额 &6{stored} &7经验"
     limit_daily: "&c✖ 已达每日兑换上限。"
     limit_total: "&c✖ 已达总兑换上限。"
-    insufficient: "&c✖ 经验不足，需要 &6{cost} &c经验。"
+    insufficient: "&c✖ 经验不足，还需 &6{diff} &c经验。&7(需 &6{cost}&7，当前 &6{stored}&7)"
     cost_lore: "&7消耗: &c{cost} &7xp"
 
 menu:
@@ -98,3 +98,25 @@ i18n:
   unsupported: "&c✖ 不支持的语言: &6{language}"
   current: "&7当前语言: &6{language}"
   default: "&7默认语言: &6{language}"
+
+tab:
+  wish:
+    pool: "<祈愿池名称>"
+    query_pool: "<查询的祈愿池>"
+    count: "<祈愿次数>"
+  event:
+    id: "<参与的活动ID>"
+  exp:
+    action: "<操作类型>"
+    exchange_id: "<兑换项目ID>"
+    deposit_amount: "<存入的经验数量>"
+    withdraw_amount: "<取出的经验数量>"
+    pay_target: "<转账对象玩家名>"
+    pay_amount: "<转账经验数量>"
+  cdk:
+    code: "<输入CDK兑换码>"
+  buy:
+    type: "<购买的类型>"
+    level: "<开通的等级>"
+  language:
+    code: "<语言代码>"

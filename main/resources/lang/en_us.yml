@@ -33,7 +33,7 @@ event:
     limit: "Participation limit reached"
 
 exp:
-  usage: "&7Usage: &f/exp &6<balance|save|withdraw|pay|menu|exchange>"
+  usage: "&7Usage: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
   balance: "&7Account: &6{stored} &7xp &8| &7Carried: &6{carried} &7xp"
   deposit:
     success: "&a✔ &7Deposited &6{amount} &7xp, balance &6{stored} &7xp"
@@ -54,7 +54,7 @@ exp:
     success: "&a✔ &7Exchange success: &6{id}&7, cost &c{cost} &7xp, balance &6{stored} &7xp"
     limit_daily: "&c✖ Daily exchange limit reached."
     limit_total: "&c✖ Total exchange limit reached."
-    insufficient: "&c✖ Not enough experience, need &6{cost} &cxp."
+    insufficient: "&c✖ Not enough experience, need &6{diff} &cmore xp. &7(requires &6{cost}&7, have &6{stored}&7)"
     cost_lore: "&7Cost: &c{cost} &7xp"
 
 menu:
@@ -98,3 +98,25 @@ i18n:
   unsupported: "&c✖ Unsupported language: &6{language}"
   current: "&7Current language: &6{language}"
   default: "&7Default language: &6{language}"
+
+tab:
+  wish:
+    pool: "<pool_name>"
+    query_pool: "<pool_to_query>"
+    count: "<wish_count>"
+  event:
+    id: "<event_id>"
+  exp:
+    action: "<action_type>"
+    exchange_id: "<exchange_id>"
+    deposit_amount: "<amount_to_deposit>"
+    withdraw_amount: "<amount_to_withdraw>"
+    pay_target: "<player_name>"
+    pay_amount: "<amount_to_pay>"
+  cdk:
+    code: "<enter_cdk_code>"
+  buy:
+    type: "<product_type>"
+    level: "<product_level>"
+  language:
+    code: "<language_code>"

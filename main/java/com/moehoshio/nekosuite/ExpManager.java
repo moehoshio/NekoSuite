@@ -191,6 +191,8 @@ public class ExpManager {
         if (stored < item.getCost()) {
             Map<String, String> map = new HashMap<String, String>();
             map.put("cost", String.valueOf(item.getCost()));
+            map.put("stored", String.valueOf(stored));
+            map.put("diff", String.valueOf(item.getCost() - stored));
                 player.sendMessage(messages.format(player, "exp.exchange.insufficient", map));
             return false;
         }

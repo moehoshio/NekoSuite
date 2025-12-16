@@ -47,7 +47,7 @@ public class Messages {
         DEFAULTS.put("event.error.not_found", "活動不存在");
         DEFAULTS.put("event.error.closed", "活動未開啟");
         DEFAULTS.put("event.error.limit", "已達到參與限制");
-        DEFAULTS.put("exp.usage", "&7用法: &f/exp &6<balance|save|withdraw|pay|menu|exchange>");
+        DEFAULTS.put("exp.usage", "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>");
         DEFAULTS.put("exp.balance", "&7賬戶餘額: &6{stored} &7xp &8| &7身上: &6{carried} &7xp");
         DEFAULTS.put("exp.deposit.success", "&a✔ &7已存入 &6{amount} &7xp，賬戶餘額 &6{stored} &7xp");
         DEFAULTS.put("exp.deposit.button", "&#80ff8a存入 &f{amount} xp");
@@ -64,7 +64,7 @@ public class Messages {
         DEFAULTS.put("exp.exchange.success", "&a✔ &7兌換成功: &6{id}&7，消耗 &c{cost} &7xp，餘額 &6{stored} &7xp");
         DEFAULTS.put("exp.exchange.limit_daily", "&c✖ 達到每日兌換上限。");
         DEFAULTS.put("exp.exchange.limit_total", "&c✖ 達到總兌換上限。");
-        DEFAULTS.put("exp.exchange.insufficient", "&c✖ 經驗不足，需 &6{cost} &cxp。");
+        DEFAULTS.put("exp.exchange.insufficient", "&c✖ 經驗不足，還需 &6{diff} &cxp。&7(需 &6{cost}&7，當前 &6{stored}&7)");
         DEFAULTS.put("exp.exchange.cost_lore", "&7消耗: &c{cost} &7xp");
         DEFAULTS.put("menu.wish.title", "&#c084fc✦ 祈願選單");
         DEFAULTS.put("menu.event.title", "&#60a5fa✦ 活動選單");
@@ -96,6 +96,21 @@ public class Messages {
         DEFAULTS.put("i18n.unsupported", "&c✖ 不支援的語言: &6{language}");
         DEFAULTS.put("i18n.current", "&7當前語言: &6{language}");
         DEFAULTS.put("i18n.default", "&7默認語言: &6{language}");
+        // Tab completion hints
+        DEFAULTS.put("tab.wish.pool", "<祈願池名稱>");
+        DEFAULTS.put("tab.wish.query_pool", "<查詢的祈願池>");
+        DEFAULTS.put("tab.wish.count", "<祈願次數>");
+        DEFAULTS.put("tab.event.id", "<參與的活動ID>");
+        DEFAULTS.put("tab.exp.action", "<操作類型>");
+        DEFAULTS.put("tab.exp.exchange_id", "<兌換項目ID>");
+        DEFAULTS.put("tab.exp.deposit_amount", "<存入的經驗數量>");
+        DEFAULTS.put("tab.exp.withdraw_amount", "<取出的經驗數量>");
+        DEFAULTS.put("tab.exp.pay_target", "<轉帳對象玩家名>");
+        DEFAULTS.put("tab.exp.pay_amount", "<轉帳經驗數量>");
+        DEFAULTS.put("tab.cdk.code", "<輸入CDK兌換碼>");
+        DEFAULTS.put("tab.buy.type", "<購買的類型>");
+        DEFAULTS.put("tab.buy.level", "<開通的等級>");
+        DEFAULTS.put("tab.language.code", "<語言代碼>");
     }
 
     private final JavaPlugin plugin;
@@ -212,13 +227,37 @@ public class Messages {
     }
 
     /**
-     * Translate '&' color codes into Minecraft formatting codes.
+     * Translate '&' color codes and &#RRGGBB hex colors into Minecraft formatting codes.
      */
     public String colorize(String text) {
         if (text == null) {
             return "";
         }
+        text = translateHexColors(text);
         return ChatColor.translateAlternateColorCodes('&', text);
+    }
+
+    /**
+     * Translate &#RRGGBB format to Minecraft hex color codes (§x§R§R§G§G§B§B).
+     */
+    private String translateHexColors(String text) {
+        if (text == null) {
+            return null;
+        }
+        // Match &#RRGGBB pattern
+        java.util.regex.Pattern hexPattern = java.util.regex.Pattern.compile("&#([0-9A-Fa-f]{6})");
+        java.util.regex.Matcher matcher = hexPattern.matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String hex = matcher.group(1);
+            StringBuilder replacement = new StringBuilder("§x");
+            for (char c : hex.toCharArray()) {
+                replacement.append('§').append(Character.toLowerCase(c));
+            }
+            matcher.appendReplacement(sb, replacement.toString());
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     /**
@@ -348,6 +387,10 @@ public class Messages {
     }
 
     private String color(String text) {
+        if (text == null) {
+            return "";
+        }
+        text = translateHexColors(text);
         return ChatColor.translateAlternateColorCodes('&', text);
     }
 

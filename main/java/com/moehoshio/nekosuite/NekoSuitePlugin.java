@@ -313,14 +313,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return true;
         }
         String sub = args[0].toLowerCase();
-        if ("balance".equals(sub) || "info".equals(sub)) {
+        if ("balance".equals(sub)) {
             Map<String, String> map = new HashMap<String, String>();
             map.put("stored", String.valueOf(expManager.getStored(player.getName())));
             map.put("carried", String.valueOf(player.getTotalExperience()));
             sender.sendMessage(messages.format(sender, "exp.balance", map));
             return true;
         }
-        if ("save".equals(sub) || "deposit".equals(sub)) {
+        if ("deposit".equals(sub)) {
             long amount = player.getTotalExperience();
             if (args.length > 1 && !"all".equalsIgnoreCase(args[1])) {
                 amount = parseLong(args[1]);
@@ -328,7 +328,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             expManager.deposit(player, amount);
             return true;
         }
-        if ("withdraw".equals(sub) || "raw".equals(sub)) {
+        if ("withdraw".equals(sub)) {
             if (args.length < 2) {
                 sender.sendMessage(messages.format(sender, "exp.usage"));
                 return true;
@@ -337,7 +337,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             expManager.withdraw(player, amount);
             return true;
         }
-        if ("pay".equals(sub) || "transfer".equals(sub)) {
+        if ("pay".equals(sub)) {
             if (args.length < 3) {
                 sender.sendMessage(messages.format(sender, "exp.usage"));
                 return true;
@@ -347,7 +347,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             expManager.transfer(player, target, amount);
             return true;
         }
-        if ("menu".equals(sub) || "shop".equals(sub)) {
+        if ("menu".equals(sub)) {
             expManager.openMenu(player);
             return true;
         }
@@ -439,52 +439,84 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 if (args.length == 1) {
                     List<String> dynamic = new ArrayList<String>(wishManager.getPools().keySet());
                     dynamic.add("query");
+                    dynamic.add(messages.getRaw(sender, "tab.wish.pool"));
                     return filter(dynamic, args[0]);
                 }
                 if (args.length == 2) {
                     if ("query".equalsIgnoreCase(args[0])) {
-                        return filter(new ArrayList<String>(wishManager.getPools().keySet()), args[1]);
+                        List<String> pools = new ArrayList<String>(wishManager.getPools().keySet());
+                        pools.add(messages.getRaw(sender, "tab.wish.query_pool"));
+                        return filter(pools, args[1]);
                     }
                     // Suggest counts for wish pool
-                    return filter(Arrays.asList("1", "5", "10"), args[1]);
+                    List<String> counts = new ArrayList<String>(Arrays.asList("1", "5", "10"));
+                    counts.add(messages.getRaw(sender, "tab.wish.count"));
+                    return filter(counts, args[1]);
                 }
                 break;
             case "wishquery":
                 if (args.length == 1) {
-                    return filter(new ArrayList<String>(wishManager.getPools().keySet()), args[0]);
+                    List<String> pools = new ArrayList<String>(wishManager.getPools().keySet());
+                    pools.add(messages.getRaw(sender, "tab.wish.query_pool"));
+                    return filter(pools, args[0]);
                 }
                 break;
             case "eventparticipate":
                 if (args.length == 1) {
-                    return filter(new ArrayList<String>(eventManager.getEventIds()), args[0]);
+                    List<String> events = new ArrayList<String>(eventManager.getEventIds());
+                    events.add(messages.getRaw(sender, "tab.event.id"));
+                    return filter(events, args[0]);
                 }
                 break;
             case "exp":
                 if (args.length == 1) {
-                    List<String> dynamic = Arrays.asList("balance", "info", "save", "deposit", "withdraw", "pay", "transfer", "menu", "shop", "exchange");
+                    List<String> dynamic = new ArrayList<String>(Arrays.asList("balance", "deposit", "withdraw", "pay", "menu", "exchange"));
+                    dynamic.add(messages.getRaw(sender, "tab.exp.action"));
                     return filter(dynamic, args[0]);
                 }
-                if (args.length == 2 && "exchange".equalsIgnoreCase(args[0])) {
-                    return filter(expManager.getExchangeIds(), args[1]);
+                if (args.length == 2) {
+                    if ("exchange".equalsIgnoreCase(args[0])) {
+                        List<String> exchanges = new ArrayList<String>(expManager.getExchangeIds());
+                        exchanges.add(messages.getRaw(sender, "tab.exp.exchange_id"));
+                        return filter(exchanges, args[1]);
+                    }
+                    if ("deposit".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList("all", messages.getRaw(sender, "tab.exp.deposit_amount"));
+                    }
+                    if ("withdraw".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.exp.withdraw_amount"));
+                    }
+                    if ("pay".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.exp.pay_target"));
+                    }
+                }
+                if (args.length == 3 && "pay".equalsIgnoreCase(args[0])) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.exp.pay_amount"));
                 }
                 break;
             case "cdk":
+                // Do not expose CDK codes in tab completion, but show hint
                 if (args.length == 1) {
-                    return filter(new ArrayList<String>(cdkManager.getCodeIds()), args[0]);
+                    return Arrays.asList(messages.getRaw(sender, "tab.cdk.code"));
                 }
-                break;
+                return Collections.emptyList();
             case "buy":
                 if (args.length == 1) {
                     // Suggest product types: vip, bag, mcd
-                    return filter(Arrays.asList("vip", "bag", "mcd"), args[0]);
+                    List<String> types = new ArrayList<String>(Arrays.asList("vip", "bag", "mcd"));
+                    types.add(messages.getRaw(sender, "tab.buy.type"));
+                    return filter(types, args[0]);
                 }
                 if (args.length == 2) {
                     String type = args[0].toLowerCase();
+                    List<String> levels = new ArrayList<String>();
                     if ("vip".equals(type) || "bag".equals(type)) {
-                        return filter(Arrays.asList("1", "2", "3", "4", "5", "6"), args[1]);
+                        levels.addAll(Arrays.asList("1", "2", "3", "4", "5", "6"));
                     } else if ("mcd".equals(type)) {
-                        return filter(Arrays.asList("1", "2"), args[1]);
+                        levels.addAll(Arrays.asList("1", "2"));
                     }
+                    levels.add(messages.getRaw(sender, "tab.buy.level"));
+                    return filter(levels, args[1]);
                 }
                 break;
             case "language":
@@ -493,6 +525,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     options.add("list");
                     options.add("reset");
                     options.add("default");
+                    options.add(messages.getRaw(sender, "tab.language.code"));
                     return filter(options, args[0]);
                 }
                 break;

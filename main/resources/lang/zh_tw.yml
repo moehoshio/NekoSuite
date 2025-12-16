@@ -35,7 +35,7 @@ event:
     limit: "已達到參與限制"
 
 exp:
-  usage: "&7用法: &f/exp &6<balance|save|withdraw|pay|menu|exchange>"
+  usage: "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
   balance: "&7賬戶餘額: &6{stored} &7xp &8| &7身上: &6{carried} &7xp"
   deposit:
     success: "&a✔ &7已存入 &6{amount} &7xp，賬戶餘額 &6{stored} &7xp"
@@ -56,7 +56,7 @@ exp:
     success: "&a✔ &7兌換成功: &6{id}&7，消耗 &c{cost} &7xp，餘額 &6{stored} &7xp"
     limit_daily: "&c✖ 達到每日兌換上限。"
     limit_total: "&c✖ 達到總兌換上限。"
-    insufficient: "&c✖ 經驗不足，需 &6{cost} &cxp。"
+    insufficient: "&c✖ 經驗不足，還需 &6{diff} &cxp。&7(需 &6{cost}&7，當前 &6{stored}&7)"
     cost_lore: "&7消耗: &c{cost} &7xp"
 
 menu:
@@ -199,3 +199,25 @@ i18n:
   unsupported: "&c✖ 不支援的語言: &6{language}"
   current: "&7當前語言: &6{language}"
   default: "&7默認語言: &6{language}"
+
+tab:
+  wish:
+    pool: "<祈願池名稱>"
+    query_pool: "<查詢的祈願池>"
+    count: "<祈願次數>"
+  event:
+    id: "<參與的活動ID>"
+  exp:
+    action: "<操作類型>"
+    exchange_id: "<兌換項目ID>"
+    deposit_amount: "<存入的經驗數量>"
+    withdraw_amount: "<取出的經驗數量>"
+    pay_target: "<轉帳對象玩家名>"
+    pay_amount: "<轉帳經驗數量>"
+  cdk:
+    code: "<輸入CDK兌換碼>"
+  buy:
+    type: "<購買的類型>"
+    level: "<開通的等級>"
+  language:
+    code: "<語言代碼>"

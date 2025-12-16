@@ -79,10 +79,10 @@ public class BuyManager {
         YamlConfiguration data = loadUserData(player.getName());
         String key = "buy." + product.getId();
         long expiry = data.getLong(key + ".expiry", 0L);
+        boolean owned = data.getBoolean(key + ".owned", false);
         long now = System.currentTimeMillis();
-        if (expiry == 0L || now > expiry) {
-            // expired or never owned; proceed
-        } else {
+        // Check if already owned: permanent products use 'owned' flag, timed products use expiry
+        if (owned && (expiry == 0L || now <= expiry)) {
             throw new BuyException(messages.format(player, "buy.already_active"));
         }
 
@@ -113,6 +113,7 @@ public class BuyManager {
             dispatch(cmd, player, product.getDurationDays());
         }
 
+        data.set(key + ".owned", true);
         if (product.getDurationDays() > 0) {
             Instant exp = Instant.ofEpochMilli(now).plus(product.getDurationDays(), ChronoUnit.DAYS);
             data.set(key + ".expiry", exp.toEpochMilli());
