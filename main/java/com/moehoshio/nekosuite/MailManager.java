@@ -45,7 +45,7 @@ public class MailManager {
         String dataDir = config.getString("storage.data_dir", "userdata");
         storageDir = new File(plugin.getDataFolder(), dataDir);
         if (!storageDir.exists() && !storageDir.mkdirs()) {
-            plugin.getLogger().warning("無法創建數據目錄: " + storageDir.getAbsolutePath());
+            plugin.getLogger().warning("Failed to create data directory: " + storageDir.getAbsolutePath());
         }
         maxMailsPerPlayer = config.getInt("settings.max_mails_per_player", 50);
         mailExpiryDays = config.getInt("settings.mail_expiry_days", 30);
@@ -573,7 +573,7 @@ public class MailManager {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
             } catch (IOException e) {
-                plugin.getLogger().warning("無法創建用戶數據文件: " + e.getMessage());
+                plugin.getLogger().warning("Failed to create user data file: " + e.getMessage());
             }
         }
         return YamlConfiguration.loadConfiguration(file);
@@ -584,7 +584,7 @@ public class MailManager {
         try {
             data.save(file);
         } catch (IOException e) {
-            plugin.getLogger().warning("保存用戶數據失敗: " + e.getMessage());
+            plugin.getLogger().warning("Failed to save user data: " + e.getMessage());
         }
     }
 
