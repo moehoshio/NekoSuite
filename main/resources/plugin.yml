@@ -47,6 +47,22 @@ commands:
     description: Open privilege purchase menu
     usage: /buymenu
     permission: nekosuite.buy.menu
+  mail:
+    description: Mail operations
+    usage: /mail <read|send|list|claim|delete>
+    permission: nekosuite.mail
+  mailmenu:
+    description: Open mail GUI
+    usage: /mailmenu
+    permission: nekosuite.mail.menu
+  mailsend:
+    description: Send mail to a player
+    usage: /mailsend <player> <subject> [message]
+    permission: nekosuite.mail.send
+  mailadmin:
+    description: Admin mail commands
+    usage: /mailadmin <send|template> <player> <subject|templateId> [content] [commands...]
+    permission: nekosuite.mail.admin
   language:
     description: Set preferred language
     usage: /language <code|list|reset>
