@@ -256,6 +256,10 @@ public class StrategyGameManager {
 
     // ============ Menu Operations ============
 
+    /**
+     * Open the main game menu - now directly shows event selection.
+     * Players must choose from the random events/battles/shops displayed.
+     */
     public void openMainMenu(Player player) {
         GameSession session = getOrLoadSession(player.getName());
         if (session == null) {
@@ -267,16 +271,31 @@ public class StrategyGameManager {
             return;
         }
 
+        // Check if player has completed enough stages
+        if (session.getCurrentStage() >= maxStages) {
+            openVictoryMenu(player, session);
+            return;
+        }
+
+        // Directly show event selection - no more separate main menu
+        openEventSelectionMenu(player);
+    }
+
+    /**
+     * Open victory menu when player completes all stages.
+     */
+    private void openVictoryMenu(Player player, GameSession session) {
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
-        String title = messages.format(player, "menu.sgame.title");
+        String title = messages.format(player, "menu.sgame.victory_title");
         Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.MAIN), layout.getSize(), title);
 
-        // Status display item
+        // Status display
         Map<String, String> statusMap = new HashMap<String, String>();
         statusMap.put("gold", String.valueOf(session.getGold()));
         statusMap.put("health", String.valueOf(session.getHealth()));
         statusMap.put("stage", String.valueOf(session.getCurrentStage()));
         statusMap.put("max_stage", String.valueOf(maxStages));
+        statusMap.put("victories", String.valueOf(session.getVictories()));
         
         ItemStack statusItem = createItem(Material.BOOK, 
             messages.format(player, "menu.sgame.status_title", statusMap),
@@ -285,58 +304,25 @@ public class StrategyGameManager {
                 messages.format(player, "menu.sgame.health_lore", statusMap),
                 messages.format(player, "menu.sgame.stage_lore", statusMap)
             });
-        safeSet(inv, layout.getStatusSlot(), statusItem);
+        safeSet(inv, 4, statusItem);
 
-        // Adventure/Event button
-        ItemStack adventureItem = createItem(Material.COMPASS,
-            messages.format(player, "menu.sgame.adventure_title"),
+        // End game button - claim rewards
+        ItemStack endItem = createItem(Material.NETHER_STAR,
+            messages.format(player, "menu.sgame.end_game_title"),
             new String[]{
-                messages.format(player, "menu.sgame.adventure_lore"),
-                "ID:adventure"
+                messages.format(player, "menu.sgame.end_game_lore"),
+                "ID:end_game"
             });
-        safeSet(inv, layout.getAdventureSlot(), adventureItem);
+        safeSet(inv, 13, endItem);
 
-        // Battle button
-        ItemStack battleItem = createItem(Material.IRON_SWORD,
-            messages.format(player, "menu.sgame.battle_title"),
-            new String[]{
-                messages.format(player, "menu.sgame.battle_lore"),
-                "ID:battle"
-            });
-        safeSet(inv, layout.getBattleSlot(), battleItem);
-
-        // Shop button
-        ItemStack shopItem = createItem(Material.EMERALD,
-            messages.format(player, "menu.sgame.shop_title"),
-            new String[]{
-                messages.format(player, "menu.sgame.shop_lore"),
-                "ID:shop"
-            });
-        safeSet(inv, layout.getShopSlot(), shopItem);
-
-        // Equipment button (slot 21, next to shop)
+        // Equipment button - can still manage equipment before ending
         ItemStack equipItem = createItem(Material.DIAMOND_CHESTPLATE,
             messages.format(player, "menu.sgame.equipment_title"),
             new String[]{
                 messages.format(player, "menu.sgame.equipment_lore"),
                 "ID:equipment"
             });
-        safeSet(inv, 21, equipItem);
-
-        // End game button (only if completed enough stages)
-        if (session.getCurrentStage() >= maxStages) {
-            ItemStack endItem = createItem(Material.NETHER_STAR,
-                messages.format(player, "menu.sgame.end_game_title"),
-                new String[]{
-                    messages.format(player, "menu.sgame.end_game_lore"),
-                    "ID:end_game"
-                });
-            safeSet(inv, layout.getEndGameSlot(), endItem);
-        }
-
-        // Close button
-        safeSet(inv, layout.getCloseSlot(), createItem(Material.BARRIER, 
-            messages.format(player, "menu.close"), new String[0]));
+        safeSet(inv, 11, equipItem);
 
         player.openInventory(inv);
     }
@@ -440,11 +426,14 @@ public class StrategyGameManager {
             safeSet(inv, eventSlots[i], eventItem);
         }
 
-        // Back button
-        ItemStack backItem = createItem(Material.ARROW,
-            messages.format(player, "menu.sgame.back"),
-            new String[]{"ID:back"});
-        safeSet(inv, layout.getCloseSlot(), backItem);
+        // Equipment button - players can manage equipment before choosing
+        ItemStack equipItem = createItem(Material.DIAMOND_CHESTPLATE,
+            messages.format(player, "menu.sgame.equipment_title"),
+            new String[]{
+                messages.format(player, "menu.sgame.equipment_lore"),
+                "ID:equipment"
+            });
+        safeSet(inv, layout.getCloseSlot(), equipItem);
 
         player.openInventory(inv);
     }
@@ -552,11 +541,8 @@ public class StrategyGameManager {
             safeSet(inv, choiceSlots[i], choiceItem);
         }
 
-        // Back button
-        ItemStack backItem = createItem(Material.ARROW,
-            messages.format(player, "menu.sgame.back"),
-            new String[]{"ID:back"});
-        safeSet(inv, layout.getCloseSlot(), backItem);
+        // No back button - players must make a choice
+        // This is intentional to prevent exploiting by backing out
 
         player.openInventory(inv);
     }
@@ -608,7 +594,7 @@ public class StrategyGameManager {
             });
         safeSet(inv, 11, fightItem);
 
-        // Flee button
+        // Flee button - players can flee but it costs them
         ItemStack fleeItem = createItem(Material.FEATHER,
             messages.format(player, "menu.sgame.flee_button"),
             new String[]{
@@ -617,11 +603,7 @@ public class StrategyGameManager {
             });
         safeSet(inv, 15, fleeItem);
 
-        // Back button
-        ItemStack backItem = createItem(Material.ARROW,
-            messages.format(player, "menu.sgame.back"),
-            new String[]{"ID:back"});
-        safeSet(inv, layout.getCloseSlot(), backItem);
+        // No back button - must fight or flee
 
         player.openInventory(inv);
     }
@@ -675,20 +657,17 @@ public class StrategyGameManager {
             safeSet(inv, itemSlots[i], shopItemStack);
         }
 
-        // Continue button - proceed to next stage without buying more
-        ItemStack continueItem = createItem(Material.LIME_WOOL,
-            messages.format(player, "menu.sgame.shop_continue"),
+        // Leave shop button - proceed to next stage after shopping
+        // Shop events count as completed, advancing the stage
+        ItemStack leaveItem = createItem(Material.LIME_WOOL,
+            messages.format(player, "menu.sgame.shop_leave"),
             new String[]{
-                messages.format(player, "menu.sgame.shop_continue_lore"),
-                "ID:shop_continue"
+                messages.format(player, "menu.sgame.shop_leave_lore"),
+                "ID:shop_leave"
             });
-        safeSet(inv, 22, continueItem);
+        safeSet(inv, 22, leaveItem);
 
-        // Back button
-        ItemStack backItem = createItem(Material.ARROW,
-            messages.format(player, "menu.sgame.back"),
-            new String[]{"ID:back"});
-        safeSet(inv, layout.getCloseSlot(), backItem);
+        // No back button - must leave shop properly
 
         player.openInventory(inv);
     }
@@ -872,8 +851,9 @@ public class StrategyGameManager {
     }
 
     private void handleEventSelectionClick(Player player, GameSession session, String id) {
-        if ("back".equals(id)) {
-            openMainMenu(player);
+        // Equipment button in event selection
+        if ("equipment".equals(id)) {
+            openEquipmentMenu(player);
             return;
         }
 
@@ -898,20 +878,24 @@ public class StrategyGameManager {
 
             session.setCurrentEventId(eventId);
             session.addVisitedEvent(eventId); // Track visited event for weighted selection
+            session.setLastEventId(eventId); // Track last event for followup weighting
             saveSession(session);
-            openEventMenu(player);
+            
+            // Route to appropriate menu based on event type
+            String eventType = event.getEventType();
+            if ("battle".equals(eventType)) {
+                openBattleMenu(player);
+            } else if ("shop".equals(eventType)) {
+                openShopMenu(player);
+            } else {
+                openEventMenu(player);
+            }
         }
     }
 
     private void handleEventMenuClick(Player player, GameSession session, String id) {
-        if ("back".equals(id)) {
-            // Go back to event selection instead of main menu
-            session.setCurrentEventId(null);
-            saveSession(session);
-            openEventSelectionMenu(player);
-            return;
-        }
-
+        // No back button - must make a choice
+        
         if (id.startsWith("choice_")) {
             int choiceIndex;
             try {
@@ -931,14 +915,19 @@ public class StrategyGameManager {
             session.setCurrentEventId(null);
             session.incrementStage();
             saveSession(session);
+            
+            // After applying choice effects, check if player survived
+            // If health <= 0, handleGameOverDeath was already called in applyEventChoice
+            // Only continue to next event selection if player is still alive
+            if (session.getHealth() > 0) {
+                openMainMenu(player); // Will show next event selection or victory
+            }
+            // If health <= 0, player already received game over message and rewards
         }
     }
 
     private void handleBattleMenuClick(Player player, GameSession session, String id) {
-        if ("back".equals(id)) {
-            openMainMenu(player);
-            return;
-        }
+        // No back button - must fight or flee
 
         String enemyId = session.getCurrentEnemyId();
         BattleEnemy enemy = findEnemy(enemyId);
@@ -955,18 +944,15 @@ public class StrategyGameManager {
     }
 
     private void handleShopMenuClick(Player player, GameSession session, String id) {
-        if ("back".equals(id)) {
-            openMainMenu(player);
-            return;
-        }
+        // No back button - must leave shop properly
 
-        if ("shop_continue".equals(id)) {
-            // Proceed to next stage after shopping
+        if ("shop_leave".equals(id)) {
+            // Leave shop and advance to next stage
+            session.setCurrentEventId(null);
             session.incrementStage();
             saveSession(session);
             player.sendMessage(messages.format(player, "sgame.shop_left"));
-            player.closeInventory();
-            openMainMenu(player);
+            openMainMenu(player); // Will show next event selection or victory
             return;
         }
 
@@ -997,7 +983,7 @@ public class StrategyGameManager {
 
     private void handleEquipmentMenuClick(Player player, GameSession session, String id) {
         if ("back".equals(id)) {
-            openMainMenu(player);
+            openMainMenu(player); // Returns to event selection
             return;
         }
 
@@ -1191,11 +1177,13 @@ public class StrategyGameManager {
             }
         }
 
+        // Clear current event/enemy and go back to event selection
+        // Note: Fleeing does NOT advance stage - player must select new events
         session.setCurrentEnemyId(null);
+        session.setCurrentEventId(null);
         saveSession(session);
         
-        player.closeInventory();
-        openMainMenu(player);
+        openMainMenu(player); // Will show new random event selection
     }
 
     private void applyShopItem(Player player, GameSession session, ShopItem item) {
@@ -1734,6 +1722,7 @@ public class StrategyGameManager {
         void setCurrentStage(int stage) { this.currentStage = stage; }
         void incrementStage() { this.currentStage++; }
         int getBattleVictories() { return battleVictories; }
+        int getVictories() { return battleVictories; } // Alias for getBattleVictories
         void setBattleVictories(int victories) { this.battleVictories = victories; }
         void incrementBattleVictories() { this.battleVictories++; }
         boolean isEnded() { return ended; }

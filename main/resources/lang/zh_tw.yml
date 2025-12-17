@@ -309,6 +309,7 @@ menu:
     info_lore: "&7未讀: &a{unread} &8| &7待領取: &6{unclaimed}"
   sgame:
     title: "&#ffcc00✦ 貓咪王國冒險"
+    victory_title: "&#ffcc00✦ 冒險成功！"
     status_title: "&7冒險狀態"
     gold_lore: "&6金幣: &f{gold}"
     health_lore: "&c生命: &f{health}/{max_health}"
@@ -330,6 +331,8 @@ menu:
     battle_menu_title: "&#ff6666✦ 戰鬥"
     shop_menu_title: "&#ffcc00✦ 商店"
     equipment_menu_title: "&#3399ff✦ 裝備管理"
+    shop_leave: "&a離開商店"
+    shop_leave_lore: "&7完成購物，前往下一關"
     shop_continue: "&a繼續冒險"
     shop_continue_lore: "&7購買完成，前往下一關"
     enemy_title: "&c敵人: &f{enemy}"
