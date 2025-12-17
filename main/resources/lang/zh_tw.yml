@@ -289,6 +289,189 @@ sgame:
   round_enemy_skill_beats_defense: "&c敵人的技能穿透了防禦！"
   round_enemy_defense_beats_attack: "&c敵人防禦了你的攻擊！"
   round_tie: "&7雙方僵持！"
+  # Config texts - Events
+  config:
+    events:
+      mysterious_merchant:
+        name: "&6神秘商人"
+        desc1: "&7你在路上遇到一位神秘的商人..."
+        desc2: "&7他似乎有些東西想交易。"
+        choice1:
+          text: "&a與他交易"
+          result: "&7商人很高興，給了你一些金幣作為回報！"
+        choice2:
+          text: "&c忽略他離開"
+          result: "&7你繼續你的旅程，什麼也沒發生。"
+        choice3:
+          text: "&e嘗試搶劫"
+          result: "&c商人是個偽裝的盜賊！你被攻擊了！"
+      injured_traveler:
+        name: "&b受傷的旅人"
+        desc1: "&7路邊躺著一個受傷的旅人..."
+        desc2: "&7他似乎需要幫助。"
+        choice1:
+          text: "&a幫助他 (使用治療藥水)"
+          result: "&7旅人非常感激，給了你豐厚的報酬！"
+          result_alt: "&7你盡力幫助了他，他給了你一些金幣。"
+        choice2:
+          text: "&e查看他的背包"
+          result: "&7你發現了一些金幣，但感覺有些不安..."
+        choice3:
+          text: "&c離開"
+          result: "&7你繼續趕路。"
+      ancient_shrine:
+        name: "&d古老的神殿"
+        desc1: "&7你發現了一座古老的神殿..."
+        desc2: "&7神殿中央有一個祭壇。"
+        fail_text: "&c你需要至少20金幣才能進入神殿"
+        choice1:
+          text: "&a獻上金幣祈禱 (花費20金幣)"
+          result: "&7神明保佑了你，恢復了生命力！"
+        choice2:
+          text: "&e探索神殿"
+          result: "&7你找到了一些寶物！"
+        choice3:
+          text: "&c離開神殿"
+          result: "&7你尊重這個地方，繼續前進。"
+      forest_crossroads:
+        name: "&2森林岔路"
+        desc1: "&7你來到了一個分岔路口..."
+        desc2: "&7左邊看起來很陰暗，右邊陽光明媚。"
+        choice1:
+          text: "&a走右邊的路"
+          result: "&7安全的道路，你找到了一些金幣。"
+        choice2:
+          text: "&c走左邊的路 (需要護身符)"
+          result: "&7護身符保護了你，你發現了大量寶藏！"
+          result_alt: "&7危險的道路，你受傷了但找到了一些寶物。"
+        choice3:
+          text: "&e原路返回"
+          result: "&7你決定謹慎行事。"
+      treasure_chest:
+        name: "&6寶箱"
+        desc1: "&7你發現了一個閃閃發光的寶箱！"
+        desc2: "&7你會如何處理它？"
+        choice1:
+          text: "&a小心地打開"
+          result: "&7你成功避開陷阱，獲得了獎勵！"
+        choice2:
+          text: "&e直接打開"
+          result: "&c觸發了陷阱！但裡面的寶物很豐富。"
+        choice3:
+          text: "&c不碰它離開"
+          result: "&7安全第一。"
+      village_festival:
+        name: "&e村莊慶典"
+        desc1: "&7你路過一個正在舉辦慶典的村莊。"
+        desc2: "&7村民們很熱情地邀請你參加。"
+        choice1:
+          text: "&a參加慶典 (花費10金幣)"
+          result: "&7你度過了愉快的時光，恢復了精力！"
+        choice2:
+          text: "&e表演賺錢"
+          result: "&7村民們很喜歡你的表演！"
+        choice3:
+          text: "&c繼續趕路"
+          result: "&7你沒有時間休息。"
+      secret_vault:
+        name: "&5秘密金庫"
+        desc1: "&7你發現了一個隱藏的金庫入口！"
+        desc2: "&7需要鑰匙才能打開。"
+        fail_text: "&c你需要一把寶藏鑰匙才能進入"
+        choice1:
+          text: "&a使用鑰匙開門"
+          result: "&7金庫裡滿是財寶！你發財了！"
+        choice2:
+          text: "&c離開"
+          result: "&7你決定保留鑰匙，以後再來。"
+      traveling_merchant_shop:
+        name: "&6旅行商人的商店"
+        desc1: "&7一位旅行商人願意與你交易..."
+        desc2: "&7他有一些特殊的物品出售。"
+        fail_text: "&c需要商人代幣才能進入特別商店"
+        choice1:
+          text: "&a查看商品"
+          result: "&7歡迎光臨！"
+      monster_ambush:
+        name: "&c怪物伏擊"
+        desc1: "&7你走進了一個黑暗的區域..."
+        desc2: "&7突然，一個怪物從暗處跳出！"
+        choice1:
+          text: "&c準備戰鬥"
+          result: "&7你拔出武器準備迎戰！"
+      blacksmith_shop:
+        name: "&8鐵匠鋪"
+        desc1: "&7你來到了一間鐵匠鋪。"
+        desc2: "&7這裡有各種裝備可以購買。"
+        choice1:
+          text: "&a瀏覽裝備"
+          result: "&7歡迎來到我的鐵匠鋪！"
+    # Shop items
+    shop:
+      small_potion:
+        name: "&a小型治療藥水"
+        effect: "恢復 25 點生命值"
+      large_potion:
+        name: "&a大型治療藥水"
+        effect: "恢復 50 點生命值"
+      health_upgrade:
+        name: "&c生命強化"
+        effect: "永久增加 20 點最大生命值"
+      lucky_coin:
+        name: "&6幸運金幣"
+        effect: "恢復 10 點生命值並帶來好運"
+      healing_potion:
+        name: "&d治療藥水"
+        effect: "獲得1個可在事件中使用的治療藥水"
+    # Equipment
+    equipment:
+      iron_sword:
+        name: "&f鐵劍"
+      steel_sword:
+        name: "&b鋼劍"
+      leather_armor:
+        name: "&6皮甲"
+      iron_armor:
+        name: "&f鐵甲"
+      magic_ring:
+        name: "&d魔法戒指"
+      amulet_of_protection:
+        name: "&5守護護符"
+    # Enemies
+    enemies:
+      slime:
+        name: "&a史萊姆"
+        desc: "一個綠色的彈跳生物"
+      skeleton:
+        name: "&f骷髏弓箭手"
+        desc: "一個拿著弓的骷髏"
+      zombie:
+        name: "&2殭屍"
+        desc: "一個緩慢但強壯的不死生物"
+      spider:
+        name: "&8巨型蜘蛛"
+        desc: "一隻可怕的巨型蜘蛛"
+      witch:
+        name: "&5女巫"
+        desc: "一個邪惡的魔法使用者"
+      dark_knight:
+        name: "&8黑暗騎士"
+        desc: "一個強大的黑暗戰士"
+      dragon:
+        name: "&4暗影龍"
+        desc: "最終的挑戰，傳說中的龍"
+    # End rewards
+    rewards:
+      novice:
+        name: "&6冒險新手獎勵"
+      adventurer:
+        name: "&a冒險者獎勵"
+      veteran:
+        name: "&b資深冒險者獎勵"
+      legendary:
+        name: "&d傳奇冒險者獎勵"
+      king:
+        name: "&6&l王者獎勵"
 
 menu:
   wish:

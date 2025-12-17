@@ -383,7 +383,8 @@ public class StrategyGameManager {
             // Check if event has requirements and if player meets them
             boolean meetsRequirements = true;
             List<String> loreList = new ArrayList<String>();
-            loreList.addAll(event.getDescription());
+            // Resolve i18n keys for description
+            loreList.addAll(resolveI18nList(player, event.getDescription()));
             
             // Show event type indicator using i18n
             String eventType = event.getEventType();
@@ -435,7 +436,7 @@ public class StrategyGameManager {
             
             Material eventMaterial = meetsRequirements ? Material.WRITABLE_BOOK : Material.BARRIER;
             ItemStack eventItem = createItem(eventMaterial,
-                event.getName(),
+                resolveI18n(player, event.getName()),
                 loreList.toArray(new String[0]));
             safeSet(inv, eventSlots[i], eventItem);
         }
@@ -494,8 +495,8 @@ public class StrategyGameManager {
 
         // Event description
         ItemStack descItem = createItem(Material.PAPER,
-            event.getName(),
-            event.getDescription().toArray(new String[0]));
+            resolveI18n(player, event.getName()),
+            resolveI18nList(player, event.getDescription()).toArray(new String[0]));
         safeSet(inv, 4, descItem);
 
         // Choice buttons - no spoilers about outcomes, only show requirements
@@ -549,7 +550,7 @@ public class StrategyGameManager {
             
             Material choiceMat = meetsReq ? Material.OAK_SIGN : (choice.hasAltResult() ? Material.BIRCH_SIGN : Material.OAK_SIGN);
             ItemStack choiceItem = createItem(choiceMat,
-                choice.getText(),
+                resolveI18n(player, choice.getText()),
                 loreList.toArray(new String[0]));
             safeSet(inv, choiceSlots[i], choiceItem);
         }
@@ -587,7 +588,7 @@ public class StrategyGameManager {
 
         // Enemy display with combat stats
         Map<String, String> enemyMap = new HashMap<String, String>();
-        enemyMap.put("enemy", enemy.getName());
+        enemyMap.put("enemy", resolveI18n(player, enemy.getName()));
         enemyMap.put("power", String.valueOf(enemy.getPower()));
         enemyMap.put("attack", String.valueOf(enemy.getAttack()));
         enemyMap.put("defense", String.valueOf(enemy.getDefense()));
@@ -598,7 +599,7 @@ public class StrategyGameManager {
             messages.format(player, "menu.sgame.enemy_title", enemyMap),
             new String[]{
                 messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap),
-                "&7" + enemy.getDescription()
+                "&7" + resolveI18n(player, enemy.getDescription())
             });
         safeSet(inv, 4, enemyItem);
 
@@ -681,7 +682,7 @@ public class StrategyGameManager {
         int enemyMaxHp = session.getCurrentEnemyMaxHp();
         String enemyHpBar = createHpBar(enemyHp, enemyMaxHp);
         Map<String, String> enemyMap = new HashMap<String, String>();
-        enemyMap.put("enemy", enemy.getName());
+        enemyMap.put("enemy", resolveI18n(player, enemy.getName()));
         enemyMap.put("hp", String.valueOf(enemyHp));
         enemyMap.put("max_hp", String.valueOf(enemyMaxHp));
         enemyMap.put("hp_bar", enemyHpBar);
@@ -931,7 +932,7 @@ public class StrategyGameManager {
             lore.add(canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"));
             lore.add("ID:buy_" + offering.getId());
             
-            return createItem(eq.getMaterial(), eq.getName(), lore.toArray(new String[0]));
+            return createItem(eq.getMaterial(), resolveI18n(player, eq.getName()), lore.toArray(new String[0]));
         } else {
             ShopItem item = findShopItem(offering.getId());
             if (item == null) return createItem(Material.BARRIER, "&cError", new String[]{});
@@ -956,11 +957,11 @@ public class StrategyGameManager {
             String priceColor = canAfford ? "&a" : "&c";
             lore.add(priceColor + messages.format(player, "menu.sgame.item_price_lore", priceMap));
             
-            lore.add("&7" + item.getEffectDescription());
+            lore.add("&7" + resolveI18n(player, item.getEffectDescription()));
             lore.add(canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"));
             lore.add("ID:buy_" + offering.getId());
             
-            return createItem(item.getMaterial(), item.getName(), lore.toArray(new String[0]));
+            return createItem(item.getMaterial(), resolveI18n(player, item.getName()), lore.toArray(new String[0]));
         }
     }
 
@@ -1000,7 +1001,7 @@ public class StrategyGameManager {
         Equipment weapon = weaponId != null ? findEquipment(weaponId) : null;
         Map<String, String> weaponMap = new HashMap<String, String>();
         if (weapon != null) {
-            weaponMap.put("name", weapon.getName());
+            weaponMap.put("name", resolveI18n(player, weapon.getName()));
             weaponMap.put("attack", String.valueOf(weapon.getAttackBonus()));
             weaponMap.put("defense", String.valueOf(weapon.getDefenseBonus()));
         }
@@ -1019,7 +1020,7 @@ public class StrategyGameManager {
         Equipment armor = armorId != null ? findEquipment(armorId) : null;
         Map<String, String> armorMap = new HashMap<String, String>();
         if (armor != null) {
-            armorMap.put("name", armor.getName());
+            armorMap.put("name", resolveI18n(player, armor.getName()));
             armorMap.put("defense", String.valueOf(armor.getDefenseBonus()));
             armorMap.put("health", String.valueOf(armor.getHealthBonus()));
         }
@@ -1038,7 +1039,7 @@ public class StrategyGameManager {
         Equipment accessory = accessoryId != null ? findEquipment(accessoryId) : null;
         Map<String, String> accessoryMap = new HashMap<String, String>();
         if (accessory != null) {
-            accessoryMap.put("name", accessory.getName());
+            accessoryMap.put("name", resolveI18n(player, accessory.getName()));
         }
         ItemStack accessorySlot = createItem(accessory != null ? accessory.getMaterial() : Material.GOLD_INGOT,
             messages.format(player, "menu.sgame.equip_slot_accessory"),
@@ -1105,7 +1106,7 @@ public class StrategyGameManager {
             }
             lore.add("ID:buy_equip_" + eq.getId());
             
-            ItemStack eqItem = createItem(eq.getMaterial(), eq.getName(), lore.toArray(new String[0]));
+            ItemStack eqItem = createItem(eq.getMaterial(), resolveI18n(player, eq.getName()), lore.toArray(new String[0]));
             safeSet(inv, equipSlots[slotIndex], eqItem);
             slotIndex++;
         }
@@ -1209,7 +1210,7 @@ public class StrategyGameManager {
             if (event.hasRequirement()) {
                 EventRequirement req = event.getRequirement();
                 if (!req.checkRequirements(session)) {
-                    player.sendMessage(messages.colorize(req.getFailText()));
+                    player.sendMessage(messages.colorize(resolveI18n(player, req.getFailText())));
                     return;
                 }
                 // Apply gold cost if any
@@ -1366,7 +1367,7 @@ public class StrategyGameManager {
                 saveSession(session);
                 
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("item", eq.getName());
+                map.put("item", resolveI18n(player, eq.getName()));
                 player.sendMessage(messages.format(player, "sgame.equipped", map));
             } else {
                 // Handle regular item purchase
@@ -1386,7 +1387,7 @@ public class StrategyGameManager {
                 saveSession(session);
                 
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("item", item.getName());
+                map.put("item", resolveI18n(player, item.getName()));
                 player.sendMessage(messages.format(player, "sgame.item_purchased", map));
             }
             
@@ -1424,7 +1425,7 @@ public class StrategyGameManager {
                     session.setEquippedAccessory(null);
                 }
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("item", eq.getName());
+                map.put("item", resolveI18n(player, eq.getName()));
                 player.sendMessage(messages.format(player, "sgame.unequipped", map));
             } else {
                 // Check if can afford
@@ -1447,7 +1448,7 @@ public class StrategyGameManager {
                 }
                 
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("item", eq.getName());
+                map.put("item", resolveI18n(player, eq.getName()));
                 player.sendMessage(messages.format(player, "sgame.equipped", map));
             }
             
@@ -1500,9 +1501,9 @@ public class StrategyGameManager {
             return;
         }
 
-        // Show result
+        // Show result - resolve i18n for result text
         Map<String, String> map = new HashMap<String, String>();
-        map.put("result", resultText != null ? resultText : "");
+        map.put("result", resultText != null ? resolveI18n(player, resultText) : "");
         map.put("gold_change", formatChange(goldChange));
         map.put("health_change", formatChange(healthChange));
         player.sendMessage(messages.format(player, "sgame.choice_result", map));
@@ -1528,7 +1529,7 @@ public class StrategyGameManager {
         int enemyPower = enemy.getAttack() + (enemy.getHealth() / 5) + (enemy.getMagic() / 3) + random.nextInt(16);
         
         Map<String, String> map = new HashMap<String, String>();
-        map.put("enemy", enemy.getName());
+        map.put("enemy", resolveI18n(player, enemy.getName()));
         map.put("player_power", String.valueOf(playerPower));
         map.put("enemy_power", String.valueOf(enemyPower));
 
@@ -1602,7 +1603,7 @@ public class StrategyGameManager {
         Map<String, String> resultMap = new HashMap<String, String>();
         resultMap.put("player_action", getActionName(player, playerAction));
         resultMap.put("enemy_action", getActionName(player, enemyAction));
-        resultMap.put("enemy", enemy.getName());
+        resultMap.put("enemy", resolveI18n(player, enemy.getName()));
         resultMap.put("round", String.valueOf(session.getBattleRound()));
         
         if (advantage == 1) {
@@ -1680,7 +1681,7 @@ public class StrategyGameManager {
             saveSession(session);
             
             Map<String, String> victoryMap = new HashMap<String, String>();
-            victoryMap.put("enemy", enemy.getName());
+            victoryMap.put("enemy", resolveI18n(player, enemy.getName()));
             victoryMap.put("gold", String.valueOf(goldReward));
             victoryMap.put("rounds", String.valueOf(session.getBattleRound()));
             player.sendMessage(messages.format(player, "sgame.battle_victory_multiround", victoryMap));
@@ -1847,7 +1848,7 @@ public class StrategyGameManager {
                     }
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
                 }
-                rewardNames.add(reward.getName());
+                rewardNames.add(resolveI18n(player, reward.getName()));
             }
         }
         
@@ -2090,6 +2091,35 @@ public class StrategyGameManager {
             return "+" + value;
         }
         return String.valueOf(value);
+    }
+
+    /**
+     * Resolve an i18n key to its translated text for the given player.
+     * If the key doesn't exist in the language file, returns the key itself as fallback.
+     */
+    private String resolveI18n(Player player, String key) {
+        if (key == null || key.isEmpty()) {
+            return "";
+        }
+        // Try to resolve as i18n key
+        String resolved = messages.format(player, key);
+        // If the key wasn't found, messages.format returns the key with "missing:" prefix or similar
+        // In that case, just return the original key as fallback (might be hardcoded text)
+        if (resolved.equals(key) || resolved.contains("missing")) {
+            return key;
+        }
+        return resolved;
+    }
+
+    /**
+     * Resolve a list of i18n keys to their translated texts.
+     */
+    private List<String> resolveI18nList(Player player, List<String> keys) {
+        List<String> result = new ArrayList<String>();
+        for (String key : keys) {
+            result.add(resolveI18n(player, key));
+        }
+        return result;
     }
 
     private void safeSet(Inventory inv, int slot, ItemStack item) {
