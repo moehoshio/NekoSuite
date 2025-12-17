@@ -21,6 +21,7 @@ public class MenuLayout {
     private final ExpLayout expLayout;
     private final BuyLayout buyLayout;
     private final MailLayout mailLayout;
+    private final StrategyGameLayout strategyGameLayout;
 
     public MenuLayout(JavaPlugin plugin) {
         File file = new File(plugin.getDataFolder(), "menu_layout.yml");
@@ -33,6 +34,7 @@ public class MenuLayout {
         this.expLayout = new ExpLayout(config.getConfigurationSection("exp"));
         this.buyLayout = new BuyLayout(config.getConfigurationSection("buy"));
         this.mailLayout = new MailLayout(config.getConfigurationSection("mail"));
+        this.strategyGameLayout = new StrategyGameLayout(config.getConfigurationSection("strategy_game"));
     }
 
     public WishLayout getWishLayout() {
@@ -53,6 +55,10 @@ public class MenuLayout {
 
     public MailLayout getMailLayout() {
         return mailLayout;
+    }
+
+    public StrategyGameLayout getStrategyGameLayout() {
+        return strategyGameLayout;
     }
 
     public static class WishLayout {
@@ -246,5 +252,53 @@ public class MenuLayout {
             list.add(i);
         }
         return list;
+    }
+
+    public static class StrategyGameLayout {
+        private final int size;
+        private final int statusSlot;
+        private final int adventureSlot;
+        private final int battleSlot;
+        private final int shopSlot;
+        private final int endGameSlot;
+        private final int closeSlot;
+
+        StrategyGameLayout(ConfigurationSection section) {
+            this.size = section != null ? section.getInt("size", 27) : 27;
+            this.statusSlot = section != null ? section.getInt("status_slot", 4) : 4;
+            this.adventureSlot = section != null ? section.getInt("adventure_slot", 11) : 11;
+            this.battleSlot = section != null ? section.getInt("battle_slot", 13) : 13;
+            this.shopSlot = section != null ? section.getInt("shop_slot", 15) : 15;
+            this.endGameSlot = section != null ? section.getInt("end_game_slot", 22) : 22;
+            this.closeSlot = section != null ? section.getInt("close_slot", 26) : 26;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public int getStatusSlot() {
+            return statusSlot;
+        }
+
+        public int getAdventureSlot() {
+            return adventureSlot;
+        }
+
+        public int getBattleSlot() {
+            return battleSlot;
+        }
+
+        public int getShopSlot() {
+            return shopSlot;
+        }
+
+        public int getEndGameSlot() {
+            return endGameSlot;
+        }
+
+        public int getCloseSlot() {
+            return closeSlot;
+        }
     }
 }

@@ -75,3 +75,11 @@ commands:
     description: Reload NekoSuite configs
     usage: /nekoreload
     permission: nekosuite.reload
+  sgame:
+    description: Strategy game commands
+    usage: /sgame <start|continue|status|end|abandon|menu>
+    permission: nekosuite.sgame
+  sgamemenu:
+    description: Open strategy game menu
+    usage: /sgamemenu
+    permission: nekosuite.sgame.menu
