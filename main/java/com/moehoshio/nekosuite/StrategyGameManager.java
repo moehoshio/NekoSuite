@@ -569,6 +569,10 @@ public class StrategyGameManager {
         // Pick a random enemy based on stage
         BattleEnemy enemy = pickEnemy(session.getCurrentStage());
         session.setCurrentEnemyId(enemy.getId());
+        // Initialize enemy HP for multi-round combat
+        session.setCurrentEnemyHp(enemy.getHealth());
+        session.setCurrentEnemyMaxHp(enemy.getHealth());
+        session.setBattleRound(1);
         saveSession(session);
 
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
@@ -613,6 +617,149 @@ public class StrategyGameManager {
         // No back button - must fight or flee
 
         player.openInventory(inv);
+    }
+
+    /**
+     * Open the battle action selection menu - Rock-Paper-Scissors style combat.
+     * Shows both HP bars and allows player to choose Attack, Defense, or Skill.
+     */
+    public void openBattleActionMenu(Player player) {
+        GameSession session = getOrLoadSession(player.getName());
+        if (session == null || session.isEnded()) {
+            return;
+        }
+
+        String enemyId = session.getCurrentEnemyId();
+        BattleEnemy enemy = findEnemy(enemyId);
+        if (enemy == null) {
+            openMainMenu(player);
+            return;
+        }
+
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.battle_action_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.BATTLE_ACTION), layout.getSize(), title);
+
+        // Round indicator at top center
+        Map<String, String> roundMap = new HashMap<String, String>();
+        roundMap.put("round", String.valueOf(session.getBattleRound()));
+        ItemStack roundItem = createItem(Material.CLOCK,
+            messages.format(player, "menu.sgame.battle_round", roundMap),
+            new String[]{
+                messages.format(player, "menu.sgame.battle_round_lore", roundMap)
+            });
+        safeSet(inv, 4, roundItem);
+
+        // Player HP bar (left side, slot 0-2)
+        int playerHp = session.getHealth();
+        int playerMaxHp = session.getMaxHealth();
+        String playerHpBar = createHpBar(playerHp, playerMaxHp);
+        Map<String, String> playerMap = new HashMap<String, String>();
+        playerMap.put("hp", String.valueOf(playerHp));
+        playerMap.put("max_hp", String.valueOf(playerMaxHp));
+        playerMap.put("hp_bar", playerHpBar);
+        playerMap.put("attack", String.valueOf(session.getAttack() + getEquipmentAttackBonus(session)));
+        playerMap.put("defense", String.valueOf(session.getDefense() + getEquipmentDefenseBonus(session)));
+        playerMap.put("magic", String.valueOf(session.getMagic()));
+        
+        ItemStack playerItem = createItem(Material.PLAYER_HEAD,
+            messages.format(player, "menu.sgame.your_status"),
+            new String[]{
+                messages.format(player, "menu.sgame.hp_bar_lore", playerMap),
+                messages.format(player, "menu.sgame.combat_stats_lore", playerMap)
+            });
+        safeSet(inv, 0, playerItem);
+
+        // Enemy HP bar (right side, slot 8)
+        int enemyHp = session.getCurrentEnemyHp();
+        int enemyMaxHp = session.getCurrentEnemyMaxHp();
+        String enemyHpBar = createHpBar(enemyHp, enemyMaxHp);
+        Map<String, String> enemyMap = new HashMap<String, String>();
+        enemyMap.put("enemy", enemy.getName());
+        enemyMap.put("hp", String.valueOf(enemyHp));
+        enemyMap.put("max_hp", String.valueOf(enemyMaxHp));
+        enemyMap.put("hp_bar", enemyHpBar);
+        enemyMap.put("attack", String.valueOf(enemy.getAttack()));
+        enemyMap.put("defense", String.valueOf(enemy.getDefense()));
+
+        ItemStack enemyItem = createItem(Material.ZOMBIE_HEAD,
+            messages.format(player, "menu.sgame.enemy_title", enemyMap),
+            new String[]{
+                messages.format(player, "menu.sgame.enemy_hp_bar_lore", enemyMap),
+                messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap)
+            });
+        safeSet(inv, 8, enemyItem);
+
+        // Action buttons (row 2: slots 10, 13, 16)
+        // Attack button - beats Skill
+        ItemStack attackItem = createItem(Material.IRON_SWORD,
+            messages.format(player, "menu.sgame.action_attack"),
+            new String[]{
+                messages.format(player, "menu.sgame.action_attack_lore"),
+                messages.format(player, "menu.sgame.action_attack_hint"),
+                "ID:action_attack"
+            });
+        safeSet(inv, 10, attackItem);
+
+        // Defense button - beats Attack
+        ItemStack defenseItem = createItem(Material.SHIELD,
+            messages.format(player, "menu.sgame.action_defense"),
+            new String[]{
+                messages.format(player, "menu.sgame.action_defense_lore"),
+                messages.format(player, "menu.sgame.action_defense_hint"),
+                "ID:action_defense"
+            });
+        safeSet(inv, 13, defenseItem);
+
+        // Skill button - beats Defense, requires magic
+        boolean canUseSkill = session.getMagic() >= 10;
+        Map<String, String> skillMap = new HashMap<String, String>();
+        skillMap.put("magic_cost", "10");
+        skillMap.put("current_magic", String.valueOf(session.getMagic()));
+        ItemStack skillItem = createItem(canUseSkill ? Material.BLAZE_POWDER : Material.GUNPOWDER,
+            messages.format(player, "menu.sgame.action_skill"),
+            new String[]{
+                messages.format(player, "menu.sgame.action_skill_lore"),
+                messages.format(player, "menu.sgame.action_skill_hint"),
+                messages.format(player, "menu.sgame.action_skill_cost", skillMap),
+                canUseSkill ? "" : messages.format(player, "menu.sgame.not_enough_magic"),
+                "ID:action_skill"
+            });
+        safeSet(inv, 16, skillItem);
+
+        // VS indicator in the center
+        ItemStack vsItem = createItem(Material.NETHER_STAR,
+            "&c⚔ VS ⚔",
+            new String[]{
+                messages.format(player, "menu.sgame.vs_hint")
+            });
+        safeSet(inv, 22, vsItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Create a visual HP bar using colored characters.
+     */
+    private String createHpBar(int current, int max) {
+        int barLength = 10;
+        int filledLength = max > 0 ? (int) Math.ceil((double) current / max * barLength) : 0;
+        StringBuilder bar = new StringBuilder("&a");
+        for (int i = 0; i < barLength; i++) {
+            if (i < filledLength) {
+                if (i < barLength / 3) {
+                    bar.append("&c"); // Red for low HP
+                } else if (i < barLength * 2 / 3) {
+                    bar.append("&e"); // Yellow for medium HP
+                } else {
+                    bar.append("&a"); // Green for high HP
+                }
+                bar.append("█");
+            } else {
+                bar.append("&8░");
+            }
+        }
+        return bar.toString();
     }
 
     public void openShopMenu(Player player) {
@@ -870,6 +1017,9 @@ public class StrategyGameManager {
             case BATTLE:
                 handleBattleMenuClick(player, session, id);
                 break;
+            case BATTLE_ACTION:
+                handleBattleActionClick(player, session, id);
+                break;
             case SHOP:
                 handleShopMenuClick(player, session, id);
                 break;
@@ -989,9 +1139,41 @@ public class StrategyGameManager {
         }
 
         if ("fight".equals(id)) {
-            resolveBattle(player, session, enemy);
+            // Open the multi-round battle action menu
+            openBattleActionMenu(player);
         } else if ("flee".equals(id)) {
             resolveFlee(player, session, enemy);
+        }
+    }
+
+    /**
+     * Handle clicks in the battle action selection menu.
+     * Processes Rock-Paper-Scissors style combat actions.
+     */
+    private void handleBattleActionClick(Player player, GameSession session, String id) {
+        String enemyId = session.getCurrentEnemyId();
+        BattleEnemy enemy = findEnemy(enemyId);
+        if (enemy == null) {
+            openMainMenu(player);
+            return;
+        }
+
+        BattleAction playerAction = null;
+        if ("action_attack".equals(id)) {
+            playerAction = BattleAction.ATTACK;
+        } else if ("action_defense".equals(id)) {
+            playerAction = BattleAction.DEFENSE;
+        } else if ("action_skill".equals(id)) {
+            // Check if player has enough magic
+            if (session.getMagic() < 10) {
+                player.sendMessage(messages.format(player, "sgame.not_enough_magic"));
+                return;
+            }
+            playerAction = BattleAction.SKILL;
+        }
+
+        if (playerAction != null) {
+            resolveBattleRound(player, session, enemy, playerAction);
         }
     }
 
@@ -1206,6 +1388,190 @@ public class StrategyGameManager {
         
         player.closeInventory();
         openMainMenu(player);
+    }
+
+    /**
+     * Resolve a single round of multi-round Rock-Paper-Scissors style combat.
+     * - ATTACK beats SKILL (interrupts skill casting)
+     * - SKILL beats DEFENSE (bypasses defense)
+     * - DEFENSE beats ATTACK (blocks damage)
+     */
+    private void resolveBattleRound(Player player, GameSession session, BattleEnemy enemy, BattleAction playerAction) {
+        // Determine enemy action (random weighted by enemy stats)
+        BattleAction enemyAction = pickEnemyAction(enemy);
+        
+        // Calculate base damage values
+        int playerAttack = session.getAttack() + getEquipmentAttackBonus(session);
+        int playerDefense = session.getDefense() + getEquipmentDefenseBonus(session);
+        int playerMagic = session.getMagic() + getEquipmentMagicBonus(session);
+        
+        int enemyAttackStat = enemy.getAttack();
+        int enemyDefense = enemy.getDefense();
+        
+        // Determine round outcome based on RPS logic
+        int playerDamageDealt = 0;
+        int enemyDamageDealt = 0;
+        String roundResult;
+        
+        // Determine advantage: 0 = tie, 1 = player wins RPS, -1 = enemy wins RPS
+        int advantage = determineRpsAdvantage(playerAction, enemyAction);
+        
+        Map<String, String> resultMap = new HashMap<String, String>();
+        resultMap.put("player_action", getActionName(player, playerAction));
+        resultMap.put("enemy_action", getActionName(player, enemyAction));
+        resultMap.put("enemy", enemy.getName());
+        resultMap.put("round", String.valueOf(session.getBattleRound()));
+        
+        if (advantage == 1) {
+            // Player wins RPS - deal increased damage, take reduced damage
+            if (playerAction == BattleAction.ATTACK) {
+                // Attack beats Skill - interrupt enemy and deal full damage
+                playerDamageDealt = Math.max(1, playerAttack - (enemyDefense / 4) + random.nextInt(6));
+                enemyDamageDealt = 0;
+                roundResult = messages.format(player, "sgame.round_attack_beats_skill");
+            } else if (playerAction == BattleAction.SKILL) {
+                // Skill beats Defense - bypass defense and deal magic damage
+                session.addMagic(-10); // Consume magic
+                playerDamageDealt = Math.max(1, (playerMagic / 2) + random.nextInt(8));
+                enemyDamageDealt = 0;
+                roundResult = messages.format(player, "sgame.round_skill_beats_defense");
+            } else {
+                // Defense beats Attack - block enemy and counter attack
+                playerDamageDealt = Math.max(1, playerDefense / 2);
+                enemyDamageDealt = 0;
+                roundResult = messages.format(player, "sgame.round_defense_beats_attack");
+            }
+        } else if (advantage == -1) {
+            // Enemy wins RPS - enemy deals increased damage
+            if (enemyAction == BattleAction.ATTACK) {
+                // Enemy attack beats player skill
+                playerDamageDealt = 0;
+                enemyDamageDealt = Math.max(1, enemyAttackStat - (playerDefense / 4) + random.nextInt(6));
+                if (playerAction == BattleAction.SKILL) {
+                    session.addMagic(-5); // Partial magic cost for interrupted skill
+                }
+                roundResult = messages.format(player, "sgame.round_enemy_attack_beats_skill");
+            } else if (enemyAction == BattleAction.SKILL) {
+                // Enemy skill beats player defense
+                playerDamageDealt = 0;
+                enemyDamageDealt = Math.max(1, (enemy.getMagic() / 2) + random.nextInt(6));
+                roundResult = messages.format(player, "sgame.round_enemy_skill_beats_defense");
+            } else {
+                // Enemy defense beats player attack
+                playerDamageDealt = 0;
+                enemyDamageDealt = Math.max(1, enemyDefense / 3);
+                roundResult = messages.format(player, "sgame.round_enemy_defense_beats_attack");
+            }
+        } else {
+            // Tie - both deal reduced damage
+            if (playerAction == BattleAction.SKILL) {
+                session.addMagic(-10);
+            }
+            playerDamageDealt = Math.max(1, playerAttack / 3 + random.nextInt(3));
+            enemyDamageDealt = Math.max(1, enemyAttackStat / 3 + random.nextInt(3));
+            roundResult = messages.format(player, "sgame.round_tie");
+        }
+        
+        // Apply damage
+        session.addCurrentEnemyHp(-playerDamageDealt);
+        session.addHealth(-enemyDamageDealt);
+        
+        resultMap.put("player_damage", String.valueOf(playerDamageDealt));
+        resultMap.put("enemy_damage", String.valueOf(enemyDamageDealt));
+        resultMap.put("result", roundResult);
+        
+        // Send round result message
+        player.sendMessage(messages.format(player, "sgame.battle_round_result", resultMap));
+        
+        // Check if battle ended
+        if (session.getCurrentEnemyHp() <= 0) {
+            // Victory!
+            int goldReward = enemy.getGoldReward();
+            session.addGold(goldReward);
+            session.incrementBattleVictories();
+            session.incrementStage();
+            session.setCurrentEnemyId(null);
+            session.setCurrentEnemyHp(0);
+            saveSession(session);
+            
+            Map<String, String> victoryMap = new HashMap<String, String>();
+            victoryMap.put("enemy", enemy.getName());
+            victoryMap.put("gold", String.valueOf(goldReward));
+            victoryMap.put("rounds", String.valueOf(session.getBattleRound()));
+            player.sendMessage(messages.format(player, "sgame.battle_victory_multiround", victoryMap));
+            
+            player.closeInventory();
+            openMainMenu(player);
+            return;
+        }
+        
+        if (session.getHealth() <= 0) {
+            // Player died
+            handleGameOverDeath(player, session);
+            return;
+        }
+        
+        // Continue to next round
+        session.incrementBattleRound();
+        saveSession(session);
+        
+        // Refresh the battle action menu for next round
+        openBattleActionMenu(player);
+    }
+
+    /**
+     * Determine RPS advantage: 1 = player wins, -1 = enemy wins, 0 = tie
+     * ATTACK beats SKILL, SKILL beats DEFENSE, DEFENSE beats ATTACK
+     */
+    private int determineRpsAdvantage(BattleAction playerAction, BattleAction enemyAction) {
+        if (playerAction == enemyAction) {
+            return 0; // Tie
+        }
+        
+        if ((playerAction == BattleAction.ATTACK && enemyAction == BattleAction.SKILL) ||
+            (playerAction == BattleAction.SKILL && enemyAction == BattleAction.DEFENSE) ||
+            (playerAction == BattleAction.DEFENSE && enemyAction == BattleAction.ATTACK)) {
+            return 1; // Player wins
+        }
+        
+        return -1; // Enemy wins
+    }
+
+    /**
+     * Pick an enemy action based on enemy stats.
+     * Enemies with more magic tend to use skill, more defense tends to use defense, etc.
+     */
+    private BattleAction pickEnemyAction(BattleEnemy enemy) {
+        int attackWeight = enemy.getAttack() + 10;
+        int defenseWeight = enemy.getDefense() + 5;
+        int skillWeight = enemy.getMagic() > 0 ? enemy.getMagic() + 5 : 2;
+        
+        int total = attackWeight + defenseWeight + skillWeight;
+        int roll = random.nextInt(total);
+        
+        if (roll < attackWeight) {
+            return BattleAction.ATTACK;
+        } else if (roll < attackWeight + defenseWeight) {
+            return BattleAction.DEFENSE;
+        } else {
+            return BattleAction.SKILL;
+        }
+    }
+
+    /**
+     * Get localized action name for display.
+     */
+    private String getActionName(Player player, BattleAction action) {
+        switch (action) {
+            case ATTACK:
+                return messages.format(player, "menu.sgame.action_attack_name");
+            case DEFENSE:
+                return messages.format(player, "menu.sgame.action_defense_name");
+            case SKILL:
+                return messages.format(player, "menu.sgame.action_skill_name");
+            default:
+                return "?";
+        }
     }
 
     private void resolveFlee(Player player, GameSession session, BattleEnemy enemy) {
@@ -1619,6 +1985,11 @@ public class StrategyGameManager {
         }
         session.setLastEventId(data.getString("sgame.last_event_id", null));
         
+        // Load multi-round battle state
+        session.setCurrentEnemyHp(data.getInt("sgame.current_enemy_hp", 0));
+        session.setCurrentEnemyMaxHp(data.getInt("sgame.current_enemy_max_hp", 0));
+        session.setBattleRound(data.getInt("sgame.battle_round", 1));
+        
         // Load inventory
         ConfigurationSection invSection = data.getConfigurationSection("sgame.inventory");
         if (invSection != null) {
@@ -1667,6 +2038,11 @@ public class StrategyGameManager {
         data.set("sgame.visited_events", session.getVisitedEvents());
         data.set("sgame.last_event_id", session.getLastEventId());
         
+        // Save multi-round battle state
+        data.set("sgame.current_enemy_hp", session.getCurrentEnemyHp());
+        data.set("sgame.current_enemy_max_hp", session.getCurrentEnemyMaxHp());
+        data.set("sgame.battle_round", session.getBattleRound());
+        
         // Save inventory
         data.set("sgame.inventory", null);
         for (Map.Entry<String, Integer> entry : session.getInventory().entrySet()) {
@@ -1698,7 +2074,17 @@ public class StrategyGameManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, EVENT_SELECTION, EVENT, BATTLE, SHOP, EQUIPMENT
+        MAIN, EVENT_SELECTION, EVENT, BATTLE, BATTLE_ACTION, SHOP, EQUIPMENT
+    }
+
+    /**
+     * Battle actions for Rock-Paper-Scissors style combat.
+     * - ATTACK beats SKILL (interrupts skill casting)
+     * - SKILL beats DEFENSE (bypasses defense)
+     * - DEFENSE beats ATTACK (blocks damage)
+     */
+    public enum BattleAction {
+        ATTACK, DEFENSE, SKILL
     }
 
     public static class StrategyGameMenuHolder implements InventoryHolder {
@@ -1743,6 +2129,11 @@ public class StrategyGameManager {
         // Event tracking for weighted randomization
         private final List<String> visitedEvents;
         private String lastEventId;
+        
+        // Multi-round battle tracking
+        private int currentEnemyHp;
+        private int currentEnemyMaxHp;
+        private int battleRound;
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -1816,6 +2207,16 @@ public class StrategyGameManager {
         }
         String getLastEventId() { return lastEventId; }
         void setLastEventId(String id) { this.lastEventId = id; }
+        
+        // Multi-round battle tracking
+        int getCurrentEnemyHp() { return currentEnemyHp; }
+        void setCurrentEnemyHp(int hp) { this.currentEnemyHp = Math.max(0, hp); }
+        void addCurrentEnemyHp(int amount) { this.currentEnemyHp = Math.max(0, this.currentEnemyHp + amount); }
+        int getCurrentEnemyMaxHp() { return currentEnemyMaxHp; }
+        void setCurrentEnemyMaxHp(int hp) { this.currentEnemyMaxHp = hp; }
+        int getBattleRound() { return battleRound; }
+        void setBattleRound(int round) { this.battleRound = round; }
+        void incrementBattleRound() { this.battleRound++; }
         
         // Inventory management
         Map<String, Integer> getInventory() { return inventory; }
