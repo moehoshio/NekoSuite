@@ -50,6 +50,12 @@ public class StrategyGameManager {
     private static final int DEFAULT_MAX_STAGES = 10;
     private static final int DEFAULT_ENEMY_POWER = 30;
     private static final int DEFAULT_ENEMY_DAMAGE = 10;
+    
+    // Shop configuration constants
+    private static final int MAX_SHOP_ITEMS = 5;
+    private static final int DISCOUNT_CHANCE = 30; // Percentage chance for discount
+    private static final int MIN_DISCOUNT = 10;
+    private static final int MAX_DISCOUNT = 50;
 
     // Game configuration
     private int startingGold = DEFAULT_STARTING_GOLD;
@@ -775,10 +781,16 @@ public class StrategyGameManager {
             return;
         }
 
-        if (shopItems.isEmpty()) {
+        if (shopItems.isEmpty() && equipments.isEmpty()) {
             player.sendMessage(messages.format(player, "sgame.shop_empty"));
             openMainMenu(player);
             return;
+        }
+
+        // Generate random shop offerings if not already generated for this shop visit
+        if (session.getCurrentShopOfferings().isEmpty()) {
+            generateShopOfferings(session);
+            saveSession(session);
         }
 
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
@@ -796,26 +808,13 @@ public class StrategyGameManager {
             });
         safeSet(inv, 4, goldItem);
 
-        // Shop items
+        // Display current shop offerings (randomly selected items/equipment with possible discounts)
         int[] itemSlots = {10, 11, 12, 13, 14, 15, 16};
-        for (int i = 0; i < shopItems.size() && i < itemSlots.length; i++) {
-            ShopItem item = shopItems.get(i);
-            Map<String, String> itemMap = new HashMap<String, String>();
-            itemMap.put("price", String.valueOf(item.getPrice()));
-            itemMap.put("effect", item.getEffectDescription());
-            
-            boolean canAfford = session.getGold() >= item.getPrice();
-            String priceColor = canAfford ? "&a" : "&c";
-            
-            ItemStack shopItemStack = createItem(item.getMaterial(),
-                item.getName(),
-                new String[]{
-                    priceColor + messages.format(player, "menu.sgame.item_price_lore", itemMap),
-                    "&7" + item.getEffectDescription(),
-                    canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"),
-                    "ID:buy_" + item.getId()
-                });
-            safeSet(inv, itemSlots[i], shopItemStack);
+        List<ShopOffering> offerings = session.getCurrentShopOfferings();
+        for (int i = 0; i < offerings.size() && i < itemSlots.length; i++) {
+            ShopOffering offering = offerings.get(i);
+            ItemStack offeringItem = createShopOfferingItem(player, session, offering);
+            safeSet(inv, itemSlots[i], offeringItem);
         }
 
         // Leave shop button - proceed to next stage after shopping
@@ -831,6 +830,138 @@ public class StrategyGameManager {
         // No back button - must leave shop properly
 
         player.openInventory(inv);
+    }
+
+    /**
+     * Generate random shop offerings from available items and equipment.
+     * Each offering may have a random discount.
+     */
+    private void generateShopOfferings(GameSession session) {
+        session.clearShopOfferings();
+        
+        // Combine all available items and equipment into a pool
+        List<Object[]> pool = new ArrayList<Object[]>(); // [id, type]
+        for (ShopItem item : shopItems) {
+            pool.add(new Object[]{item.getId(), "item"});
+        }
+        for (Equipment eq : equipments) {
+            pool.add(new Object[]{eq.getId(), "equipment"});
+        }
+        
+        // Shuffle the pool and select items
+        java.util.Collections.shuffle(pool, random);
+        int itemCount = Math.min(MAX_SHOP_ITEMS, pool.size());
+        
+        for (int i = 0; i < itemCount; i++) {
+            Object[] entry = pool.get(i);
+            String id = (String) entry[0];
+            String type = (String) entry[1];
+            
+            // Random discount based on configured chance and range
+            int discount = 0;
+            if (random.nextInt(100) < DISCOUNT_CHANCE) {
+                discount = MIN_DISCOUNT + random.nextInt(MAX_DISCOUNT - MIN_DISCOUNT + 1);
+            }
+            
+            session.addShopOffering(new ShopOffering(id, type, discount));
+        }
+    }
+
+    /**
+     * Create an ItemStack for displaying a shop offering with discount info.
+     */
+    private ItemStack createShopOfferingItem(Player player, GameSession session, ShopOffering offering) {
+        if (offering.isEquipment()) {
+            Equipment eq = findEquipment(offering.getId());
+            if (eq == null) return createItem(Material.BARRIER, "&cError", new String[]{});
+            
+            int originalPrice = eq.getPrice();
+            int finalPrice = offering.getDiscountedPrice(originalPrice);
+            boolean canAfford = session.getGold() >= finalPrice;
+            
+            List<String> lore = new ArrayList<String>();
+            
+            // Show discount if applicable
+            if (offering.hasDiscount()) {
+                Map<String, String> discountMap = new HashMap<String, String>();
+                discountMap.put("discount", String.valueOf(offering.getDiscount()));
+                discountMap.put("original_price", String.valueOf(originalPrice));
+                discountMap.put("final_price", String.valueOf(finalPrice));
+                lore.add(messages.format(player, "menu.sgame.discount_lore", discountMap));
+            }
+            
+            Map<String, String> priceMap = new HashMap<String, String>();
+            priceMap.put("price", String.valueOf(finalPrice));
+            String priceColor = canAfford ? "&a" : "&c";
+            lore.add(priceColor + messages.format(player, "menu.sgame.item_price_lore", priceMap));
+            
+            // Equipment stats
+            if (eq.getAttackBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getAttackBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_attack_bonus", statMap));
+            }
+            if (eq.getDefenseBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getDefenseBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_defense_bonus", statMap));
+            }
+            if (eq.getHealthBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getHealthBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_health_bonus", statMap));
+            }
+            if (eq.getMagicBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getMagicBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_magic_bonus", statMap));
+            }
+            
+            // Slot type
+            Map<String, String> typeMap = new HashMap<String, String>();
+            if ("weapon".equals(eq.getSlot())) {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_weapon"));
+            } else if ("armor".equals(eq.getSlot())) {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_armor"));
+            } else {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_accessory"));
+            }
+            lore.add(messages.format(player, "menu.sgame.equip_type_lore", typeMap));
+            
+            lore.add(canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"));
+            lore.add("ID:buy_" + offering.getId());
+            
+            return createItem(eq.getMaterial(), eq.getName(), lore.toArray(new String[0]));
+        } else {
+            ShopItem item = findShopItem(offering.getId());
+            if (item == null) return createItem(Material.BARRIER, "&cError", new String[]{});
+            
+            int originalPrice = item.getPrice();
+            int finalPrice = offering.getDiscountedPrice(originalPrice);
+            boolean canAfford = session.getGold() >= finalPrice;
+            
+            List<String> lore = new ArrayList<String>();
+            
+            // Show discount if applicable
+            if (offering.hasDiscount()) {
+                Map<String, String> discountMap = new HashMap<String, String>();
+                discountMap.put("discount", String.valueOf(offering.getDiscount()));
+                discountMap.put("original_price", String.valueOf(originalPrice));
+                discountMap.put("final_price", String.valueOf(finalPrice));
+                lore.add(messages.format(player, "menu.sgame.discount_lore", discountMap));
+            }
+            
+            Map<String, String> priceMap = new HashMap<String, String>();
+            priceMap.put("price", String.valueOf(finalPrice));
+            String priceColor = canAfford ? "&a" : "&c";
+            lore.add(priceColor + messages.format(player, "menu.sgame.item_price_lore", priceMap));
+            
+            lore.add("&7" + item.getEffectDescription());
+            lore.add(canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"));
+            lore.add("ID:buy_" + offering.getId());
+            
+            return createItem(item.getMaterial(), item.getName(), lore.toArray(new String[0]));
+        }
     }
 
     /**
@@ -1189,6 +1320,8 @@ public class StrategyGameManager {
 
         if ("shop_leave".equals(id)) {
             // Leave shop and advance to next stage
+            // Clear shop offerings for next shop visit
+            session.clearShopOfferings();
             session.setCurrentEventId(null);
             session.incrementStage();
             saveSession(session);
@@ -1199,23 +1332,63 @@ public class StrategyGameManager {
 
         if (id.startsWith("buy_")) {
             String itemId = id.substring(4);
-            ShopItem item = findShopItem(itemId);
-            if (item == null) {
-                return;
-            }
-
-            if (session.getGold() < item.getPrice()) {
-                player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
-                return;
-            }
-
-            session.addGold(-item.getPrice());
-            applyShopItem(player, session, item);
-            saveSession(session);
             
-            Map<String, String> map = new HashMap<String, String>();
-            map.put("item", item.getName());
-            player.sendMessage(messages.format(player, "sgame.item_purchased", map));
+            // Find the offering to get the discount
+            ShopOffering offering = session.findShopOffering(itemId);
+            if (offering == null) {
+                return;
+            }
+            
+            if (offering.isEquipment()) {
+                // Handle equipment purchase from shop
+                Equipment eq = findEquipment(itemId);
+                if (eq == null) {
+                    return;
+                }
+                
+                int finalPrice = offering.getDiscountedPrice(eq.getPrice());
+                if (session.getGold() < finalPrice) {
+                    player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
+                    return;
+                }
+                
+                // Purchase and equip
+                session.addGold(-finalPrice);
+                
+                if ("weapon".equals(eq.getSlot())) {
+                    session.setEquippedWeapon(itemId);
+                } else if ("armor".equals(eq.getSlot())) {
+                    session.setEquippedArmor(itemId);
+                } else {
+                    session.setEquippedAccessory(itemId);
+                }
+                
+                saveSession(session);
+                
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", eq.getName());
+                player.sendMessage(messages.format(player, "sgame.equipped", map));
+            } else {
+                // Handle regular item purchase
+                ShopItem item = findShopItem(itemId);
+                if (item == null) {
+                    return;
+                }
+                
+                int finalPrice = offering.getDiscountedPrice(item.getPrice());
+                if (session.getGold() < finalPrice) {
+                    player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
+                    return;
+                }
+                
+                session.addGold(-finalPrice);
+                applyShopItem(player, session, item);
+                saveSession(session);
+                
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", item.getName());
+                player.sendMessage(messages.format(player, "sgame.item_purchased", map));
+            }
             
             // Refresh shop menu to show updated gold and item availability
             openShopMenu(player);
@@ -2146,6 +2319,9 @@ public class StrategyGameManager {
         private int currentEnemyHp;
         private int currentEnemyMaxHp;
         private int battleRound;
+        
+        // Shop offering tracking - stores current shop items with discounts
+        private final List<ShopOffering> currentShopOfferings;
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -2157,6 +2333,7 @@ public class StrategyGameManager {
             this.ended = false;
             this.inventory = new HashMap<String, Integer>();
             this.visitedEvents = new ArrayList<String>();
+            this.currentShopOfferings = new ArrayList<ShopOffering>();
             
             // Default combat stats
             this.attack = 10;
@@ -2229,6 +2406,19 @@ public class StrategyGameManager {
         int getBattleRound() { return battleRound; }
         void setBattleRound(int round) { this.battleRound = round; }
         void incrementBattleRound() { this.battleRound++; }
+        
+        // Shop offering management
+        List<ShopOffering> getCurrentShopOfferings() { return currentShopOfferings; }
+        void clearShopOfferings() { currentShopOfferings.clear(); }
+        void addShopOffering(ShopOffering offering) { currentShopOfferings.add(offering); }
+        ShopOffering findShopOffering(String id) {
+            for (ShopOffering offering : currentShopOfferings) {
+                if (offering.getId().equals(id)) {
+                    return offering;
+                }
+            }
+            return null;
+        }
         
         // Inventory management
         Map<String, Integer> getInventory() { return inventory; }
@@ -2518,6 +2708,35 @@ public class StrategyGameManager {
         String getEffectType() { return effectType; }
         int getEffectValue() { return effectValue; }
         String getEffectDescription() { return effectDescription; }
+    }
+
+    /**
+     * Represents an item currently offered in the shop with potential discount.
+     * Can be either a ShopItem (consumable) or Equipment.
+     */
+    private static class ShopOffering {
+        private final String id;
+        private final String type; // "item" or "equipment"
+        private final int discount; // Discount percentage
+        
+        ShopOffering(String id, String type, int discount) {
+            this.id = id;
+            this.type = type;
+            this.discount = Math.min(MAX_DISCOUNT, Math.max(0, discount));
+        }
+        
+        String getId() { return id; }
+        String getType() { return type; }
+        int getDiscount() { return discount; }
+        boolean isEquipment() { return "equipment".equals(type); }
+        boolean hasDiscount() { return discount > 0; }
+        
+        /**
+         * Calculate discounted price from original price.
+         */
+        int getDiscountedPrice(int originalPrice) {
+            return originalPrice - (originalPrice * discount / 100);
+        }
     }
 
     private static class BattleEnemy {

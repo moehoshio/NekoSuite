@@ -146,6 +146,7 @@ menu:
     # Shop i18n
     click_to_buy: "&a点击购买"
     not_enough_gold: "&c金币不足"
+    discount_lore: "&e✦ 特价 {discount}% 折扣！&f &7原价: &m{original_price}&r &a→ &6{final_price}"
     # Equipment i18n
     equipped_item: "&a已装备: {name}"
     equip_weapon_stats: "&7攻击: +{attack} 防御: +{defense}"

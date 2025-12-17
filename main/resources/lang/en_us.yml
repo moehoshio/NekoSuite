@@ -146,6 +146,7 @@ menu:
     # Shop i18n
     click_to_buy: "&aClick to buy"
     not_enough_gold: "&cNot enough gold"
+    discount_lore: "&e✦ {discount}% OFF! &7Was: &m{original_price}&r &a→ &6{final_price}"
     # Equipment i18n
     equipped_item: "&aEquipped: {name}"
     equip_weapon_stats: "&7Attack: +{attack} Defense: +{defense}"
