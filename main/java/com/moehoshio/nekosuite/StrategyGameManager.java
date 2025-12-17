@@ -740,20 +740,27 @@ public class StrategyGameManager {
 
     /**
      * Create a visual HP bar using colored characters.
+     * Color is based on overall HP percentage.
      */
     private String createHpBar(int current, int max) {
         int barLength = 10;
         int filledLength = max > 0 ? (int) Math.ceil((double) current / max * barLength) : 0;
-        StringBuilder bar = new StringBuilder("&a");
+        double hpPercent = max > 0 ? (double) current / max : 0;
+        
+        // Determine color based on overall HP percentage
+        String color;
+        if (hpPercent > 0.66) {
+            color = "&a"; // Green for high HP (>66%)
+        } else if (hpPercent > 0.33) {
+            color = "&e"; // Yellow for medium HP (33-66%)
+        } else {
+            color = "&c"; // Red for low HP (<33%)
+        }
+        
+        StringBuilder bar = new StringBuilder();
+        bar.append(color);
         for (int i = 0; i < barLength; i++) {
             if (i < filledLength) {
-                if (i < barLength / 3) {
-                    bar.append("&c"); // Red for low HP
-                } else if (i < barLength * 2 / 3) {
-                    bar.append("&e"); // Yellow for medium HP
-                } else {
-                    bar.append("&a"); // Green for high HP
-                }
                 bar.append("█");
             } else {
                 bar.append("&8░");
@@ -1408,6 +1415,9 @@ public class StrategyGameManager {
         int enemyAttackStat = enemy.getAttack();
         int enemyDefense = enemy.getDefense();
         
+        // Consistent random damage variance for balance
+        int damageVariance = 6;
+        
         // Determine round outcome based on RPS logic
         int playerDamageDealt = 0;
         int enemyDamageDealt = 0;
@@ -1426,13 +1436,13 @@ public class StrategyGameManager {
             // Player wins RPS - deal increased damage, take reduced damage
             if (playerAction == BattleAction.ATTACK) {
                 // Attack beats Skill - interrupt enemy and deal full damage
-                playerDamageDealt = Math.max(1, playerAttack - (enemyDefense / 4) + random.nextInt(6));
+                playerDamageDealt = Math.max(1, playerAttack - (enemyDefense / 4) + random.nextInt(damageVariance));
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_attack_beats_skill");
             } else if (playerAction == BattleAction.SKILL) {
                 // Skill beats Defense - bypass defense and deal magic damage
                 session.addMagic(-10); // Consume magic
-                playerDamageDealt = Math.max(1, (playerMagic / 2) + random.nextInt(8));
+                playerDamageDealt = Math.max(1, (playerMagic / 2) + random.nextInt(damageVariance));
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_skill_beats_defense");
             } else {
@@ -1446,7 +1456,7 @@ public class StrategyGameManager {
             if (enemyAction == BattleAction.ATTACK) {
                 // Enemy attack beats player skill
                 playerDamageDealt = 0;
-                enemyDamageDealt = Math.max(1, enemyAttackStat - (playerDefense / 4) + random.nextInt(6));
+                enemyDamageDealt = Math.max(1, enemyAttackStat - (playerDefense / 4) + random.nextInt(damageVariance));
                 if (playerAction == BattleAction.SKILL) {
                     session.addMagic(-5); // Partial magic cost for interrupted skill
                 }
@@ -1454,7 +1464,7 @@ public class StrategyGameManager {
             } else if (enemyAction == BattleAction.SKILL) {
                 // Enemy skill beats player defense
                 playerDamageDealt = 0;
-                enemyDamageDealt = Math.max(1, (enemy.getMagic() / 2) + random.nextInt(6));
+                enemyDamageDealt = Math.max(1, (enemy.getMagic() / 2) + random.nextInt(damageVariance));
                 roundResult = messages.format(player, "sgame.round_enemy_skill_beats_defense");
             } else {
                 // Enemy defense beats player attack
@@ -1466,8 +1476,10 @@ public class StrategyGameManager {
             // Tie - both deal reduced damage
             if (playerAction == BattleAction.SKILL) {
                 session.addMagic(-10);
+                playerDamageDealt = Math.max(1, playerMagic / 4 + random.nextInt(3));
+            } else {
+                playerDamageDealt = Math.max(1, playerAttack / 3 + random.nextInt(3));
             }
-            playerDamageDealt = Math.max(1, playerAttack / 3 + random.nextInt(3));
             enemyDamageDealt = Math.max(1, enemyAttackStat / 3 + random.nextInt(3));
             roundResult = messages.format(player, "sgame.round_tie");
         }
