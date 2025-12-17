@@ -52,6 +52,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private BuyManager buyManager;
     private MailManager mailManager;
     private MenuLayout menuLayout;
+    private StrategyGameManager strategyGameManager;
 
     @Override
     public void onEnable() {
@@ -64,6 +65,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("buy_config.yml", false);
         saveResource("mail_config.yml", false);
         saveResource("menu_layout.yml", false);
+        saveResource("strategy_game_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -143,6 +145,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("nekoreload").setExecutor(this);
             getCommand("nekoreload").setTabCompleter(this);
         }
+        if (getCommand("sgame") != null) {
+            getCommand("sgame").setExecutor(this);
+            getCommand("sgame").setTabCompleter(this);
+        }
+        if (getCommand("sgamemenu") != null) {
+            getCommand("sgamemenu").setExecutor(this);
+            getCommand("sgamemenu").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -187,6 +197,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleLanguage(sender, args);
             case "nekoreload":
                 return handleReload(sender);
+            case "sgame":
+                return handleStrategyGame(sender, args);
+            case "sgamemenu":
+                return handleStrategyGameMenu(sender);
             default:
                 return false;
         }
@@ -866,6 +880,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return filter(Arrays.asList("reload"), prefix);
                 }
                 break;
+            case "sgame":
+                if (args.length == 1) {
+                    List<String> actions = new ArrayList<String>(Arrays.asList("start", "continue", "status", "end", "abandon", "menu"));
+                    return filter(actions, args[0]);
+                }
+                break;
             default:
                 break;
         }
@@ -925,6 +945,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         cdkManager = new CdkManager(this, messages, new File(getDataFolder(), "cdk_config.yml"));
         buyManager = new BuyManager(this, messages, new File(getDataFolder(), "buy_config.yml"), menuLayout, economy, permission);
         mailManager = new MailManager(this, messages, new File(getDataFolder(), "mail_config.yml"), menuLayout);
+        strategyGameManager = new StrategyGameManager(this, messages, new File(getDataFolder(), "strategy_game_config.yml"), menuLayout);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -934,6 +955,51 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         loadManagers();
         sender.sendMessage(messages.format(sender, "common.reload_success"));
+        return true;
+    }
+
+    private boolean handleStrategyGame(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length == 0) {
+            sender.sendMessage(messages.format(sender, "sgame.usage"));
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "start":
+                strategyGameManager.startGame(player);
+                break;
+            case "continue":
+            case "menu":
+                strategyGameManager.continueGame(player);
+                break;
+            case "status":
+                strategyGameManager.showStatus(player);
+                break;
+            case "end":
+                strategyGameManager.endGame(player);
+                break;
+            case "abandon":
+                strategyGameManager.abandonGame(player);
+                break;
+            default:
+                sender.sendMessage(messages.format(sender, "sgame.usage"));
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleStrategyGameMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        strategyGameManager.continueGame(player);
         return true;
     }
 
@@ -1172,6 +1238,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             MailManager.MailMenuHolder mailHolder = (MailManager.MailMenuHolder) holder;
             mailManager.handleMenuClick(player, clicked, event.isShiftClick(), mailHolder.getCurrentPage());
+        }
+        if (holder instanceof StrategyGameManager.StrategyGameMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null) {
+                return;
+            }
+            StrategyGameManager.StrategyGameMenuHolder sgHolder = (StrategyGameManager.StrategyGameMenuHolder) holder;
+            strategyGameManager.handleMenuClick(player, clicked, sgHolder);
         }
     }
 

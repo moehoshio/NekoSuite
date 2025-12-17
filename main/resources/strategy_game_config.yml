@@ -1,0 +1,237 @@
+# NekoSuite Strategy Game Configuration
+# 貓咪冒險 - 策略遊戲配置
+
+storage:
+  data_dir: userdata
+
+game:
+  # 起始金幣
+  starting_gold: 100
+  # 起始生命值
+  starting_health: 100
+  # 完成遊戲所需的最大階段數
+  max_stages: 10
+
+# 遊戲事件配置
+events:
+  mysterious_merchant:
+    name: "&6神秘商人"
+    description:
+      - "&7你在路上遇到一位神秘的商人..."
+      - "&7他似乎有些東西想交易。"
+    choices:
+      - text: "&a與他交易"
+        result: "&7商人很高興，給了你一些金幣作為回報！"
+        gold_change: 20
+        health_change: 0
+      - text: "&c忽略他離開"
+        result: "&7你繼續你的旅程，什麼也沒發生。"
+        gold_change: 0
+        health_change: 0
+      - text: "&e嘗試搶劫"
+        result: "&c商人是個偽裝的盜賊！你被攻擊了！"
+        gold_change: -30
+        health_change: -15
+
+  injured_traveler:
+    name: "&b受傷的旅人"
+    description:
+      - "&7路邊躺著一個受傷的旅人..."
+      - "&7他似乎需要幫助。"
+    choices:
+      - text: "&a幫助他"
+        result: "&7旅人非常感激，給了你一些金幣！"
+        gold_change: 15
+        health_change: -5
+      - text: "&e查看他的背包"
+        result: "&7你發現了一些金幣，但感覺有些不安..."
+        gold_change: 25
+        health_change: 0
+      - text: "&c離開"
+        result: "&7你繼續趕路。"
+        gold_change: 0
+        health_change: 0
+
+  ancient_shrine:
+    name: "&d古老的神殿"
+    description:
+      - "&7你發現了一座古老的神殿..."
+      - "&7神殿中央有一個祭壇。"
+    choices:
+      - text: "&a獻上金幣祈禱"
+        result: "&7神明保佑了你，恢復了生命力！"
+        gold_change: -20
+        health_change: 30
+      - text: "&e探索神殿"
+        result: "&7你找到了一些寶物！"
+        gold_change: 40
+        health_change: -10
+      - text: "&c離開神殿"
+        result: "&7你尊重這個地方，繼續前進。"
+        gold_change: 5
+        health_change: 5
+
+  forest_crossroads:
+    name: "&2森林岔路"
+    description:
+      - "&7你來到了一個分岔路口..."
+      - "&7左邊看起來很陰暗，右邊陽光明媚。"
+    choices:
+      - text: "&a走右邊的路"
+        result: "&7安全的道路，你找到了一些金幣。"
+        gold_change: 10
+        health_change: 0
+      - text: "&c走左邊的路"
+        result: "&7雖然危險，但你發現了寶藏！"
+        gold_change: 35
+        health_change: -15
+      - text: "&e原路返回"
+        result: "&7你決定謹慎行事。"
+        gold_change: 0
+        health_change: 5
+
+  treasure_chest:
+    name: "&6寶箱"
+    description:
+      - "&7你發現了一個閃閃發光的寶箱！"
+      - "&7但它可能有陷阱..."
+    choices:
+      - text: "&a小心地打開"
+        result: "&7你成功避開陷阱，獲得了獎勵！"
+        gold_change: 30
+        health_change: 0
+      - text: "&e直接打開"
+        result: "&c觸發了陷阱！但裡面的寶物很豐富。"
+        gold_change: 50
+        health_change: -20
+      - text: "&c不碰它離開"
+        result: "&7安全第一。"
+        gold_change: 0
+        health_change: 0
+
+  village_festival:
+    name: "&e村莊慶典"
+    description:
+      - "&7你路過一個正在舉辦慶典的村莊。"
+      - "&7村民們很熱情地邀請你參加。"
+    choices:
+      - text: "&a參加慶典"
+        result: "&7你度過了愉快的時光，恢復了精力！"
+        gold_change: -10
+        health_change: 20
+      - text: "&e表演賺錢"
+        result: "&7村民們很喜歡你的表演！"
+        gold_change: 25
+        health_change: 0
+      - text: "&c繼續趕路"
+        result: "&7你沒有時間休息。"
+        gold_change: 0
+        health_change: -5
+
+# 商店物品配置
+shop:
+  items:
+    - id: small_potion
+      name: "&a小型治療藥水"
+      price: 20
+      material: POTION
+      effect_type: heal
+      effect_value: 25
+      effect_description: "恢復 25 點生命值"
+    - id: large_potion
+      name: "&a大型治療藥水"
+      price: 45
+      material: SPLASH_POTION
+      effect_type: heal
+      effect_value: 50
+      effect_description: "恢復 50 點生命值"
+    - id: health_upgrade
+      name: "&c生命強化"
+      price: 80
+      material: GOLDEN_APPLE
+      effect_type: max_health
+      effect_value: 20
+      effect_description: "永久增加 20 點最大生命值"
+    - id: lucky_coin
+      name: "&6幸運金幣"
+      price: 30
+      material: GOLD_NUGGET
+      effect_type: heal
+      effect_value: 10
+      effect_description: "恢復 10 點生命值並帶來好運"
+
+# 戰鬥敵人配置
+battles:
+  enemies:
+    - id: slime
+      name: "&a史萊姆"
+      description: "一個綠色的彈跳生物"
+      power: 20
+      damage: 8
+      gold_reward: 15
+      min_stage: 0
+    - id: skeleton
+      name: "&f骷髏弓箭手"
+      description: "一個拿著弓的骷髏"
+      power: 35
+      damage: 12
+      gold_reward: 25
+      min_stage: 2
+    - id: zombie
+      name: "&2殭屍"
+      description: "一個緩慢但強壯的不死生物"
+      power: 40
+      damage: 15
+      gold_reward: 30
+      min_stage: 3
+    - id: spider
+      name: "&8巨型蜘蛛"
+      description: "一隻可怕的巨型蜘蛛"
+      power: 45
+      damage: 18
+      gold_reward: 35
+      min_stage: 4
+    - id: witch
+      name: "&5女巫"
+      description: "一個邪惡的魔法使用者"
+      power: 55
+      damage: 22
+      gold_reward: 45
+      min_stage: 5
+    - id: dark_knight
+      name: "&8黑暗騎士"
+      description: "一個強大的黑暗戰士"
+      power: 70
+      damage: 28
+      gold_reward: 60
+      min_stage: 7
+    - id: dragon
+      name: "&4暗影龍"
+      description: "最終的挑戰，傳說中的龍"
+      power: 90
+      damage: 35
+      gold_reward: 100
+      min_stage: 9
+
+# 結束獎勵配置 (根據分數發放真實獎勵)
+end_rewards:
+  - name: "&6冒險新手獎勵"
+    min_score: 100
+    commands:
+      - "minecraft:give {player} minecraft:iron_ingot 5"
+  - name: "&a冒險者獎勵"
+    min_score: 300
+    commands:
+      - "minecraft:give {player} minecraft:gold_ingot 3"
+  - name: "&b資深冒險者獎勵"
+    min_score: 500
+    commands:
+      - "minecraft:give {player} minecraft:diamond 2"
+  - name: "&d傳奇冒險者獎勵"
+    min_score: 800
+    commands:
+      - "minecraft:give {player} minecraft:emerald 5"
+  - name: "&6&l王者獎勵"
+    min_score: 1000
+    commands:
+      - "minecraft:give {player} minecraft:netherite_ingot 1"

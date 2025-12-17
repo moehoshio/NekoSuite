@@ -31,3 +31,12 @@ mail:
   next_slot: 53
   info_slot: 49
   close_slot: 50
+
+strategy_game:
+  size: 27
+  status_slot: 4
+  adventure_slot: 11
+  battle_slot: 13
+  shop_slot: 15
+  end_game_slot: 22
+  close_slot: 26
