@@ -734,6 +734,52 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     actions.add(messages.getRaw(sender, "tab.mail.action"));
                     return filter(actions, args[0]);
                 }
+                if (args.length == 2) {
+                    String action = args[0].toLowerCase();
+                    if (!(sender instanceof Player)) {
+                        return Collections.emptyList();
+                    }
+                    Player player = (Player) sender;
+                    List<MailManager.Mail> mails = mailManager.getMails(player.getName());
+                    List<String> suggestions = new ArrayList<String>();
+                    for (MailManager.Mail mail : mails) {
+                        boolean claimable = mail.hasCommands() && !mail.isClaimed();
+                        boolean deletable = mail.isClaimed() || !mail.hasCommands();
+                        boolean unread = !mail.isRead();
+
+                        if ("claim".equals(action) && !claimable) {
+                            continue;
+                        }
+                        if ("delete".equals(action) && !deletable) {
+                            continue;
+                        }
+
+                        String status;
+                        if (claimable) {
+                            status = "claimable";
+                        } else if (unread) {
+                            status = "unread";
+                        } else {
+                            status = "read";
+                        }
+
+                        String subject = mail.getSubject();
+                        if (subject == null) {
+                            subject = "";
+                        }
+                        if (subject.length() > 12) {
+                            subject = subject.substring(0, 12) + "...";
+                        }
+
+                        String label = mail.getId();
+                        if (!subject.isEmpty()) {
+                            label += "|" + subject;
+                        }
+                        label += "|" + status;
+                        suggestions.add(label);
+                    }
+                    return filter(suggestions, args[1]);
+                }
                 break;
             case "mailsend":
                 if (args.length == 1) {

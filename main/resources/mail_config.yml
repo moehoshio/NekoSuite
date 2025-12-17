@@ -20,13 +20,13 @@ settings:
 # System mail templates (can be sent via admin commands)
 templates:
   welcome:
-    subject: "歡迎來到伺服器！"
-    content: "感謝您加入我們的伺服器，祝您遊戲愉快！"
+    subject: "欢迎来到Neko Server！"
+    content: "感谢您加入我们的服务器，祝您游戏愉快！"
     commands:
       - "minecraft:give {player} minecraft:diamond 5"
   
   daily_reward:
-    subject: "每日獎勵"
-    content: "這是您今天的每日獎勵，感謝您的支持！"
+    subject: "每日奖励"
+    content: "这是您今天的每日奖励，感谢您的支持！"
     commands:
       - "minecraft:give {player} minecraft:gold_ingot 10"
