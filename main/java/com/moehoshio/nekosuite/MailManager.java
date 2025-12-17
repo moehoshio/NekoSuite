@@ -448,6 +448,8 @@ public class MailManager {
                                 // Just mark as read and show content
                                 markAsRead(player.getName(), id);
                                 showMailContent(player, mail);
+                                // Refresh the menu so the read state updates immediately
+                                openMenu(player, currentPage);
                             }
                         }
                     }

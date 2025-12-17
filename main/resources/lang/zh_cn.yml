@@ -2,7 +2,7 @@ common:
   only_player: "&c✖ 该指令只能由玩家使用。"
 
 wish:
-  usage: "&7用法: &f/wish &6<pool> [count] &7或 &f/wish query &6<pool>"
+  usage: "&7用法: &f/wish &6<pool> [count] &7或 &f/wish query &6<pool> &7或 &f/wish menu"
   query:
     usage: "&7用法: &f/wish query &6<pool>"
   success: "&a✔ &7祈愿成功: &6{rewards}"
@@ -98,7 +98,7 @@ cdk:
   not_active: "&c✖ 该兑换码当前不可用"
 
 buy:
-  usage: "&7用法: &f/buy &6<类型> <等级>"
+  usage: "&7用法: &f/buy &6<类型> <等级> &7或 &f/buy menu"
   not_found: "&c✖ 未找到该商品"
   already_active: "&c✖ 你已拥有该特权且未过期"
   success: "&a✔ &7购买成功: &6{product}"
@@ -143,7 +143,7 @@ tab:
     action: "<操作类型>"
 
 mail:
-  usage: "&7用法: &f/mail &6<list|read|claim|delete> [邮件ID]"
+  usage: "&7用法: &f/mail &6<menu|list|claim|delete> [邮件ID]"
   send_usage: "&7用法: &f/mailsend &6<玩家> <主题> [内容]"
   admin_usage: "&7用法: &f/mailadmin &6<send|template> <玩家> <主题|模板ID> [内容] [指令...]"
   list_header: "&7你的邮件列表:"
@@ -153,7 +153,7 @@ mail:
   list_status_unclaimed: "&6[待领取]"
   list_status_read: "&7[已读]"
   new_mail_notification: "&a✉ &7你收到一封来自 &6{sender} &7的新邮件: &f{subject}"
-  login_notification: "&a✉ &7你有 &6{unread} &7封未读邮件，&6{unclaimed} &7封待领取奖励。使用 &f/mailmenu &7查看。"
+  login_notification: "&a✉ &7你有 &6{unread} &7封未读邮件，&6{unclaimed} &7封待领取奖励。使用 &f/mail menu &7查看。"
   claimed: "&a✔ &7奖励领取成功！"
   deleted: "&a✔ &7邮件已删除。"
   sent: "&a✔ &7邮件已发送给 &6{recipient}&7。"

@@ -89,6 +89,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("eventparticipate").setExecutor(this);
             getCommand("eventparticipate").setTabCompleter(this);
         }
+        if (getCommand("event") != null) {
+            getCommand("event").setExecutor(this);
+            getCommand("event").setTabCompleter(this);
+        }
         if (getCommand("eventmenu") != null) {
             getCommand("eventmenu").setExecutor(this);
             getCommand("eventmenu").setTabCompleter(this);
@@ -157,6 +161,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleEventCheck(sender);
             case "eventparticipate":
                 return handleEventParticipate(sender, args);
+            case "event":
+                return handleEvent(sender, args);
             case "eventmenu":
                 return handleEventMenu(sender);
             case "exp":
@@ -196,6 +202,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return true;
         }
         Player player = (Player) sender;
+        if ("menu".equalsIgnoreCase(args[0])) {
+            openWishMenu(player);
+            return true;
+        }
         if ("query".equalsIgnoreCase(args[0])) {
             if (args.length < 2) {
                 sender.sendMessage(messages.format(sender, "wish.query.usage"));
@@ -273,6 +283,32 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
         }
         return true;
+    }
+
+    private boolean handleEvent(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        if (args.length == 0) {
+            return handleEventCheck(sender);
+        }
+        String sub = args[0].toLowerCase();
+        if ("menu".equals(sub)) {
+            return handleEventMenu(sender);
+        }
+        if ("check".equals(sub)) {
+            return handleEventCheck(sender);
+        }
+        if ("participate".equals(sub)) {
+            if (args.length < 2) {
+                sender.sendMessage(messages.format(sender, "event.participate.usage"));
+                return true;
+            }
+            return handleEventParticipate(sender, new String[]{args[1]});
+        }
+        // Default fallback: treat first argument as eventId to participate
+        return handleEventParticipate(sender, new String[]{args[0]});
     }
 
     private boolean handleEventParticipate(CommandSender sender, String[] args) {
@@ -430,6 +466,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return true;
         }
         Player player = (Player) sender;
+        if ("menu".equalsIgnoreCase(args[0])) {
+            buyManager.openMenu(player);
+            return true;
+        }
         String productId;
         if (args.length >= 2) {
             productId = args[0] + args[1];
@@ -468,6 +508,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return true;
         }
         String sub = args[0].toLowerCase();
+        if ("menu".equals(sub)) {
+            mailManager.openMenu(player);
+            return true;
+        }
         if ("list".equals(sub)) {
             List<MailManager.Mail> mails = mailManager.getMails(player.getName());
             if (mails.isEmpty()) {
@@ -637,6 +681,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             case "wish":
                 if (args.length == 1) {
                     List<String> dynamic = new ArrayList<String>(wishManager.getPools().keySet());
+                    dynamic.add("menu");
                     dynamic.add("query");
                     dynamic.add(messages.getRaw(sender, "tab.wish.pool"));
                     return filter(dynamic, args[0]);
@@ -665,6 +710,19 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     List<String> events = new ArrayList<String>(eventManager.getEventIds());
                     events.add(messages.getRaw(sender, "tab.event.id"));
                     return filter(events, args[0]);
+                }
+                break;
+            case "event":
+                if (args.length == 1) {
+                    List<String> options = new ArrayList<String>(Arrays.asList("menu", "check", "participate"));
+                    options.addAll(eventManager.getEventIds());
+                    options.add(messages.getRaw(sender, "tab.event.id"));
+                    return filter(options, args[0]);
+                }
+                if (args.length == 2 && "participate".equalsIgnoreCase(args[0])) {
+                    List<String> events = new ArrayList<String>(eventManager.getEventIds());
+                    events.add(messages.getRaw(sender, "tab.event.id"));
+                    return filter(events, args[1]);
                 }
                 break;
             case "exp":
@@ -701,8 +759,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return Collections.emptyList();
             case "buy":
                 if (args.length == 1) {
-                    // Suggest product types: vip, bag, mcd
-                    List<String> types = new ArrayList<String>(Arrays.asList("vip", "bag", "mcd"));
+                    // Suggest product types or open menu
+                    List<String> types = new ArrayList<String>(Arrays.asList("menu", "vip", "bag", "mcd"));
                     types.add(messages.getRaw(sender, "tab.buy.type"));
                     return filter(types, args[0]);
                 }
@@ -730,7 +788,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 break;
             case "mail":
                 if (args.length == 1) {
-                    List<String> actions = new ArrayList<String>(Arrays.asList("list", "claim", "delete"));
+                    List<String> actions = new ArrayList<String>(Arrays.asList("menu", "list", "claim", "delete"));
                     actions.add(messages.getRaw(sender, "tab.mail.action"));
                     return filter(actions, args[0]);
                 }
@@ -763,20 +821,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                             status = "read";
                         }
 
-                        String subject = mail.getSubject();
-                        if (subject == null) {
-                            subject = "";
-                        }
-                        if (subject.length() > 12) {
-                            subject = subject.substring(0, 12) + "...";
-                        }
-
-                        String label = mail.getId();
-                        if (!subject.isEmpty()) {
-                            label += "|" + subject;
-                        }
-                        label += "|" + status;
-                        suggestions.add(label);
+                        // Only return the raw mail ID to keep parsing simple (no subject included)
+                        suggestions.add(mail.getId());
                     }
                     return filter(suggestions, args[1]);
                 }

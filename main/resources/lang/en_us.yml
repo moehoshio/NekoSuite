@@ -2,7 +2,7 @@ common:
   only_player: "&c✖ This command can only be used by players."
 
 wish:
-  usage: "&7Usage: &f/wish &6<pool> [count] &7or &f/wish query &6<pool>"
+  usage: "&7Usage: &f/wish &6<pool> [count] &7or &f/wish query &6<pool> &7or &f/wish menu"
   query:
     usage: "&7Usage: &f/wish query &6<pool>"
   success: "&a✔ &7Wish succeeded: &6{rewards}"
@@ -98,7 +98,7 @@ cdk:
   not_active: "&c✖ This CDK is currently unavailable"
 
 buy:
-  usage: "&7Usage: &f/buy &6<type> <level>"
+  usage: "&7Usage: &f/buy &6<type> <level> &7or &f/buy menu"
   not_found: "&c✖ Product not found"
   already_active: "&c✖ You already own this perk and it is not expired"
   success: "&a✔ &7Purchased: &6{product}"
@@ -143,7 +143,7 @@ tab:
     action: "<action_type>"
 
 mail:
-  usage: "&7Usage: &f/mail &6<list|read|claim|delete> [mailId]"
+  usage: "&7Usage: &f/mail &6<menu|list|claim|delete> [mailId]"
   send_usage: "&7Usage: &f/mailsend &6<player> <subject> [content]"
   admin_usage: "&7Usage: &f/mailadmin &6<send|template> <player> <subject|templateId> [content] [commands...]"
   list_header: "&7Your mail list:"
@@ -153,7 +153,7 @@ mail:
   list_status_unclaimed: "&6[Unclaimed]"
   list_status_read: "&7[Read]"
   new_mail_notification: "&a✉ &7You received a new mail from &6{sender}&7: &f{subject}"
-  login_notification: "&a✉ &7You have &6{unread} &7unread mail(s) and &6{unclaimed} &7unclaimed reward(s). Use &f/mailmenu &7to view."
+  login_notification: "&a✉ &7You have &6{unread} &7unread mail(s) and &6{unclaimed} &7unclaimed reward(s). Use &f/mail menu &7to view."
   claimed: "&a✔ &7Rewards claimed successfully!"
   deleted: "&a✔ &7Mail deleted."
   sent: "&a✔ &7Mail sent to &6{recipient}&7."

@@ -24,7 +24,7 @@ public class Messages {
         DEFAULTS.put("common.only_player", "&c✖ 此命令僅玩家可用。");
         DEFAULTS.put("common.no_permission", "&c✖ 您沒有權限使用此命令。");
         DEFAULTS.put("common.reload_success", "&a✔ &7配置已重載。");
-        DEFAULTS.put("wish.usage", "&7用法: &f/wish &6<pool> [count] &7或 &f/wish query &6<pool>");
+        DEFAULTS.put("wish.usage", "&7用法: &f/wish &6<pool> [count] &7或 &f/wish query &6<pool> &7或 &f/wish menu");
         DEFAULTS.put("wish.query.usage", "&7用法: &f/wish query &6<pool>");
         DEFAULTS.put("wish.success", "&a✔ &7祈願成功，獲得: &6{rewards}");
         DEFAULTS.put("wish.failure", "&c✖ 祈願失敗: &7{reason}");
@@ -81,7 +81,7 @@ public class Messages {
         DEFAULTS.put("cdk.limit", "&c✖ 該cdk已被兌換完");
         DEFAULTS.put("cdk.limit_user", "&c✖ 您已達到此cdk的兌換次數限制");
         DEFAULTS.put("cdk.not_active", "&c✖ 該cdk當前不可用");
-        DEFAULTS.put("buy.usage", "&7用法: &f/buy &6<類型> <等級>");
+        DEFAULTS.put("buy.usage", "&7用法: &f/buy &6<類型> <等級> &7或 &f/buy menu");
         DEFAULTS.put("buy.not_found", "&c✖ 未找到此商品");
         DEFAULTS.put("buy.already_active", "&c✖ 您已經擁有該特權，尚未過期");
         DEFAULTS.put("buy.success", "&a✔ &7購買成功: &6{product}");

@@ -5,7 +5,7 @@ softdepend: [Vault]
 commands:
   wish:
     description: Execute wish draws
-    usage: /wish <pool> [count] or /wish query <pool>
+    usage: /wish <pool> [count] or /wish query <pool> or /wish menu
     permission: nekosuite.wish
   wishquery:
     description: Query wish status
@@ -23,6 +23,10 @@ commands:
     description: Participate in an event
     usage: /eventparticipate <eventId>
     permission: nekosuite.event.participate
+  event:
+    description: Event operations
+    usage: /event <check|participate|menu> [eventId]
+    permission: nekosuite.event
   eventmenu:
     description: Open event GUI
     usage: /eventmenu
@@ -41,7 +45,7 @@ commands:
     permission: nekosuite.cdk
   buy:
     description: Purchase privileges
-    usage: /buy <productId>
+    usage: /buy <productId> or /buy menu
     permission: nekosuite.buy
   buymenu:
     description: Open privilege purchase menu
@@ -49,7 +53,7 @@ commands:
     permission: nekosuite.buy.menu
   mail:
     description: Mail operations
-    usage: /mail <read|send|list|claim|delete>
+    usage: /mail <menu|list|claim|delete>
     permission: nekosuite.mail
   mailmenu:
     description: Open mail GUI
