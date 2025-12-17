@@ -273,6 +273,10 @@ sgame:
   battle_defeat: "&c✖ &7你被 &c{enemy} &7擊敗了！受到 &c{damage} &7點傷害！"
   flee_success: "&a✔ &7你成功逃跑了！"
   flee_failed: "&c✖ &7逃跑失敗！受到 &c{damage} &7點傷害！"
+  event_not_found: "&c✖ &7事件不存在。"
+  missing_item_cost: "&c✖ &7你缺少必要的物品。"
+  item_gained: "&a✔ &7獲得: &6{item} x{amount}"
+  shop_left: "&a✔ &7你離開了商店，繼續冒險。"
 
 menu:
   wish:
@@ -308,7 +312,7 @@ menu:
     health_lore: "&c生命: &f{health}"
     stage_lore: "&a進度: &f{stage}/{max_stage}"
     adventure_title: "&a探索冒險"
-    adventure_lore: "&7遇到隨機事件，做出選擇"
+    adventure_lore: "&7選擇要進行的事件"
     battle_title: "&c戰鬥"
     battle_lore: "&7與怪物戰鬥獲得獎勵"
     shop_title: "&6商店"
@@ -316,9 +320,12 @@ menu:
     end_game_title: "&d結束冒險"
     end_game_lore: "&7完成冒險並領取獎勵"
     back: "&7返回"
+    event_selection_title: "&#60a5fa✦ 選擇事件"
     event_title: "&#60a5fa✦ 事件"
     battle_menu_title: "&#ff6666✦ 戰鬥"
     shop_menu_title: "&#ffcc00✦ 商店"
+    shop_continue: "&a繼續冒險"
+    shop_continue_lore: "&7購買完成，前往下一關"
     enemy_title: "&c敵人: &f{enemy}"
     enemy_power_lore: "&7戰力: &c{power}"
     fight_button: "&a戰鬥"

@@ -13,9 +13,26 @@ game:
   max_stages: 10
 
 # 遊戲事件配置
+# type: story (普通劇情), shop (商店), battle (戰鬥)
+# requirement: 進入事件的條件
+#   item: 需要的虛擬物品ID
+#   item_amount: 需要的數量 (默認1)
+#   gold: 需要持有的最低金幣數
+#   gold_cost: 進入時消耗的金幣
+#   fail_text: 條件不足時的提示
+# choices中的 requirement: 選擇的條件
+#   result_alt: 條件不足時的替代結果文字
+#   gold_change_alt: 條件不足時的金幣變化
+#   health_change_alt: 條件不足時的生命變化
+#   item_gain: 選擇後獲得的虛擬物品
+#   item_gain_amount: 獲得數量
+#   item_cost: 選擇時消耗的虛擬物品
+#   item_cost_amount: 消耗數量
+
 events:
   mysterious_merchant:
     name: "&6神秘商人"
+    type: story
     description:
       - "&7你在路上遇到一位神秘的商人..."
       - "&7他似乎有些東西想交易。"
@@ -24,6 +41,8 @@ events:
         result: "&7商人很高興，給了你一些金幣作為回報！"
         gold_change: 20
         health_change: 0
+        item_gain: merchant_token
+        item_gain_amount: 1
       - text: "&c忽略他離開"
         result: "&7你繼續你的旅程，什麼也沒發生。"
         gold_change: 0
@@ -35,14 +54,23 @@ events:
 
   injured_traveler:
     name: "&b受傷的旅人"
+    type: story
     description:
       - "&7路邊躺著一個受傷的旅人..."
       - "&7他似乎需要幫助。"
     choices:
-      - text: "&a幫助他"
-        result: "&7旅人非常感激，給了你一些金幣！"
-        gold_change: 15
-        health_change: -5
+      - text: "&a幫助他 (使用治療藥水)"
+        result: "&7旅人非常感激，給了你豐厚的報酬！"
+        result_alt: "&7你盡力幫助了他，他給了你一些金幣。"
+        gold_change: 40
+        gold_change_alt: 15
+        health_change: 0
+        health_change_alt: -5
+        item_cost: healing_potion
+        item_cost_amount: 1
+        requirement:
+          item: healing_potion
+          item_amount: 1
       - text: "&e查看他的背包"
         result: "&7你發現了一些金幣，但感覺有些不安..."
         gold_change: 25
@@ -54,14 +82,20 @@ events:
 
   ancient_shrine:
     name: "&d古老的神殿"
+    type: story
+    requirement:
+      gold: 20
+      fail_text: "&c你需要至少20金幣才能進入神殿"
     description:
       - "&7你發現了一座古老的神殿..."
       - "&7神殿中央有一個祭壇。"
     choices:
-      - text: "&a獻上金幣祈禱"
+      - text: "&a獻上金幣祈禱 (花費20金幣)"
         result: "&7神明保佑了你，恢復了生命力！"
         gold_change: -20
         health_change: 30
+        item_gain: blessed_amulet
+        item_gain_amount: 1
       - text: "&e探索神殿"
         result: "&7你找到了一些寶物！"
         gold_change: 40
@@ -73,6 +107,7 @@ events:
 
   forest_crossroads:
     name: "&2森林岔路"
+    type: story
     description:
       - "&7你來到了一個分岔路口..."
       - "&7左邊看起來很陰暗，右邊陽光明媚。"
@@ -81,10 +116,16 @@ events:
         result: "&7安全的道路，你找到了一些金幣。"
         gold_change: 10
         health_change: 0
-      - text: "&c走左邊的路"
-        result: "&7雖然危險，但你發現了寶藏！"
-        gold_change: 35
-        health_change: -15
+      - text: "&c走左邊的路 (需要護身符)"
+        result: "&7護身符保護了你，你發現了大量寶藏！"
+        result_alt: "&7危險的道路，你受傷了但找到了一些寶物。"
+        gold_change: 60
+        gold_change_alt: 35
+        health_change: 0
+        health_change_alt: -15
+        requirement:
+          item: blessed_amulet
+          item_amount: 1
       - text: "&e原路返回"
         result: "&7你決定謹慎行事。"
         gold_change: 0
@@ -92,6 +133,7 @@ events:
 
   treasure_chest:
     name: "&6寶箱"
+    type: story
     description:
       - "&7你發現了一個閃閃發光的寶箱！"
       - "&7但它可能有陷阱..."
@@ -100,6 +142,8 @@ events:
         result: "&7你成功避開陷阱，獲得了獎勵！"
         gold_change: 30
         health_change: 0
+        item_gain: treasure_key
+        item_gain_amount: 1
       - text: "&e直接打開"
         result: "&c觸發了陷阱！但裡面的寶物很豐富。"
         gold_change: 50
@@ -111,11 +155,12 @@ events:
 
   village_festival:
     name: "&e村莊慶典"
+    type: story
     description:
       - "&7你路過一個正在舉辦慶典的村莊。"
       - "&7村民們很熱情地邀請你參加。"
     choices:
-      - text: "&a參加慶典"
+      - text: "&a參加慶典 (花費10金幣)"
         result: "&7你度過了愉快的時光，恢復了精力！"
         gold_change: -10
         health_change: 20
@@ -123,10 +168,50 @@ events:
         result: "&7村民們很喜歡你的表演！"
         gold_change: 25
         health_change: 0
+        item_gain: performer_badge
+        item_gain_amount: 1
       - text: "&c繼續趕路"
         result: "&7你沒有時間休息。"
         gold_change: 0
         health_change: -5
+
+  secret_vault:
+    name: "&5秘密金庫"
+    type: story
+    requirement:
+      item: treasure_key
+      item_amount: 1
+      fail_text: "&c你需要一把寶藏鑰匙才能進入"
+    description:
+      - "&7你發現了一個隱藏的金庫入口！"
+      - "&7需要鑰匙才能打開。"
+    choices:
+      - text: "&a使用鑰匙開門"
+        result: "&7金庫裡滿是財寶！你發財了！"
+        gold_change: 100
+        health_change: 0
+        item_cost: treasure_key
+        item_cost_amount: 1
+      - text: "&c離開"
+        result: "&7你決定保留鑰匙，以後再來。"
+        gold_change: 0
+        health_change: 0
+
+  traveling_merchant_shop:
+    name: "&6旅行商人的商店"
+    type: shop
+    requirement:
+      item: merchant_token
+      item_amount: 1
+      fail_text: "&c需要商人代幣才能進入特別商店"
+    description:
+      - "&7一位旅行商人願意與你交易..."
+      - "&7他有一些特殊的物品出售。"
+    choices:
+      - text: "&a查看商品"
+        result: "&7歡迎光臨！"
+        gold_change: 0
+        health_change: 0
 
 # 商店物品配置
 shop:
@@ -159,6 +244,13 @@ shop:
       effect_type: heal
       effect_value: 10
       effect_description: "恢復 10 點生命值並帶來好運"
+    - id: healing_potion
+      name: "&d治療藥水"
+      price: 25
+      material: LINGERING_POTION
+      effect_type: item
+      effect_value: 1
+      effect_description: "獲得1個可在事件中使用的治療藥水"
 
 # 戰鬥敵人配置
 battles:

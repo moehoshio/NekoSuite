@@ -309,26 +309,139 @@ public class StrategyGameManager {
         player.openInventory(inv);
     }
 
-    public void openEventMenu(Player player) {
+    /**
+     * Open event selection menu - show multiple events for the player to choose from.
+     */
+    public void openEventSelectionMenu(Player player) {
         GameSession session = getOrLoadSession(player.getName());
         if (session == null || session.isEnded()) {
             return;
         }
 
-        // Pick a random event
         if (gameEvents.isEmpty()) {
             player.sendMessage(messages.format(player, "sgame.no_events_available"));
             openMainMenu(player);
             return;
         }
 
-        GameEvent event = gameEvents.get(random.nextInt(gameEvents.size()));
-        session.setCurrentEventId(event.getId());
-        saveSession(session);
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.event_selection_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.EVENT_SELECTION), layout.getSize(), title);
+
+        // Status display
+        Map<String, String> statusMap = new HashMap<String, String>();
+        statusMap.put("gold", String.valueOf(session.getGold()));
+        statusMap.put("health", String.valueOf(session.getHealth()));
+        statusMap.put("stage", String.valueOf(session.getCurrentStage()));
+        statusMap.put("max_stage", String.valueOf(maxStages));
+        
+        ItemStack statusItem = createItem(Material.BOOK, 
+            messages.format(player, "menu.sgame.status_title", statusMap),
+            new String[]{
+                messages.format(player, "menu.sgame.gold_lore", statusMap),
+                messages.format(player, "menu.sgame.health_lore", statusMap),
+                messages.format(player, "menu.sgame.stage_lore", statusMap)
+            });
+        safeSet(inv, 4, statusItem);
+
+        // Pick 3 random events to show
+        List<GameEvent> availableEvents = new ArrayList<GameEvent>(gameEvents);
+        java.util.Collections.shuffle(availableEvents, random);
+        int eventsToShow = Math.min(3, availableEvents.size());
+        
+        int[] eventSlots = {11, 13, 15};
+        for (int i = 0; i < eventsToShow; i++) {
+            GameEvent event = availableEvents.get(i);
+            
+            // Check if event has requirements and if player meets them
+            boolean meetsRequirements = true;
+            List<String> loreList = new ArrayList<String>();
+            loreList.addAll(event.getDescription());
+            
+            if (event.hasRequirement()) {
+                EventRequirement req = event.getRequirement();
+                meetsRequirements = req.checkRequirements(session);
+                
+                // Show requirement info
+                if (req.hasItemRequirement()) {
+                    boolean hasItem = session.hasItem(req.getRequiredItem(), req.getRequiredItemAmount());
+                    String itemColor = hasItem ? "&a✔" : "&c✖";
+                    loreList.add(itemColor + " &7需要: &f" + req.getRequiredItem() + " x" + req.getRequiredItemAmount());
+                }
+                if (req.hasGoldRequirement()) {
+                    boolean hasGold = session.getGold() >= req.getRequiredGold();
+                    String goldColor = hasGold ? "&a✔" : "&c✖";
+                    loreList.add(goldColor + " &7需要金幣: &6" + req.getRequiredGold());
+                }
+                if (req.hasGoldCost()) {
+                    boolean canPay = session.getGold() >= req.getGoldCost();
+                    String costColor = canPay ? "&e" : "&c";
+                    loreList.add(costColor + "⚡ &7消耗金幣: &6" + req.getGoldCost());
+                }
+            }
+            
+            if (meetsRequirements) {
+                loreList.add("&a點擊進入事件");
+            } else {
+                loreList.add("&c無法進入 - 條件不足");
+            }
+            loreList.add("ID:select_event_" + event.getId());
+            
+            Material eventMaterial = meetsRequirements ? Material.WRITABLE_BOOK : Material.BARRIER;
+            ItemStack eventItem = createItem(eventMaterial,
+                event.getName(),
+                loreList.toArray(new String[0]));
+            safeSet(inv, eventSlots[i], eventItem);
+        }
+
+        // Back button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.sgame.back"),
+            new String[]{"ID:back"});
+        safeSet(inv, layout.getCloseSlot(), backItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Open event detail menu - show the choices for a specific event.
+     */
+    public void openEventMenu(Player player) {
+        GameSession session = getOrLoadSession(player.getName());
+        if (session == null || session.isEnded()) {
+            return;
+        }
+
+        String eventId = session.getCurrentEventId();
+        if (eventId == null) {
+            openEventSelectionMenu(player);
+            return;
+        }
+
+        GameEvent event = findEvent(eventId);
+        if (event == null) {
+            player.sendMessage(messages.format(player, "sgame.no_events_available"));
+            session.setCurrentEventId(null);
+            saveSession(session);
+            openMainMenu(player);
+            return;
+        }
 
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
         String title = messages.format(player, "menu.sgame.event_title");
         Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.EVENT), layout.getSize(), title);
+
+        // Status display with current gold/health
+        Map<String, String> statusMap = new HashMap<String, String>();
+        statusMap.put("gold", String.valueOf(session.getGold()));
+        statusMap.put("health", String.valueOf(session.getHealth()));
+        
+        ItemStack statusItem = createItem(Material.GOLD_NUGGET, 
+            messages.format(player, "menu.sgame.your_gold", statusMap),
+            new String[]{
+                messages.format(player, "menu.sgame.health_lore", statusMap)
+            });
+        safeSet(inv, 0, statusItem);
 
         // Event description
         ItemStack descItem = createItem(Material.PAPER,
@@ -336,17 +449,60 @@ public class StrategyGameManager {
             event.getDescription().toArray(new String[0]));
         safeSet(inv, 4, descItem);
 
-        // Choice buttons
+        // Choice buttons with requirement indicators
         List<EventChoice> choices = event.getChoices();
         int[] choiceSlots = {11, 13, 15};
         for (int i = 0; i < choices.size() && i < choiceSlots.length; i++) {
             EventChoice choice = choices.get(i);
-            ItemStack choiceItem = createItem(Material.OAK_SIGN,
+            List<String> loreList = new ArrayList<String>();
+            
+            // Show potential outcomes
+            if (choice.getGoldChange() != 0) {
+                loreList.add("&7金幣: " + formatChange(choice.getGoldChange()));
+            }
+            if (choice.getHealthChange() != 0) {
+                loreList.add("&7生命: " + formatChange(choice.getHealthChange()));
+            }
+            if (choice.getItemGain() != null) {
+                loreList.add("&a獲得: &f" + choice.getItemGain() + " x" + choice.getItemGainAmount());
+            }
+            if (choice.getItemCost() != null) {
+                boolean hasItem = session.hasItem(choice.getItemCost(), choice.getItemCostAmount());
+                String costColor = hasItem ? "&e" : "&c";
+                loreList.add(costColor + "消耗: &f" + choice.getItemCost() + " x" + choice.getItemCostAmount());
+            }
+            
+            // Check choice requirements
+            boolean meetsReq = true;
+            if (choice.hasRequirement()) {
+                EventRequirement req = choice.getRequirement();
+                meetsReq = req.checkRequirements(session);
+                if (req.hasItemRequirement()) {
+                    boolean hasItem = session.hasItem(req.getRequiredItem(), req.getRequiredItemAmount());
+                    String itemColor = hasItem ? "&a✔" : "&c✖";
+                    loreList.add(itemColor + " &7需要: &f" + req.getRequiredItem() + " x" + req.getRequiredItemAmount());
+                }
+                if (req.hasGoldRequirement()) {
+                    boolean hasGold = session.getGold() >= req.getRequiredGold();
+                    String goldColor = hasGold ? "&a✔" : "&c✖";
+                    loreList.add(goldColor + " &7需要金幣: &6" + req.getRequiredGold());
+                }
+                
+                if (!meetsReq && choice.hasAltResult()) {
+                    loreList.add("&e(條件不足時有不同結果)");
+                } else if (!meetsReq) {
+                    loreList.add("&c條件不足");
+                }
+            }
+            
+            loreList.add("");
+            loreList.add("&7做出你的選擇...");
+            loreList.add("ID:choice_" + i);
+            
+            Material choiceMat = meetsReq ? Material.OAK_SIGN : (choice.hasAltResult() ? Material.BIRCH_SIGN : Material.OAK_SIGN);
+            ItemStack choiceItem = createItem(choiceMat,
                 choice.getText(),
-                new String[]{
-                    "&7做出你的選擇...",
-                    "ID:choice_" + i
-                });
+                loreList.toArray(new String[0]));
             safeSet(inv, choiceSlots[i], choiceItem);
         }
 
@@ -436,12 +592,15 @@ public class StrategyGameManager {
         String title = messages.format(player, "menu.sgame.shop_menu_title");
         Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.SHOP), layout.getSize(), title);
 
-        // Display gold
-        Map<String, String> goldMap = new HashMap<String, String>();
-        goldMap.put("gold", String.valueOf(session.getGold()));
+        // Display gold and health status
+        Map<String, String> statusMap = new HashMap<String, String>();
+        statusMap.put("gold", String.valueOf(session.getGold()));
+        statusMap.put("health", String.valueOf(session.getHealth()));
         ItemStack goldItem = createItem(Material.GOLD_NUGGET,
-            messages.format(player, "menu.sgame.your_gold", goldMap),
-            new String[0]);
+            messages.format(player, "menu.sgame.your_gold", statusMap),
+            new String[]{
+                messages.format(player, "menu.sgame.health_lore", statusMap)
+            });
         safeSet(inv, 4, goldItem);
 
         // Shop items
@@ -452,15 +611,28 @@ public class StrategyGameManager {
             itemMap.put("price", String.valueOf(item.getPrice()));
             itemMap.put("effect", item.getEffectDescription());
             
+            boolean canAfford = session.getGold() >= item.getPrice();
+            String priceColor = canAfford ? "&a" : "&c";
+            
             ItemStack shopItemStack = createItem(item.getMaterial(),
                 item.getName(),
                 new String[]{
-                    messages.format(player, "menu.sgame.item_price_lore", itemMap),
+                    priceColor + messages.format(player, "menu.sgame.item_price_lore", itemMap),
                     "&7" + item.getEffectDescription(),
+                    canAfford ? "&a點擊購買" : "&c金幣不足",
                     "ID:buy_" + item.getId()
                 });
             safeSet(inv, itemSlots[i], shopItemStack);
         }
+
+        // Continue button - proceed to next stage without buying more
+        ItemStack continueItem = createItem(Material.LIME_WOOL,
+            messages.format(player, "menu.sgame.shop_continue"),
+            new String[]{
+                messages.format(player, "menu.sgame.shop_continue_lore"),
+                "ID:shop_continue"
+            });
+        safeSet(inv, 22, continueItem);
 
         // Back button
         ItemStack backItem = createItem(Material.ARROW,
@@ -498,6 +670,9 @@ public class StrategyGameManager {
             case MAIN:
                 handleMainMenuClick(player, session, id);
                 break;
+            case EVENT_SELECTION:
+                handleEventSelectionClick(player, session, id);
+                break;
             case EVENT:
                 handleEventMenuClick(player, session, id);
                 break;
@@ -513,7 +688,7 @@ public class StrategyGameManager {
     private void handleMainMenuClick(Player player, GameSession session, String id) {
         switch (id) {
             case "adventure":
-                openEventMenu(player);
+                openEventSelectionMenu(player);
                 break;
             case "battle":
                 openBattleMenu(player);
@@ -530,9 +705,43 @@ public class StrategyGameManager {
         }
     }
 
-    private void handleEventMenuClick(Player player, GameSession session, String id) {
+    private void handleEventSelectionClick(Player player, GameSession session, String id) {
         if ("back".equals(id)) {
             openMainMenu(player);
+            return;
+        }
+
+        if (id.startsWith("select_event_")) {
+            String eventId = id.substring(13);
+            GameEvent event = findEvent(eventId);
+            if (event == null) {
+                player.sendMessage(messages.format(player, "sgame.event_not_found"));
+                return;
+            }
+
+            // Check requirements
+            if (event.hasRequirement()) {
+                EventRequirement req = event.getRequirement();
+                if (!req.checkRequirements(session)) {
+                    player.sendMessage(messages.colorize(req.getFailText()));
+                    return;
+                }
+                // Apply gold cost if any
+                req.applyGoldCost(session);
+            }
+
+            session.setCurrentEventId(eventId);
+            saveSession(session);
+            openEventMenu(player);
+        }
+    }
+
+    private void handleEventMenuClick(Player player, GameSession session, String id) {
+        if ("back".equals(id)) {
+            // Go back to event selection instead of main menu
+            session.setCurrentEventId(null);
+            saveSession(session);
+            openEventSelectionMenu(player);
             return;
         }
 
@@ -551,7 +760,7 @@ public class StrategyGameManager {
             }
 
             EventChoice choice = event.getChoices().get(choiceIndex);
-            applyEventChoice(player, session, choice);
+            applyEventChoice(player, session, event, choice);
             session.setCurrentEventId(null);
             session.incrementStage();
             saveSession(session);
@@ -584,6 +793,16 @@ public class StrategyGameManager {
             return;
         }
 
+        if ("shop_continue".equals(id)) {
+            // Proceed to next stage after shopping
+            session.incrementStage();
+            saveSession(session);
+            player.sendMessage(messages.format(player, "sgame.shop_left"));
+            player.closeInventory();
+            openMainMenu(player);
+            return;
+        }
+
         if (id.startsWith("buy_")) {
             String itemId = id.substring(4);
             ShopItem item = findShopItem(itemId);
@@ -604,17 +823,48 @@ public class StrategyGameManager {
             map.put("item", item.getName());
             player.sendMessage(messages.format(player, "sgame.item_purchased", map));
             
-            // Refresh shop menu
+            // Refresh shop menu to show updated gold and item availability
             openShopMenu(player);
         }
     }
 
     // ============ Game Logic ============
 
-    private void applyEventChoice(Player player, GameSession session, EventChoice choice) {
-        // Apply rewards/penalties
-        session.addGold(choice.getGoldChange());
-        session.addHealth(choice.getHealthChange());
+    private void applyEventChoice(Player player, GameSession session, GameEvent event, EventChoice choice) {
+        // Determine if using alternative outcome
+        boolean useAltResult = false;
+        if (choice.hasRequirement()) {
+            EventRequirement req = choice.getRequirement();
+            useAltResult = !req.checkRequirements(session) && choice.hasAltResult();
+        }
+        
+        // Consume item cost if required
+        if (choice.getItemCost() != null && !choice.getItemCost().isEmpty()) {
+            if (session.hasItem(choice.getItemCost(), choice.getItemCostAmount())) {
+                session.removeItem(choice.getItemCost(), choice.getItemCostAmount());
+            } else if (!useAltResult) {
+                // Cannot afford item cost and no alt result
+                player.sendMessage(messages.format(player, "sgame.missing_item_cost"));
+                return;
+            }
+        }
+        
+        // Apply rewards/penalties based on result type
+        int goldChange = useAltResult ? choice.getGoldChangeAlt() : choice.getGoldChange();
+        int healthChange = useAltResult ? choice.getHealthChangeAlt() : choice.getHealthChange();
+        String resultText = useAltResult ? choice.getResultTextAlt() : choice.getResultText();
+        
+        session.addGold(goldChange);
+        session.addHealth(healthChange);
+        
+        // Add gained items
+        if (choice.getItemGain() != null && !choice.getItemGain().isEmpty() && !useAltResult) {
+            session.addItem(choice.getItemGain(), choice.getItemGainAmount());
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("item", choice.getItemGain());
+            itemMap.put("amount", String.valueOf(choice.getItemGainAmount()));
+            player.sendMessage(messages.format(player, "sgame.item_gained", itemMap));
+        }
 
         // Check for game over
         if (session.getHealth() <= 0) {
@@ -624,9 +874,9 @@ public class StrategyGameManager {
 
         // Show result
         Map<String, String> map = new HashMap<String, String>();
-        map.put("result", choice.getResultText());
-        map.put("gold_change", formatChange(choice.getGoldChange()));
-        map.put("health_change", formatChange(choice.getHealthChange()));
+        map.put("result", resultText != null ? resultText : "");
+        map.put("gold_change", formatChange(goldChange));
+        map.put("health_change", formatChange(healthChange));
         player.sendMessage(messages.format(player, "sgame.choice_result", map));
         
         player.closeInventory();
@@ -906,6 +1156,17 @@ public class StrategyGameManager {
         session.setCurrentEventId(data.getString("sgame.current_event_id", null));
         session.setCurrentEnemyId(data.getString("sgame.current_enemy_id", null));
         
+        // Load inventory
+        ConfigurationSection invSection = data.getConfigurationSection("sgame.inventory");
+        if (invSection != null) {
+            for (String key : invSection.getKeys(false)) {
+                int amount = invSection.getInt(key, 0);
+                if (amount > 0) {
+                    session.addItem(key, amount);
+                }
+            }
+        }
+        
         return session;
     }
 
@@ -927,6 +1188,14 @@ public class StrategyGameManager {
         data.set("sgame.ended", session.isEnded());
         data.set("sgame.current_event_id", session.getCurrentEventId());
         data.set("sgame.current_enemy_id", session.getCurrentEnemyId());
+        
+        // Save inventory
+        data.set("sgame.inventory", null);
+        for (Map.Entry<String, Integer> entry : session.getInventory().entrySet()) {
+            if (entry.getValue() > 0) {
+                data.set("sgame.inventory." + entry.getKey(), entry.getValue());
+            }
+        }
         
         try {
             data.save(file);
@@ -951,7 +1220,7 @@ public class StrategyGameManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, EVENT, BATTLE, SHOP
+        MAIN, EVENT_SELECTION, EVENT, BATTLE, SHOP
     }
 
     public static class StrategyGameMenuHolder implements InventoryHolder {
@@ -980,6 +1249,7 @@ public class StrategyGameManager {
         private boolean ended;
         private String currentEventId;
         private String currentEnemyId;
+        private final Map<String, Integer> inventory; // Virtual items held in this game session
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -989,6 +1259,7 @@ public class StrategyGameManager {
             this.currentStage = 0;
             this.battleVictories = 0;
             this.ended = false;
+            this.inventory = new HashMap<String, Integer>();
         }
 
         String getPlayerName() { return playerName; }
@@ -1011,6 +1282,28 @@ public class StrategyGameManager {
         void setCurrentEventId(String id) { this.currentEventId = id; }
         String getCurrentEnemyId() { return currentEnemyId; }
         void setCurrentEnemyId(String id) { this.currentEnemyId = id; }
+        
+        // Inventory management
+        Map<String, Integer> getInventory() { return inventory; }
+        int getItemCount(String itemId) { 
+            return inventory.getOrDefault(itemId, 0); 
+        }
+        boolean hasItem(String itemId) { 
+            return getItemCount(itemId) > 0; 
+        }
+        boolean hasItem(String itemId, int amount) { 
+            return getItemCount(itemId) >= amount; 
+        }
+        void addItem(String itemId, int amount) {
+            int current = getItemCount(itemId);
+            inventory.put(itemId, Math.max(0, current + amount));
+        }
+        void removeItem(String itemId, int amount) {
+            addItem(itemId, -amount);
+            if (getItemCount(itemId) <= 0) {
+                inventory.remove(itemId);
+            }
+        }
     }
 
     private static class GameEvent {
@@ -1018,19 +1311,26 @@ public class StrategyGameManager {
         private final String name;
         private final List<String> description;
         private final List<EventChoice> choices;
+        private final String eventType; // "story", "shop", "battle"
+        private final EventRequirement requirement;
 
-        GameEvent(String id, String name, List<String> description, List<EventChoice> choices) {
+        GameEvent(String id, String name, List<String> description, List<EventChoice> choices, 
+                  String eventType, EventRequirement requirement) {
             this.id = id;
             this.name = name;
             this.description = description != null ? description : new ArrayList<String>();
             this.choices = choices != null ? choices : new ArrayList<EventChoice>();
+            this.eventType = eventType != null ? eventType : "story";
+            this.requirement = requirement;
         }
 
         static GameEvent fromSection(String id, ConfigurationSection section) {
             String name = section.getString("name", id);
             List<String> desc = section.getStringList("description");
-            List<EventChoice> choices = new ArrayList<EventChoice>();
+            String eventType = section.getString("type", "story");
+            EventRequirement requirement = EventRequirement.fromSection(section.getConfigurationSection("requirement"));
             
+            List<EventChoice> choices = new ArrayList<EventChoice>();
             List<Map<?, ?>> choiceList = section.getMapList("choices");
             for (Map<?, ?> raw : choiceList) {
                 EventChoice choice = EventChoice.fromMap(raw);
@@ -1039,26 +1339,131 @@ public class StrategyGameManager {
                 }
             }
             
-            return new GameEvent(id, name, desc, choices);
+            return new GameEvent(id, name, desc, choices, eventType, requirement);
         }
 
         String getId() { return id; }
         String getName() { return name; }
         List<String> getDescription() { return description; }
         List<EventChoice> getChoices() { return choices; }
+        String getEventType() { return eventType; }
+        EventRequirement getRequirement() { return requirement; }
+        boolean hasRequirement() { return requirement != null; }
+    }
+
+    /**
+     * Represents requirements for an event or choice.
+     * Can require items, gold, or other conditions.
+     */
+    private static class EventRequirement {
+        private final String requiredItem;
+        private final int requiredItemAmount;
+        private final int requiredGold;
+        private final int goldCost; // Gold spent when entering event
+        private final String failText; // Message when requirement not met
+
+        EventRequirement(String requiredItem, int requiredItemAmount, int requiredGold, 
+                        int goldCost, String failText) {
+            this.requiredItem = requiredItem;
+            this.requiredItemAmount = requiredItemAmount > 0 ? requiredItemAmount : 1;
+            this.requiredGold = requiredGold;
+            this.goldCost = goldCost;
+            this.failText = failText;
+        }
+
+        static EventRequirement fromSection(ConfigurationSection section) {
+            if (section == null) {
+                return null;
+            }
+            String item = section.getString("item");
+            int itemAmount = section.getInt("item_amount", 1);
+            int gold = section.getInt("gold", 0);
+            int cost = section.getInt("gold_cost", 0);
+            String fail = section.getString("fail_text", "&c你不滿足進入條件");
+            
+            if (item == null && gold <= 0 && cost <= 0) {
+                return null;
+            }
+            return new EventRequirement(item, itemAmount, gold, cost, fail);
+        }
+        
+        static EventRequirement fromMap(Map<?, ?> raw) {
+            if (raw == null) {
+                return null;
+            }
+            String item = raw.get("item") != null ? raw.get("item").toString() : null;
+            int itemAmount = parseInt(raw.get("item_amount"));
+            if (itemAmount <= 0) itemAmount = 1;
+            int gold = parseInt(raw.get("gold"));
+            int cost = parseInt(raw.get("gold_cost"));
+            String fail = raw.get("fail_text") != null ? raw.get("fail_text").toString() : "&c你不滿足條件";
+            
+            if (item == null && gold <= 0 && cost <= 0) {
+                return null;
+            }
+            return new EventRequirement(item, itemAmount, gold, cost, fail);
+        }
+
+        String getRequiredItem() { return requiredItem; }
+        int getRequiredItemAmount() { return requiredItemAmount; }
+        int getRequiredGold() { return requiredGold; }
+        int getGoldCost() { return goldCost; }
+        String getFailText() { return failText; }
+        
+        boolean hasItemRequirement() { return requiredItem != null && !requiredItem.isEmpty(); }
+        boolean hasGoldRequirement() { return requiredGold > 0; }
+        boolean hasGoldCost() { return goldCost > 0; }
+        
+        boolean checkRequirements(GameSession session) {
+            if (hasItemRequirement() && !session.hasItem(requiredItem, requiredItemAmount)) {
+                return false;
+            }
+            if (hasGoldRequirement() && session.getGold() < requiredGold) {
+                return false;
+            }
+            if (hasGoldCost() && session.getGold() < goldCost) {
+                return false;
+            }
+            return true;
+        }
+        
+        void applyGoldCost(GameSession session) {
+            if (hasGoldCost()) {
+                session.addGold(-goldCost);
+            }
+        }
     }
 
     private static class EventChoice {
         private final String text;
         private final String resultText;
+        private final String resultTextAlt; // Alternative result when requirement not met
         private final int goldChange;
         private final int healthChange;
+        private final int goldChangeAlt; // Alternative outcome
+        private final int healthChangeAlt;
+        private final String itemGain; // Item gained from this choice
+        private final int itemGainAmount;
+        private final String itemCost; // Item consumed by this choice
+        private final int itemCostAmount;
+        private final EventRequirement requirement;
 
-        EventChoice(String text, String resultText, int goldChange, int healthChange) {
+        EventChoice(String text, String resultText, String resultTextAlt, 
+                   int goldChange, int healthChange, int goldChangeAlt, int healthChangeAlt,
+                   String itemGain, int itemGainAmount, String itemCost, int itemCostAmount,
+                   EventRequirement requirement) {
             this.text = text != null ? text : "選擇";
             this.resultText = resultText != null ? resultText : "";
+            this.resultTextAlt = resultTextAlt;
             this.goldChange = goldChange;
             this.healthChange = healthChange;
+            this.goldChangeAlt = goldChangeAlt;
+            this.healthChangeAlt = healthChangeAlt;
+            this.itemGain = itemGain;
+            this.itemGainAmount = itemGainAmount > 0 ? itemGainAmount : 1;
+            this.itemCost = itemCost;
+            this.itemCostAmount = itemCostAmount > 0 ? itemCostAmount : 1;
+            this.requirement = requirement;
         }
 
         static EventChoice fromMap(Map<?, ?> raw) {
@@ -1067,15 +1472,39 @@ public class StrategyGameManager {
             }
             String text = raw.get("text") != null ? raw.get("text").toString() : "選擇";
             String result = raw.get("result") != null ? raw.get("result").toString() : "";
+            String resultAlt = raw.get("result_alt") != null ? raw.get("result_alt").toString() : null;
             int gold = parseInt(raw.get("gold_change"));
             int health = parseInt(raw.get("health_change"));
-            return new EventChoice(text, result, gold, health);
+            int goldAlt = parseInt(raw.get("gold_change_alt"));
+            int healthAlt = parseInt(raw.get("health_change_alt"));
+            String itemGain = raw.get("item_gain") != null ? raw.get("item_gain").toString() : null;
+            int itemGainAmt = parseInt(raw.get("item_gain_amount"));
+            String itemCost = raw.get("item_cost") != null ? raw.get("item_cost").toString() : null;
+            int itemCostAmt = parseInt(raw.get("item_cost_amount"));
+            
+            EventRequirement req = null;
+            if (raw.get("requirement") instanceof Map) {
+                req = EventRequirement.fromMap((Map<?, ?>) raw.get("requirement"));
+            }
+            
+            return new EventChoice(text, result, resultAlt, gold, health, goldAlt, healthAlt, 
+                                  itemGain, itemGainAmt, itemCost, itemCostAmt, req);
         }
 
         String getText() { return text; }
         String getResultText() { return resultText; }
+        String getResultTextAlt() { return resultTextAlt; }
         int getGoldChange() { return goldChange; }
         int getHealthChange() { return healthChange; }
+        int getGoldChangeAlt() { return goldChangeAlt; }
+        int getHealthChangeAlt() { return healthChangeAlt; }
+        String getItemGain() { return itemGain; }
+        int getItemGainAmount() { return itemGainAmount; }
+        String getItemCost() { return itemCost; }
+        int getItemCostAmount() { return itemCostAmount; }
+        EventRequirement getRequirement() { return requirement; }
+        boolean hasRequirement() { return requirement != null; }
+        boolean hasAltResult() { return resultTextAlt != null && !resultTextAlt.isEmpty(); }
     }
 
     private static class ShopItem {
