@@ -50,6 +50,12 @@ public class StrategyGameManager {
     private static final int DEFAULT_MAX_STAGES = 10;
     private static final int DEFAULT_ENEMY_POWER = 30;
     private static final int DEFAULT_ENEMY_DAMAGE = 10;
+    
+    // Shop configuration constants
+    private static final int MAX_SHOP_ITEMS = 5;
+    private static final int DISCOUNT_CHANCE = 30; // Percentage chance for discount
+    private static final int MIN_DISCOUNT = 10;
+    private static final int MAX_DISCOUNT = 50;
 
     // Game configuration
     private int startingGold = DEFAULT_STARTING_GOLD;
@@ -377,7 +383,8 @@ public class StrategyGameManager {
             // Check if event has requirements and if player meets them
             boolean meetsRequirements = true;
             List<String> loreList = new ArrayList<String>();
-            loreList.addAll(event.getDescription());
+            // Resolve i18n keys for description
+            loreList.addAll(resolveI18nList(player, event.getDescription()));
             
             // Show event type indicator using i18n
             String eventType = event.getEventType();
@@ -429,7 +436,7 @@ public class StrategyGameManager {
             
             Material eventMaterial = meetsRequirements ? Material.WRITABLE_BOOK : Material.BARRIER;
             ItemStack eventItem = createItem(eventMaterial,
-                event.getName(),
+                resolveI18n(player, event.getName()),
                 loreList.toArray(new String[0]));
             safeSet(inv, eventSlots[i], eventItem);
         }
@@ -488,8 +495,8 @@ public class StrategyGameManager {
 
         // Event description
         ItemStack descItem = createItem(Material.PAPER,
-            event.getName(),
-            event.getDescription().toArray(new String[0]));
+            resolveI18n(player, event.getName()),
+            resolveI18nList(player, event.getDescription()).toArray(new String[0]));
         safeSet(inv, 4, descItem);
 
         // Choice buttons - no spoilers about outcomes, only show requirements
@@ -543,7 +550,7 @@ public class StrategyGameManager {
             
             Material choiceMat = meetsReq ? Material.OAK_SIGN : (choice.hasAltResult() ? Material.BIRCH_SIGN : Material.OAK_SIGN);
             ItemStack choiceItem = createItem(choiceMat,
-                choice.getText(),
+                resolveI18n(player, choice.getText()),
                 loreList.toArray(new String[0]));
             safeSet(inv, choiceSlots[i], choiceItem);
         }
@@ -569,6 +576,10 @@ public class StrategyGameManager {
         // Pick a random enemy based on stage
         BattleEnemy enemy = pickEnemy(session.getCurrentStage());
         session.setCurrentEnemyId(enemy.getId());
+        // Initialize enemy HP for multi-round combat
+        session.setCurrentEnemyHp(enemy.getHealth());
+        session.setCurrentEnemyMaxHp(enemy.getHealth());
+        session.setBattleRound(1);
         saveSession(session);
 
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
@@ -577,7 +588,7 @@ public class StrategyGameManager {
 
         // Enemy display with combat stats
         Map<String, String> enemyMap = new HashMap<String, String>();
-        enemyMap.put("enemy", enemy.getName());
+        enemyMap.put("enemy", resolveI18n(player, enemy.getName()));
         enemyMap.put("power", String.valueOf(enemy.getPower()));
         enemyMap.put("attack", String.valueOf(enemy.getAttack()));
         enemyMap.put("defense", String.valueOf(enemy.getDefense()));
@@ -588,7 +599,7 @@ public class StrategyGameManager {
             messages.format(player, "menu.sgame.enemy_title", enemyMap),
             new String[]{
                 messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap),
-                "&7" + enemy.getDescription()
+                "&7" + resolveI18n(player, enemy.getDescription())
             });
         safeSet(inv, 4, enemyItem);
 
@@ -615,16 +626,172 @@ public class StrategyGameManager {
         player.openInventory(inv);
     }
 
+    /**
+     * Open the battle action selection menu - Rock-Paper-Scissors style combat.
+     * Shows both HP bars and allows player to choose Attack, Defense, or Skill.
+     */
+    public void openBattleActionMenu(Player player) {
+        GameSession session = getOrLoadSession(player.getName());
+        if (session == null || session.isEnded()) {
+            return;
+        }
+
+        String enemyId = session.getCurrentEnemyId();
+        BattleEnemy enemy = findEnemy(enemyId);
+        if (enemy == null) {
+            openMainMenu(player);
+            return;
+        }
+
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.battle_action_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.BATTLE_ACTION), layout.getSize(), title);
+
+        // Round indicator at top center
+        Map<String, String> roundMap = new HashMap<String, String>();
+        roundMap.put("round", String.valueOf(session.getBattleRound()));
+        ItemStack roundItem = createItem(Material.CLOCK,
+            messages.format(player, "menu.sgame.battle_round", roundMap),
+            new String[]{
+                messages.format(player, "menu.sgame.battle_round_lore", roundMap)
+            });
+        safeSet(inv, 4, roundItem);
+
+        // Player HP bar (left side, slot 0-2)
+        int playerHp = session.getHealth();
+        int playerMaxHp = session.getMaxHealth();
+        String playerHpBar = createHpBar(playerHp, playerMaxHp);
+        Map<String, String> playerMap = new HashMap<String, String>();
+        playerMap.put("hp", String.valueOf(playerHp));
+        playerMap.put("max_hp", String.valueOf(playerMaxHp));
+        playerMap.put("hp_bar", playerHpBar);
+        playerMap.put("attack", String.valueOf(session.getAttack() + getEquipmentAttackBonus(session)));
+        playerMap.put("defense", String.valueOf(session.getDefense() + getEquipmentDefenseBonus(session)));
+        playerMap.put("magic", String.valueOf(session.getMagic()));
+        
+        ItemStack playerItem = createItem(Material.PLAYER_HEAD,
+            messages.format(player, "menu.sgame.your_status"),
+            new String[]{
+                messages.format(player, "menu.sgame.hp_bar_lore", playerMap),
+                messages.format(player, "menu.sgame.combat_stats_lore", playerMap)
+            });
+        safeSet(inv, 0, playerItem);
+
+        // Enemy HP bar (right side, slot 8)
+        int enemyHp = session.getCurrentEnemyHp();
+        int enemyMaxHp = session.getCurrentEnemyMaxHp();
+        String enemyHpBar = createHpBar(enemyHp, enemyMaxHp);
+        Map<String, String> enemyMap = new HashMap<String, String>();
+        enemyMap.put("enemy", resolveI18n(player, enemy.getName()));
+        enemyMap.put("hp", String.valueOf(enemyHp));
+        enemyMap.put("max_hp", String.valueOf(enemyMaxHp));
+        enemyMap.put("hp_bar", enemyHpBar);
+        enemyMap.put("attack", String.valueOf(enemy.getAttack()));
+        enemyMap.put("defense", String.valueOf(enemy.getDefense()));
+
+        ItemStack enemyItem = createItem(Material.ZOMBIE_HEAD,
+            messages.format(player, "menu.sgame.enemy_title", enemyMap),
+            new String[]{
+                messages.format(player, "menu.sgame.enemy_hp_bar_lore", enemyMap),
+                messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap)
+            });
+        safeSet(inv, 8, enemyItem);
+
+        // Action buttons (row 2: slots 10, 13, 16)
+        // Attack button - beats Skill
+        ItemStack attackItem = createItem(Material.IRON_SWORD,
+            messages.format(player, "menu.sgame.action_attack"),
+            new String[]{
+                messages.format(player, "menu.sgame.action_attack_lore"),
+                messages.format(player, "menu.sgame.action_attack_hint"),
+                "ID:action_attack"
+            });
+        safeSet(inv, 10, attackItem);
+
+        // Defense button - beats Attack
+        ItemStack defenseItem = createItem(Material.SHIELD,
+            messages.format(player, "menu.sgame.action_defense"),
+            new String[]{
+                messages.format(player, "menu.sgame.action_defense_lore"),
+                messages.format(player, "menu.sgame.action_defense_hint"),
+                "ID:action_defense"
+            });
+        safeSet(inv, 13, defenseItem);
+
+        // Skill button - beats Defense, requires magic
+        boolean canUseSkill = session.getMagic() >= 10;
+        Map<String, String> skillMap = new HashMap<String, String>();
+        skillMap.put("magic_cost", "10");
+        skillMap.put("current_magic", String.valueOf(session.getMagic()));
+        ItemStack skillItem = createItem(canUseSkill ? Material.BLAZE_POWDER : Material.GUNPOWDER,
+            messages.format(player, "menu.sgame.action_skill"),
+            new String[]{
+                messages.format(player, "menu.sgame.action_skill_lore"),
+                messages.format(player, "menu.sgame.action_skill_hint"),
+                messages.format(player, "menu.sgame.action_skill_cost", skillMap),
+                canUseSkill ? "" : messages.format(player, "menu.sgame.not_enough_magic"),
+                "ID:action_skill"
+            });
+        safeSet(inv, 16, skillItem);
+
+        // VS indicator in the center
+        ItemStack vsItem = createItem(Material.NETHER_STAR,
+            "&c⚔ VS ⚔",
+            new String[]{
+                messages.format(player, "menu.sgame.vs_hint")
+            });
+        safeSet(inv, 22, vsItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Create a visual HP bar using colored characters.
+     * Color is based on overall HP percentage.
+     */
+    private String createHpBar(int current, int max) {
+        int barLength = 10;
+        int filledLength = max > 0 ? (int) Math.ceil((double) current / max * barLength) : 0;
+        double hpPercent = max > 0 ? (double) current / max : 0;
+        
+        // Determine color based on overall HP percentage
+        String color;
+        if (hpPercent > 0.66) {
+            color = "&a"; // Green for high HP (>66%)
+        } else if (hpPercent > 0.33) {
+            color = "&e"; // Yellow for medium HP (33-66%)
+        } else {
+            color = "&c"; // Red for low HP (<33%)
+        }
+        
+        StringBuilder bar = new StringBuilder();
+        bar.append(color);
+        for (int i = 0; i < barLength; i++) {
+            if (i < filledLength) {
+                bar.append("█");
+            } else {
+                bar.append("&8░");
+            }
+        }
+        return bar.toString();
+    }
+
     public void openShopMenu(Player player) {
         GameSession session = getOrLoadSession(player.getName());
         if (session == null || session.isEnded()) {
             return;
         }
 
-        if (shopItems.isEmpty()) {
+        if (shopItems.isEmpty() && equipments.isEmpty()) {
             player.sendMessage(messages.format(player, "sgame.shop_empty"));
             openMainMenu(player);
             return;
+        }
+
+        // Generate random shop offerings if not already generated for this shop visit
+        if (session.getCurrentShopOfferings().isEmpty()) {
+            generateShopOfferings(session);
+            saveSession(session);
         }
 
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
@@ -642,26 +809,13 @@ public class StrategyGameManager {
             });
         safeSet(inv, 4, goldItem);
 
-        // Shop items
+        // Display current shop offerings (randomly selected items/equipment with possible discounts)
         int[] itemSlots = {10, 11, 12, 13, 14, 15, 16};
-        for (int i = 0; i < shopItems.size() && i < itemSlots.length; i++) {
-            ShopItem item = shopItems.get(i);
-            Map<String, String> itemMap = new HashMap<String, String>();
-            itemMap.put("price", String.valueOf(item.getPrice()));
-            itemMap.put("effect", item.getEffectDescription());
-            
-            boolean canAfford = session.getGold() >= item.getPrice();
-            String priceColor = canAfford ? "&a" : "&c";
-            
-            ItemStack shopItemStack = createItem(item.getMaterial(),
-                item.getName(),
-                new String[]{
-                    priceColor + messages.format(player, "menu.sgame.item_price_lore", itemMap),
-                    "&7" + item.getEffectDescription(),
-                    canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"),
-                    "ID:buy_" + item.getId()
-                });
-            safeSet(inv, itemSlots[i], shopItemStack);
+        List<ShopOffering> offerings = session.getCurrentShopOfferings();
+        for (int i = 0; i < offerings.size() && i < itemSlots.length; i++) {
+            ShopOffering offering = offerings.get(i);
+            ItemStack offeringItem = createShopOfferingItem(player, session, offering);
+            safeSet(inv, itemSlots[i], offeringItem);
         }
 
         // Leave shop button - proceed to next stage after shopping
@@ -677,6 +831,138 @@ public class StrategyGameManager {
         // No back button - must leave shop properly
 
         player.openInventory(inv);
+    }
+
+    /**
+     * Generate random shop offerings from available items and equipment.
+     * Each offering may have a random discount.
+     */
+    private void generateShopOfferings(GameSession session) {
+        session.clearShopOfferings();
+        
+        // Combine all available items and equipment into a pool
+        List<Object[]> pool = new ArrayList<Object[]>(); // [id, type]
+        for (ShopItem item : shopItems) {
+            pool.add(new Object[]{item.getId(), "item"});
+        }
+        for (Equipment eq : equipments) {
+            pool.add(new Object[]{eq.getId(), "equipment"});
+        }
+        
+        // Shuffle the pool and select items
+        java.util.Collections.shuffle(pool, random);
+        int itemCount = Math.min(MAX_SHOP_ITEMS, pool.size());
+        
+        for (int i = 0; i < itemCount; i++) {
+            Object[] entry = pool.get(i);
+            String id = (String) entry[0];
+            String type = (String) entry[1];
+            
+            // Random discount based on configured chance and range
+            int discount = 0;
+            if (random.nextInt(100) < DISCOUNT_CHANCE) {
+                discount = MIN_DISCOUNT + random.nextInt(MAX_DISCOUNT - MIN_DISCOUNT + 1);
+            }
+            
+            session.addShopOffering(new ShopOffering(id, type, discount));
+        }
+    }
+
+    /**
+     * Create an ItemStack for displaying a shop offering with discount info.
+     */
+    private ItemStack createShopOfferingItem(Player player, GameSession session, ShopOffering offering) {
+        if (offering.isEquipment()) {
+            Equipment eq = findEquipment(offering.getId());
+            if (eq == null) return createItem(Material.BARRIER, "&cError", new String[]{});
+            
+            int originalPrice = eq.getPrice();
+            int finalPrice = offering.getDiscountedPrice(originalPrice);
+            boolean canAfford = session.getGold() >= finalPrice;
+            
+            List<String> lore = new ArrayList<String>();
+            
+            // Show discount if applicable
+            if (offering.hasDiscount()) {
+                Map<String, String> discountMap = new HashMap<String, String>();
+                discountMap.put("discount", String.valueOf(offering.getDiscount()));
+                discountMap.put("original_price", String.valueOf(originalPrice));
+                discountMap.put("final_price", String.valueOf(finalPrice));
+                lore.add(messages.format(player, "menu.sgame.discount_lore", discountMap));
+            }
+            
+            Map<String, String> priceMap = new HashMap<String, String>();
+            priceMap.put("price", String.valueOf(finalPrice));
+            String priceColor = canAfford ? "&a" : "&c";
+            lore.add(priceColor + messages.format(player, "menu.sgame.item_price_lore", priceMap));
+            
+            // Equipment stats
+            if (eq.getAttackBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getAttackBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_attack_bonus", statMap));
+            }
+            if (eq.getDefenseBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getDefenseBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_defense_bonus", statMap));
+            }
+            if (eq.getHealthBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getHealthBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_health_bonus", statMap));
+            }
+            if (eq.getMagicBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getMagicBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_magic_bonus", statMap));
+            }
+            
+            // Slot type
+            Map<String, String> typeMap = new HashMap<String, String>();
+            if ("weapon".equals(eq.getSlot())) {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_weapon"));
+            } else if ("armor".equals(eq.getSlot())) {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_armor"));
+            } else {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_accessory"));
+            }
+            lore.add(messages.format(player, "menu.sgame.equip_type_lore", typeMap));
+            
+            lore.add(canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"));
+            lore.add("ID:buy_" + offering.getId());
+            
+            return createItem(eq.getMaterial(), resolveI18n(player, eq.getName()), lore.toArray(new String[0]));
+        } else {
+            ShopItem item = findShopItem(offering.getId());
+            if (item == null) return createItem(Material.BARRIER, "&cError", new String[]{});
+            
+            int originalPrice = item.getPrice();
+            int finalPrice = offering.getDiscountedPrice(originalPrice);
+            boolean canAfford = session.getGold() >= finalPrice;
+            
+            List<String> lore = new ArrayList<String>();
+            
+            // Show discount if applicable
+            if (offering.hasDiscount()) {
+                Map<String, String> discountMap = new HashMap<String, String>();
+                discountMap.put("discount", String.valueOf(offering.getDiscount()));
+                discountMap.put("original_price", String.valueOf(originalPrice));
+                discountMap.put("final_price", String.valueOf(finalPrice));
+                lore.add(messages.format(player, "menu.sgame.discount_lore", discountMap));
+            }
+            
+            Map<String, String> priceMap = new HashMap<String, String>();
+            priceMap.put("price", String.valueOf(finalPrice));
+            String priceColor = canAfford ? "&a" : "&c";
+            lore.add(priceColor + messages.format(player, "menu.sgame.item_price_lore", priceMap));
+            
+            lore.add("&7" + resolveI18n(player, item.getEffectDescription()));
+            lore.add(canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"));
+            lore.add("ID:buy_" + offering.getId());
+            
+            return createItem(item.getMaterial(), resolveI18n(player, item.getName()), lore.toArray(new String[0]));
+        }
     }
 
     /**
@@ -715,7 +1001,7 @@ public class StrategyGameManager {
         Equipment weapon = weaponId != null ? findEquipment(weaponId) : null;
         Map<String, String> weaponMap = new HashMap<String, String>();
         if (weapon != null) {
-            weaponMap.put("name", weapon.getName());
+            weaponMap.put("name", resolveI18n(player, weapon.getName()));
             weaponMap.put("attack", String.valueOf(weapon.getAttackBonus()));
             weaponMap.put("defense", String.valueOf(weapon.getDefenseBonus()));
         }
@@ -734,7 +1020,7 @@ public class StrategyGameManager {
         Equipment armor = armorId != null ? findEquipment(armorId) : null;
         Map<String, String> armorMap = new HashMap<String, String>();
         if (armor != null) {
-            armorMap.put("name", armor.getName());
+            armorMap.put("name", resolveI18n(player, armor.getName()));
             armorMap.put("defense", String.valueOf(armor.getDefenseBonus()));
             armorMap.put("health", String.valueOf(armor.getHealthBonus()));
         }
@@ -753,7 +1039,7 @@ public class StrategyGameManager {
         Equipment accessory = accessoryId != null ? findEquipment(accessoryId) : null;
         Map<String, String> accessoryMap = new HashMap<String, String>();
         if (accessory != null) {
-            accessoryMap.put("name", accessory.getName());
+            accessoryMap.put("name", resolveI18n(player, accessory.getName()));
         }
         ItemStack accessorySlot = createItem(accessory != null ? accessory.getMaterial() : Material.GOLD_INGOT,
             messages.format(player, "menu.sgame.equip_slot_accessory"),
@@ -820,7 +1106,7 @@ public class StrategyGameManager {
             }
             lore.add("ID:buy_equip_" + eq.getId());
             
-            ItemStack eqItem = createItem(eq.getMaterial(), eq.getName(), lore.toArray(new String[0]));
+            ItemStack eqItem = createItem(eq.getMaterial(), resolveI18n(player, eq.getName()), lore.toArray(new String[0]));
             safeSet(inv, equipSlots[slotIndex], eqItem);
             slotIndex++;
         }
@@ -869,6 +1155,9 @@ public class StrategyGameManager {
                 break;
             case BATTLE:
                 handleBattleMenuClick(player, session, id);
+                break;
+            case BATTLE_ACTION:
+                handleBattleActionClick(player, session, id);
                 break;
             case SHOP:
                 handleShopMenuClick(player, session, id);
@@ -921,7 +1210,7 @@ public class StrategyGameManager {
             if (event.hasRequirement()) {
                 EventRequirement req = event.getRequirement();
                 if (!req.checkRequirements(session)) {
-                    player.sendMessage(messages.colorize(req.getFailText()));
+                    player.sendMessage(messages.colorize(resolveI18n(player, req.getFailText())));
                     return;
                 }
                 // Apply gold cost if any
@@ -989,9 +1278,41 @@ public class StrategyGameManager {
         }
 
         if ("fight".equals(id)) {
-            resolveBattle(player, session, enemy);
+            // Open the multi-round battle action menu
+            openBattleActionMenu(player);
         } else if ("flee".equals(id)) {
             resolveFlee(player, session, enemy);
+        }
+    }
+
+    /**
+     * Handle clicks in the battle action selection menu.
+     * Processes Rock-Paper-Scissors style combat actions.
+     */
+    private void handleBattleActionClick(Player player, GameSession session, String id) {
+        String enemyId = session.getCurrentEnemyId();
+        BattleEnemy enemy = findEnemy(enemyId);
+        if (enemy == null) {
+            openMainMenu(player);
+            return;
+        }
+
+        BattleAction playerAction = null;
+        if ("action_attack".equals(id)) {
+            playerAction = BattleAction.ATTACK;
+        } else if ("action_defense".equals(id)) {
+            playerAction = BattleAction.DEFENSE;
+        } else if ("action_skill".equals(id)) {
+            // Check if player has enough magic
+            if (session.getMagic() < 10) {
+                player.sendMessage(messages.format(player, "sgame.not_enough_magic"));
+                return;
+            }
+            playerAction = BattleAction.SKILL;
+        }
+
+        if (playerAction != null) {
+            resolveBattleRound(player, session, enemy, playerAction);
         }
     }
 
@@ -1000,6 +1321,8 @@ public class StrategyGameManager {
 
         if ("shop_leave".equals(id)) {
             // Leave shop and advance to next stage
+            // Clear shop offerings for next shop visit
+            session.clearShopOfferings();
             session.setCurrentEventId(null);
             session.incrementStage();
             saveSession(session);
@@ -1010,23 +1333,63 @@ public class StrategyGameManager {
 
         if (id.startsWith("buy_")) {
             String itemId = id.substring(4);
-            ShopItem item = findShopItem(itemId);
-            if (item == null) {
-                return;
-            }
-
-            if (session.getGold() < item.getPrice()) {
-                player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
-                return;
-            }
-
-            session.addGold(-item.getPrice());
-            applyShopItem(player, session, item);
-            saveSession(session);
             
-            Map<String, String> map = new HashMap<String, String>();
-            map.put("item", item.getName());
-            player.sendMessage(messages.format(player, "sgame.item_purchased", map));
+            // Find the offering to get the discount
+            ShopOffering offering = session.findShopOffering(itemId);
+            if (offering == null) {
+                return;
+            }
+            
+            if (offering.isEquipment()) {
+                // Handle equipment purchase from shop
+                Equipment eq = findEquipment(itemId);
+                if (eq == null) {
+                    return;
+                }
+                
+                int finalPrice = offering.getDiscountedPrice(eq.getPrice());
+                if (session.getGold() < finalPrice) {
+                    player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
+                    return;
+                }
+                
+                // Purchase and equip
+                session.addGold(-finalPrice);
+                
+                if ("weapon".equals(eq.getSlot())) {
+                    session.setEquippedWeapon(itemId);
+                } else if ("armor".equals(eq.getSlot())) {
+                    session.setEquippedArmor(itemId);
+                } else {
+                    session.setEquippedAccessory(itemId);
+                }
+                
+                saveSession(session);
+                
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", resolveI18n(player, eq.getName()));
+                player.sendMessage(messages.format(player, "sgame.equipped", map));
+            } else {
+                // Handle regular item purchase
+                ShopItem item = findShopItem(itemId);
+                if (item == null) {
+                    return;
+                }
+                
+                int finalPrice = offering.getDiscountedPrice(item.getPrice());
+                if (session.getGold() < finalPrice) {
+                    player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
+                    return;
+                }
+                
+                session.addGold(-finalPrice);
+                applyShopItem(player, session, item);
+                saveSession(session);
+                
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", resolveI18n(player, item.getName()));
+                player.sendMessage(messages.format(player, "sgame.item_purchased", map));
+            }
             
             // Refresh shop menu to show updated gold and item availability
             openShopMenu(player);
@@ -1062,7 +1425,7 @@ public class StrategyGameManager {
                     session.setEquippedAccessory(null);
                 }
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("item", eq.getName());
+                map.put("item", resolveI18n(player, eq.getName()));
                 player.sendMessage(messages.format(player, "sgame.unequipped", map));
             } else {
                 // Check if can afford
@@ -1085,7 +1448,7 @@ public class StrategyGameManager {
                 }
                 
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("item", eq.getName());
+                map.put("item", resolveI18n(player, eq.getName()));
                 player.sendMessage(messages.format(player, "sgame.equipped", map));
             }
             
@@ -1138,9 +1501,9 @@ public class StrategyGameManager {
             return;
         }
 
-        // Show result
+        // Show result - resolve i18n for result text
         Map<String, String> map = new HashMap<String, String>();
-        map.put("result", resultText != null ? resultText : "");
+        map.put("result", resultText != null ? resolveI18n(player, resultText) : "");
         map.put("gold_change", formatChange(goldChange));
         map.put("health_change", formatChange(healthChange));
         player.sendMessage(messages.format(player, "sgame.choice_result", map));
@@ -1166,7 +1529,7 @@ public class StrategyGameManager {
         int enemyPower = enemy.getAttack() + (enemy.getHealth() / 5) + (enemy.getMagic() / 3) + random.nextInt(16);
         
         Map<String, String> map = new HashMap<String, String>();
-        map.put("enemy", enemy.getName());
+        map.put("enemy", resolveI18n(player, enemy.getName()));
         map.put("player_power", String.valueOf(playerPower));
         map.put("enemy_power", String.valueOf(enemyPower));
 
@@ -1206,6 +1569,195 @@ public class StrategyGameManager {
         
         player.closeInventory();
         openMainMenu(player);
+    }
+
+    /**
+     * Resolve a single round of multi-round Rock-Paper-Scissors style combat.
+     * - ATTACK beats SKILL (interrupts skill casting)
+     * - SKILL beats DEFENSE (bypasses defense)
+     * - DEFENSE beats ATTACK (blocks damage)
+     */
+    private void resolveBattleRound(Player player, GameSession session, BattleEnemy enemy, BattleAction playerAction) {
+        // Determine enemy action (random weighted by enemy stats)
+        BattleAction enemyAction = pickEnemyAction(enemy);
+        
+        // Calculate base damage values
+        int playerAttack = session.getAttack() + getEquipmentAttackBonus(session);
+        int playerDefense = session.getDefense() + getEquipmentDefenseBonus(session);
+        int playerMagic = session.getMagic() + getEquipmentMagicBonus(session);
+        
+        int enemyAttackStat = enemy.getAttack();
+        int enemyDefense = enemy.getDefense();
+        
+        // Consistent random damage variance for balance
+        int damageVariance = 6;
+        
+        // Determine round outcome based on RPS logic
+        int playerDamageDealt = 0;
+        int enemyDamageDealt = 0;
+        String roundResult;
+        
+        // Determine advantage: 0 = tie, 1 = player wins RPS, -1 = enemy wins RPS
+        int advantage = determineRpsAdvantage(playerAction, enemyAction);
+        
+        Map<String, String> resultMap = new HashMap<String, String>();
+        resultMap.put("player_action", getActionName(player, playerAction));
+        resultMap.put("enemy_action", getActionName(player, enemyAction));
+        resultMap.put("enemy", resolveI18n(player, enemy.getName()));
+        resultMap.put("round", String.valueOf(session.getBattleRound()));
+        
+        if (advantage == 1) {
+            // Player wins RPS - deal increased damage, take reduced damage
+            if (playerAction == BattleAction.ATTACK) {
+                // Attack beats Skill - interrupt enemy and deal full damage
+                playerDamageDealt = Math.max(1, playerAttack - (enemyDefense / 4) + random.nextInt(damageVariance));
+                enemyDamageDealt = 0;
+                roundResult = messages.format(player, "sgame.round_attack_beats_skill");
+            } else if (playerAction == BattleAction.SKILL) {
+                // Skill beats Defense - bypass defense and deal magic damage
+                session.addMagic(-10); // Consume magic
+                playerDamageDealt = Math.max(1, (playerMagic / 2) + random.nextInt(damageVariance));
+                enemyDamageDealt = 0;
+                roundResult = messages.format(player, "sgame.round_skill_beats_defense");
+            } else {
+                // Defense beats Attack - block enemy and counter attack
+                playerDamageDealt = Math.max(1, playerDefense / 2);
+                enemyDamageDealt = 0;
+                roundResult = messages.format(player, "sgame.round_defense_beats_attack");
+            }
+        } else if (advantage == -1) {
+            // Enemy wins RPS - enemy deals increased damage
+            if (enemyAction == BattleAction.ATTACK) {
+                // Enemy attack beats player skill
+                playerDamageDealt = 0;
+                enemyDamageDealt = Math.max(1, enemyAttackStat - (playerDefense / 4) + random.nextInt(damageVariance));
+                if (playerAction == BattleAction.SKILL) {
+                    session.addMagic(-5); // Partial magic cost for interrupted skill
+                }
+                roundResult = messages.format(player, "sgame.round_enemy_attack_beats_skill");
+            } else if (enemyAction == BattleAction.SKILL) {
+                // Enemy skill beats player defense
+                playerDamageDealt = 0;
+                enemyDamageDealt = Math.max(1, (enemy.getMagic() / 2) + random.nextInt(damageVariance));
+                roundResult = messages.format(player, "sgame.round_enemy_skill_beats_defense");
+            } else {
+                // Enemy defense beats player attack
+                playerDamageDealt = 0;
+                enemyDamageDealt = Math.max(1, enemyDefense / 3);
+                roundResult = messages.format(player, "sgame.round_enemy_defense_beats_attack");
+            }
+        } else {
+            // Tie - both deal reduced damage
+            if (playerAction == BattleAction.SKILL) {
+                session.addMagic(-10);
+                playerDamageDealt = Math.max(1, playerMagic / 4 + random.nextInt(3));
+            } else {
+                playerDamageDealt = Math.max(1, playerAttack / 3 + random.nextInt(3));
+            }
+            enemyDamageDealt = Math.max(1, enemyAttackStat / 3 + random.nextInt(3));
+            roundResult = messages.format(player, "sgame.round_tie");
+        }
+        
+        // Apply damage
+        session.addCurrentEnemyHp(-playerDamageDealt);
+        session.addHealth(-enemyDamageDealt);
+        
+        resultMap.put("player_damage", String.valueOf(playerDamageDealt));
+        resultMap.put("enemy_damage", String.valueOf(enemyDamageDealt));
+        resultMap.put("result", roundResult);
+        
+        // Send round result message
+        player.sendMessage(messages.format(player, "sgame.battle_round_result", resultMap));
+        
+        // Check if battle ended
+        if (session.getCurrentEnemyHp() <= 0) {
+            // Victory!
+            int goldReward = enemy.getGoldReward();
+            session.addGold(goldReward);
+            session.incrementBattleVictories();
+            session.incrementStage();
+            session.setCurrentEnemyId(null);
+            session.setCurrentEnemyHp(0);
+            saveSession(session);
+            
+            Map<String, String> victoryMap = new HashMap<String, String>();
+            victoryMap.put("enemy", resolveI18n(player, enemy.getName()));
+            victoryMap.put("gold", String.valueOf(goldReward));
+            victoryMap.put("rounds", String.valueOf(session.getBattleRound()));
+            player.sendMessage(messages.format(player, "sgame.battle_victory_multiround", victoryMap));
+            
+            player.closeInventory();
+            openMainMenu(player);
+            return;
+        }
+        
+        if (session.getHealth() <= 0) {
+            // Player died
+            handleGameOverDeath(player, session);
+            return;
+        }
+        
+        // Continue to next round
+        session.incrementBattleRound();
+        saveSession(session);
+        
+        // Refresh the battle action menu for next round
+        openBattleActionMenu(player);
+    }
+
+    /**
+     * Determine RPS advantage: 1 = player wins, -1 = enemy wins, 0 = tie
+     * ATTACK beats SKILL, SKILL beats DEFENSE, DEFENSE beats ATTACK
+     */
+    private int determineRpsAdvantage(BattleAction playerAction, BattleAction enemyAction) {
+        if (playerAction == enemyAction) {
+            return 0; // Tie
+        }
+        
+        if ((playerAction == BattleAction.ATTACK && enemyAction == BattleAction.SKILL) ||
+            (playerAction == BattleAction.SKILL && enemyAction == BattleAction.DEFENSE) ||
+            (playerAction == BattleAction.DEFENSE && enemyAction == BattleAction.ATTACK)) {
+            return 1; // Player wins
+        }
+        
+        return -1; // Enemy wins
+    }
+
+    /**
+     * Pick an enemy action based on enemy stats.
+     * Enemies with more magic tend to use skill, more defense tends to use defense, etc.
+     */
+    private BattleAction pickEnemyAction(BattleEnemy enemy) {
+        int attackWeight = enemy.getAttack() + 10;
+        int defenseWeight = enemy.getDefense() + 5;
+        int skillWeight = enemy.getMagic() > 0 ? enemy.getMagic() + 5 : 2;
+        
+        int total = attackWeight + defenseWeight + skillWeight;
+        int roll = random.nextInt(total);
+        
+        if (roll < attackWeight) {
+            return BattleAction.ATTACK;
+        } else if (roll < attackWeight + defenseWeight) {
+            return BattleAction.DEFENSE;
+        } else {
+            return BattleAction.SKILL;
+        }
+    }
+
+    /**
+     * Get localized action name for display.
+     */
+    private String getActionName(Player player, BattleAction action) {
+        switch (action) {
+            case ATTACK:
+                return messages.format(player, "menu.sgame.action_attack_name");
+            case DEFENSE:
+                return messages.format(player, "menu.sgame.action_defense_name");
+            case SKILL:
+                return messages.format(player, "menu.sgame.action_skill_name");
+            default:
+                return "?";
+        }
     }
 
     private void resolveFlee(Player player, GameSession session, BattleEnemy enemy) {
@@ -1296,7 +1848,7 @@ public class StrategyGameManager {
                     }
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
                 }
-                rewardNames.add(reward.getName());
+                rewardNames.add(resolveI18n(player, reward.getName()));
             }
         }
         
@@ -1541,6 +2093,35 @@ public class StrategyGameManager {
         return String.valueOf(value);
     }
 
+    /**
+     * Resolve an i18n key to its translated text for the given player.
+     * If the key doesn't exist in the language file, returns the key itself as fallback.
+     */
+    private String resolveI18n(Player player, String key) {
+        if (key == null || key.isEmpty()) {
+            return "";
+        }
+        // Try to resolve as i18n key
+        String resolved = messages.format(player, key);
+        // If the key wasn't found, messages.format returns the key with "missing:" prefix or similar
+        // In that case, just return the original key as fallback (might be hardcoded text)
+        if (resolved.equals(key) || resolved.contains("missing")) {
+            return key;
+        }
+        return resolved;
+    }
+
+    /**
+     * Resolve a list of i18n keys to their translated texts.
+     */
+    private List<String> resolveI18nList(Player player, List<String> keys) {
+        List<String> result = new ArrayList<String>();
+        for (String key : keys) {
+            result.add(resolveI18n(player, key));
+        }
+        return result;
+    }
+
     private void safeSet(Inventory inv, int slot, ItemStack item) {
         if (slot >= 0 && slot < inv.getSize()) {
             inv.setItem(slot, item);
@@ -1619,6 +2200,11 @@ public class StrategyGameManager {
         }
         session.setLastEventId(data.getString("sgame.last_event_id", null));
         
+        // Load multi-round battle state
+        session.setCurrentEnemyHp(data.getInt("sgame.current_enemy_hp", 0));
+        session.setCurrentEnemyMaxHp(data.getInt("sgame.current_enemy_max_hp", 0));
+        session.setBattleRound(data.getInt("sgame.battle_round", 1));
+        
         // Load inventory
         ConfigurationSection invSection = data.getConfigurationSection("sgame.inventory");
         if (invSection != null) {
@@ -1667,6 +2253,11 @@ public class StrategyGameManager {
         data.set("sgame.visited_events", session.getVisitedEvents());
         data.set("sgame.last_event_id", session.getLastEventId());
         
+        // Save multi-round battle state
+        data.set("sgame.current_enemy_hp", session.getCurrentEnemyHp());
+        data.set("sgame.current_enemy_max_hp", session.getCurrentEnemyMaxHp());
+        data.set("sgame.battle_round", session.getBattleRound());
+        
         // Save inventory
         data.set("sgame.inventory", null);
         for (Map.Entry<String, Integer> entry : session.getInventory().entrySet()) {
@@ -1698,7 +2289,17 @@ public class StrategyGameManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, EVENT_SELECTION, EVENT, BATTLE, SHOP, EQUIPMENT
+        MAIN, EVENT_SELECTION, EVENT, BATTLE, BATTLE_ACTION, SHOP, EQUIPMENT
+    }
+
+    /**
+     * Battle actions for Rock-Paper-Scissors style combat.
+     * - ATTACK beats SKILL (interrupts skill casting)
+     * - SKILL beats DEFENSE (bypasses defense)
+     * - DEFENSE beats ATTACK (blocks damage)
+     */
+    public enum BattleAction {
+        ATTACK, DEFENSE, SKILL
     }
 
     public static class StrategyGameMenuHolder implements InventoryHolder {
@@ -1743,6 +2344,14 @@ public class StrategyGameManager {
         // Event tracking for weighted randomization
         private final List<String> visitedEvents;
         private String lastEventId;
+        
+        // Multi-round battle tracking
+        private int currentEnemyHp;
+        private int currentEnemyMaxHp;
+        private int battleRound;
+        
+        // Shop offering tracking - stores current shop items with discounts
+        private final List<ShopOffering> currentShopOfferings;
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -1754,6 +2363,7 @@ public class StrategyGameManager {
             this.ended = false;
             this.inventory = new HashMap<String, Integer>();
             this.visitedEvents = new ArrayList<String>();
+            this.currentShopOfferings = new ArrayList<ShopOffering>();
             
             // Default combat stats
             this.attack = 10;
@@ -1816,6 +2426,29 @@ public class StrategyGameManager {
         }
         String getLastEventId() { return lastEventId; }
         void setLastEventId(String id) { this.lastEventId = id; }
+        
+        // Multi-round battle tracking
+        int getCurrentEnemyHp() { return currentEnemyHp; }
+        void setCurrentEnemyHp(int hp) { this.currentEnemyHp = Math.max(0, hp); }
+        void addCurrentEnemyHp(int amount) { this.currentEnemyHp = Math.max(0, this.currentEnemyHp + amount); }
+        int getCurrentEnemyMaxHp() { return currentEnemyMaxHp; }
+        void setCurrentEnemyMaxHp(int hp) { this.currentEnemyMaxHp = hp; }
+        int getBattleRound() { return battleRound; }
+        void setBattleRound(int round) { this.battleRound = round; }
+        void incrementBattleRound() { this.battleRound++; }
+        
+        // Shop offering management
+        List<ShopOffering> getCurrentShopOfferings() { return currentShopOfferings; }
+        void clearShopOfferings() { currentShopOfferings.clear(); }
+        void addShopOffering(ShopOffering offering) { currentShopOfferings.add(offering); }
+        ShopOffering findShopOffering(String id) {
+            for (ShopOffering offering : currentShopOfferings) {
+                if (offering.getId().equals(id)) {
+                    return offering;
+                }
+            }
+            return null;
+        }
         
         // Inventory management
         Map<String, Integer> getInventory() { return inventory; }
@@ -2105,6 +2738,35 @@ public class StrategyGameManager {
         String getEffectType() { return effectType; }
         int getEffectValue() { return effectValue; }
         String getEffectDescription() { return effectDescription; }
+    }
+
+    /**
+     * Represents an item currently offered in the shop with potential discount.
+     * Can be either a ShopItem (consumable) or Equipment.
+     */
+    private static class ShopOffering {
+        private final String id;
+        private final String type; // "item" or "equipment"
+        private final int discount; // Discount percentage
+        
+        ShopOffering(String id, String type, int discount) {
+            this.id = id;
+            this.type = type;
+            this.discount = Math.min(MAX_DISCOUNT, Math.max(0, discount));
+        }
+        
+        String getId() { return id; }
+        String getType() { return type; }
+        int getDiscount() { return discount; }
+        boolean isEquipment() { return "equipment".equals(type); }
+        boolean hasDiscount() { return discount > 0; }
+        
+        /**
+         * Calculate discounted price from original price.
+         */
+        int getDiscountedPrice(int originalPrice) {
+            return originalPrice - (originalPrice * discount / 100);
+        }
     }
 
     private static class BattleEnemy {

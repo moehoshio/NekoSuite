@@ -146,6 +146,7 @@ menu:
     # Shop i18n
     click_to_buy: "&aClick to buy"
     not_enough_gold: "&cNot enough gold"
+    discount_lore: "&e✦ {discount}% OFF! &7Was: &m{original_price}&r &a→ &6{final_price}"
     # Equipment i18n
     equipped_item: "&aEquipped: {name}"
     equip_weapon_stats: "&7Attack: +{attack} Defense: +{defense}"
@@ -162,6 +163,28 @@ menu:
     equip_price_lore: "&6Price: {price} gold"
     already_equipped: "&a✔ Equipped"
     click_to_buy_equip: "&aBuy and equip"
+    # Multi-round battle action i18n
+    battle_action_title: "&#ff6666✦ Choose Action"
+    battle_round: "&eRound {round}"
+    battle_round_lore: "&7Choose your action for this round"
+    your_status: "&aYour Status"
+    hp_bar_lore: "&cHP: {hp}/{max_hp} {hp_bar}"
+    enemy_hp_bar_lore: "&cHP: {hp}/{max_hp} {hp_bar}"
+    action_attack: "&c⚔ Attack"
+    action_attack_lore: "&7Launch an attack at the enemy"
+    action_attack_hint: "&7Beats: &dSkill &8| &7Loses to: &eDefense"
+    action_attack_name: "&cAttack"
+    action_defense: "&e🛡 Defense"
+    action_defense_lore: "&7Defend against enemy attacks"
+    action_defense_hint: "&7Beats: &cAttack &8| &7Loses to: &dSkill"
+    action_defense_name: "&eDefense"
+    action_skill: "&d✦ Skill"
+    action_skill_lore: "&7Cast a magic skill"
+    action_skill_hint: "&7Beats: &eDefense &8| &7Loses to: &cAttack"
+    action_skill_cost: "&7Cost: &d{magic_cost} &7magic (Current: &d{current_magic}&7)"
+    action_skill_name: "&dSkill"
+    not_enough_magic: "&cNot enough magic"
+    vs_hint: "&7Choose your action to fight the enemy!"
   close: "&c✖ Close"
 
 cdk:
@@ -385,3 +408,196 @@ sgame:
   shop_left: "&a✔ &7You left the shop and continue the adventure."
   equipped: "&a✔ &7Equipped: &6{item}"
   unequipped: "&a✔ &7Unequipped: &6{item}"
+  not_enough_magic: "&c✖ &7You don't have enough magic!"
+  battle_round_result: "&7Round {round}: You used {player_action}, enemy used {enemy_action}. {result} &7(&aDealt {player_damage} damage&7, &cTook {enemy_damage} damage&7)"
+  battle_victory_multiround: "&a✔ &7After {rounds} rounds, you defeated &c{enemy}&7! Gained &6{gold} &7gold!"
+  round_attack_beats_skill: "&aAttack interrupted enemy's skill!"
+  round_skill_beats_defense: "&dSkill bypassed enemy's defense!"
+  round_defense_beats_attack: "&eSuccessfully blocked and countered!"
+  round_enemy_attack_beats_skill: "&cEnemy interrupted your skill!"
+  round_enemy_skill_beats_defense: "&cEnemy's skill bypassed your defense!"
+  round_enemy_defense_beats_attack: "&cEnemy blocked your attack!"
+  round_tie: "&7Both sides clashed!"
+  # Config texts - Events
+  config:
+    events:
+      mysterious_merchant:
+        name: "&6Mysterious Merchant"
+        desc1: "&7You encounter a mysterious merchant on the road..."
+        desc2: "&7He seems to have something to trade."
+        choice1:
+          text: "&aTrade with him"
+          result: "&7The merchant is pleased and gives you some gold in return!"
+        choice2:
+          text: "&cIgnore and leave"
+          result: "&7You continue your journey, nothing happened."
+        choice3:
+          text: "&eTry to rob him"
+          result: "&cThe merchant was a disguised bandit! You got attacked!"
+      injured_traveler:
+        name: "&bInjured Traveler"
+        desc1: "&7An injured traveler lies by the roadside..."
+        desc2: "&7He seems to need help."
+        choice1:
+          text: "&aHelp him (use healing potion)"
+          result: "&7The traveler is very grateful and rewards you generously!"
+          result_alt: "&7You did your best to help him, he gave you some gold."
+        choice2:
+          text: "&eCheck his backpack"
+          result: "&7You found some gold, but feel uneasy..."
+        choice3:
+          text: "&cLeave"
+          result: "&7You continue on your way."
+      ancient_shrine:
+        name: "&dAncient Shrine"
+        desc1: "&7You discovered an ancient shrine..."
+        desc2: "&7There's an altar in the center."
+        fail_text: "&cYou need at least 20 gold to enter the shrine"
+        choice1:
+          text: "&aOffer gold and pray (costs 20 gold)"
+          result: "&7The gods blessed you, restoring your vitality!"
+        choice2:
+          text: "&eExplore the shrine"
+          result: "&7You found some treasure!"
+        choice3:
+          text: "&cLeave the shrine"
+          result: "&7You respect this place and move on."
+      forest_crossroads:
+        name: "&2Forest Crossroads"
+        desc1: "&7You've come to a fork in the road..."
+        desc2: "&7The left looks dark, the right is sunny."
+        choice1:
+          text: "&aTake the right path"
+          result: "&7A safe road, you found some gold."
+        choice2:
+          text: "&cTake the left path (requires amulet)"
+          result: "&7The amulet protected you, you discovered great treasures!"
+          result_alt: "&7A dangerous path, you got hurt but found some treasure."
+        choice3:
+          text: "&eGo back"
+          result: "&7You decided to be cautious."
+      treasure_chest:
+        name: "&6Treasure Chest"
+        desc1: "&7You found a shiny treasure chest!"
+        desc2: "&7What will you do with it?"
+        choice1:
+          text: "&aCarefully open it"
+          result: "&7You successfully avoided the trap and got a reward!"
+        choice2:
+          text: "&eOpen it directly"
+          result: "&cTriggered a trap! But the treasure inside is rich."
+        choice3:
+          text: "&cDon't touch it and leave"
+          result: "&7Safety first."
+      village_festival:
+        name: "&eVillage Festival"
+        desc1: "&7You pass by a village holding a festival."
+        desc2: "&7The villagers warmly invite you to join."
+        choice1:
+          text: "&aJoin the festival (costs 10 gold)"
+          result: "&7You had a great time and recovered energy!"
+        choice2:
+          text: "&ePerform for money"
+          result: "&7The villagers loved your performance!"
+        choice3:
+          text: "&cContinue on your way"
+          result: "&7You don't have time to rest."
+      secret_vault:
+        name: "&5Secret Vault"
+        desc1: "&7You found a hidden vault entrance!"
+        desc2: "&7A key is needed to open it."
+        fail_text: "&cYou need a treasure key to enter"
+        choice1:
+          text: "&aUse the key to open"
+          result: "&7The vault is full of treasure! You got rich!"
+        choice2:
+          text: "&cLeave"
+          result: "&7You decided to keep the key for later."
+      traveling_merchant_shop:
+        name: "&6Traveling Merchant's Shop"
+        desc1: "&7A traveling merchant is willing to trade with you..."
+        desc2: "&7He has some special items for sale."
+        fail_text: "&cYou need a merchant token to enter the special shop"
+        choice1:
+          text: "&aBrowse goods"
+          result: "&7Welcome!"
+      monster_ambush:
+        name: "&cMonster Ambush"
+        desc1: "&7You walked into a dark area..."
+        desc2: "&7Suddenly, a monster jumps out from the shadows!"
+        choice1:
+          text: "&cPrepare for battle"
+          result: "&7You draw your weapon and prepare to fight!"
+      blacksmith_shop:
+        name: "&8Blacksmith Shop"
+        desc1: "&7You arrived at a blacksmith shop."
+        desc2: "&7Various equipment is available for purchase."
+        choice1:
+          text: "&aBrowse equipment"
+          result: "&7Welcome to my blacksmith shop!"
+    # Shop items
+    shop:
+      small_potion:
+        name: "&aSmall Healing Potion"
+        effect: "Restores 25 HP"
+      large_potion:
+        name: "&aLarge Healing Potion"
+        effect: "Restores 50 HP"
+      health_upgrade:
+        name: "&cHealth Upgrade"
+        effect: "Permanently increases max HP by 20"
+      lucky_coin:
+        name: "&6Lucky Coin"
+        effect: "Restores 10 HP and brings good luck"
+      healing_potion:
+        name: "&dHealing Potion"
+        effect: "Get 1 healing potion for use in events"
+    # Equipment
+    equipment:
+      iron_sword:
+        name: "&fIron Sword"
+      steel_sword:
+        name: "&bSteel Sword"
+      leather_armor:
+        name: "&6Leather Armor"
+      iron_armor:
+        name: "&fIron Armor"
+      magic_ring:
+        name: "&dMagic Ring"
+      amulet_of_protection:
+        name: "&5Amulet of Protection"
+    # Enemies
+    enemies:
+      slime:
+        name: "&aSlime"
+        desc: "A green bouncing creature"
+      skeleton:
+        name: "&fSkeleton Archer"
+        desc: "A skeleton with a bow"
+      zombie:
+        name: "&2Zombie"
+        desc: "A slow but strong undead creature"
+      spider:
+        name: "&8Giant Spider"
+        desc: "A terrifying giant spider"
+      witch:
+        name: "&5Witch"
+        desc: "An evil magic user"
+      dark_knight:
+        name: "&8Dark Knight"
+        desc: "A powerful dark warrior"
+      dragon:
+        name: "&4Shadow Dragon"
+        desc: "The ultimate challenge, a legendary dragon"
+    # End rewards
+    rewards:
+      novice:
+        name: "&6Novice Adventurer Reward"
+      adventurer:
+        name: "&aAdventurer Reward"
+      veteran:
+        name: "&bVeteran Adventurer Reward"
+      legendary:
+        name: "&dLegendary Adventurer Reward"
+      king:
+        name: "&6&lKing's Reward"

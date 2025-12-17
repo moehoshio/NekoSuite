@@ -279,6 +279,199 @@ sgame:
   shop_left: "&a✔ &7你離開了商店，繼續冒險。"
   equipped: "&a✔ &7已裝備: &6{item}"
   unequipped: "&a✔ &7已卸下: &6{item}"
+  not_enough_magic: "&c✖ &7你沒有足夠的魔法值！"
+  battle_round_result: "&7第{round}回合: 你使用 {player_action}，敵人使用 {enemy_action}。{result} &7(&a你造成{player_damage}傷害&7, &c受到{enemy_damage}傷害&7)"
+  battle_victory_multiround: "&a✔ &7經過{rounds}回合激戰，你擊敗了 &c{enemy}&7！獲得 &6{gold} &7金幣！"
+  round_attack_beats_skill: "&a攻擊打斷了敵人的技能！"
+  round_skill_beats_defense: "&d技能穿透了敵人的防禦！"
+  round_defense_beats_attack: "&e成功防禦並反擊！"
+  round_enemy_attack_beats_skill: "&c敵人打斷了你的技能！"
+  round_enemy_skill_beats_defense: "&c敵人的技能穿透了防禦！"
+  round_enemy_defense_beats_attack: "&c敵人防禦了你的攻擊！"
+  round_tie: "&7雙方僵持！"
+  # Config texts - Events
+  config:
+    events:
+      mysterious_merchant:
+        name: "&6神秘商人"
+        desc1: "&7你在路上遇到一位神秘的商人..."
+        desc2: "&7他似乎有些東西想交易。"
+        choice1:
+          text: "&a與他交易"
+          result: "&7商人很高興，給了你一些金幣作為回報！"
+        choice2:
+          text: "&c忽略他離開"
+          result: "&7你繼續你的旅程，什麼也沒發生。"
+        choice3:
+          text: "&e嘗試搶劫"
+          result: "&c商人是個偽裝的盜賊！你被攻擊了！"
+      injured_traveler:
+        name: "&b受傷的旅人"
+        desc1: "&7路邊躺著一個受傷的旅人..."
+        desc2: "&7他似乎需要幫助。"
+        choice1:
+          text: "&a幫助他 (使用治療藥水)"
+          result: "&7旅人非常感激，給了你豐厚的報酬！"
+          result_alt: "&7你盡力幫助了他，他給了你一些金幣。"
+        choice2:
+          text: "&e查看他的背包"
+          result: "&7你發現了一些金幣，但感覺有些不安..."
+        choice3:
+          text: "&c離開"
+          result: "&7你繼續趕路。"
+      ancient_shrine:
+        name: "&d古老的神殿"
+        desc1: "&7你發現了一座古老的神殿..."
+        desc2: "&7神殿中央有一個祭壇。"
+        fail_text: "&c你需要至少20金幣才能進入神殿"
+        choice1:
+          text: "&a獻上金幣祈禱 (花費20金幣)"
+          result: "&7神明保佑了你，恢復了生命力！"
+        choice2:
+          text: "&e探索神殿"
+          result: "&7你找到了一些寶物！"
+        choice3:
+          text: "&c離開神殿"
+          result: "&7你尊重這個地方，繼續前進。"
+      forest_crossroads:
+        name: "&2森林岔路"
+        desc1: "&7你來到了一個分岔路口..."
+        desc2: "&7左邊看起來很陰暗，右邊陽光明媚。"
+        choice1:
+          text: "&a走右邊的路"
+          result: "&7安全的道路，你找到了一些金幣。"
+        choice2:
+          text: "&c走左邊的路 (需要護身符)"
+          result: "&7護身符保護了你，你發現了大量寶藏！"
+          result_alt: "&7危險的道路，你受傷了但找到了一些寶物。"
+        choice3:
+          text: "&e原路返回"
+          result: "&7你決定謹慎行事。"
+      treasure_chest:
+        name: "&6寶箱"
+        desc1: "&7你發現了一個閃閃發光的寶箱！"
+        desc2: "&7你會如何處理它？"
+        choice1:
+          text: "&a小心地打開"
+          result: "&7你成功避開陷阱，獲得了獎勵！"
+        choice2:
+          text: "&e直接打開"
+          result: "&c觸發了陷阱！但裡面的寶物很豐富。"
+        choice3:
+          text: "&c不碰它離開"
+          result: "&7安全第一。"
+      village_festival:
+        name: "&e村莊慶典"
+        desc1: "&7你路過一個正在舉辦慶典的村莊。"
+        desc2: "&7村民們很熱情地邀請你參加。"
+        choice1:
+          text: "&a參加慶典 (花費10金幣)"
+          result: "&7你度過了愉快的時光，恢復了精力！"
+        choice2:
+          text: "&e表演賺錢"
+          result: "&7村民們很喜歡你的表演！"
+        choice3:
+          text: "&c繼續趕路"
+          result: "&7你沒有時間休息。"
+      secret_vault:
+        name: "&5秘密金庫"
+        desc1: "&7你發現了一個隱藏的金庫入口！"
+        desc2: "&7需要鑰匙才能打開。"
+        fail_text: "&c你需要一把寶藏鑰匙才能進入"
+        choice1:
+          text: "&a使用鑰匙開門"
+          result: "&7金庫裡滿是財寶！你發財了！"
+        choice2:
+          text: "&c離開"
+          result: "&7你決定保留鑰匙，以後再來。"
+      traveling_merchant_shop:
+        name: "&6旅行商人的商店"
+        desc1: "&7一位旅行商人願意與你交易..."
+        desc2: "&7他有一些特殊的物品出售。"
+        fail_text: "&c需要商人代幣才能進入特別商店"
+        choice1:
+          text: "&a查看商品"
+          result: "&7歡迎光臨！"
+      monster_ambush:
+        name: "&c怪物伏擊"
+        desc1: "&7你走進了一個黑暗的區域..."
+        desc2: "&7突然，一個怪物從暗處跳出！"
+        choice1:
+          text: "&c準備戰鬥"
+          result: "&7你拔出武器準備迎戰！"
+      blacksmith_shop:
+        name: "&8鐵匠鋪"
+        desc1: "&7你來到了一間鐵匠鋪。"
+        desc2: "&7這裡有各種裝備可以購買。"
+        choice1:
+          text: "&a瀏覽裝備"
+          result: "&7歡迎來到我的鐵匠鋪！"
+    # Shop items
+    shop:
+      small_potion:
+        name: "&a小型治療藥水"
+        effect: "恢復 25 點生命值"
+      large_potion:
+        name: "&a大型治療藥水"
+        effect: "恢復 50 點生命值"
+      health_upgrade:
+        name: "&c生命強化"
+        effect: "永久增加 20 點最大生命值"
+      lucky_coin:
+        name: "&6幸運金幣"
+        effect: "恢復 10 點生命值並帶來好運"
+      healing_potion:
+        name: "&d治療藥水"
+        effect: "獲得1個可在事件中使用的治療藥水"
+    # Equipment
+    equipment:
+      iron_sword:
+        name: "&f鐵劍"
+      steel_sword:
+        name: "&b鋼劍"
+      leather_armor:
+        name: "&6皮甲"
+      iron_armor:
+        name: "&f鐵甲"
+      magic_ring:
+        name: "&d魔法戒指"
+      amulet_of_protection:
+        name: "&5守護護符"
+    # Enemies
+    enemies:
+      slime:
+        name: "&a史萊姆"
+        desc: "一個綠色的彈跳生物"
+      skeleton:
+        name: "&f骷髏弓箭手"
+        desc: "一個拿著弓的骷髏"
+      zombie:
+        name: "&2殭屍"
+        desc: "一個緩慢但強壯的不死生物"
+      spider:
+        name: "&8巨型蜘蛛"
+        desc: "一隻可怕的巨型蜘蛛"
+      witch:
+        name: "&5女巫"
+        desc: "一個邪惡的魔法使用者"
+      dark_knight:
+        name: "&8黑暗騎士"
+        desc: "一個強大的黑暗戰士"
+      dragon:
+        name: "&4暗影龍"
+        desc: "最終的挑戰，傳說中的龍"
+    # End rewards
+    rewards:
+      novice:
+        name: "&6冒險新手獎勵"
+      adventurer:
+        name: "&a冒險者獎勵"
+      veteran:
+        name: "&b資深冒險者獎勵"
+      legendary:
+        name: "&d傳奇冒險者獎勵"
+      king:
+        name: "&6&l王者獎勵"
 
 menu:
   wish:
@@ -367,6 +560,7 @@ menu:
     # Shop i18n
     click_to_buy: "&a點擊購買"
     not_enough_gold: "&c金幣不足"
+    discount_lore: "&e✦ 特價 {discount}% 折扣！&f &7原價: &m{original_price}&r &a→ &6{final_price}"
     # Equipment i18n
     equipped_item: "&a已裝備: {name}"
     equip_weapon_stats: "&7攻擊: +{attack} 防禦: +{defense}"
@@ -383,4 +577,26 @@ menu:
     equip_price_lore: "&6價格: {price} 金幣"
     already_equipped: "&a✔ 已裝備"
     click_to_buy_equip: "&a點擊購買並裝備"
+    # Multi-round battle action i18n
+    battle_action_title: "&#ff6666✦ 選擇行動"
+    battle_round: "&e第 {round} 回合"
+    battle_round_lore: "&7選擇你這回合的行動"
+    your_status: "&a你的狀態"
+    hp_bar_lore: "&c生命: {hp}/{max_hp} {hp_bar}"
+    enemy_hp_bar_lore: "&c生命: {hp}/{max_hp} {hp_bar}"
+    action_attack: "&c⚔ 攻擊"
+    action_attack_lore: "&7對敵人發動攻擊"
+    action_attack_hint: "&7克制: &d技能 &8| &7被克制: &e防禦"
+    action_attack_name: "&c攻擊"
+    action_defense: "&e🛡 防禦"
+    action_defense_lore: "&7防禦敵人的攻擊"
+    action_defense_hint: "&7克制: &c攻擊 &8| &7被克制: &d技能"
+    action_defense_name: "&e防禦"
+    action_skill: "&d✦ 技能"
+    action_skill_lore: "&7施放魔法技能"
+    action_skill_hint: "&7克制: &e防禦 &8| &7被克制: &c攻擊"
+    action_skill_cost: "&7消耗: &d{magic_cost} &7魔法 (目前: &d{current_magic}&7)"
+    action_skill_name: "&d技能"
+    not_enough_magic: "&c魔法值不足"
+    vs_hint: "&7選擇你的行動來對抗敵人！"
   close: "&c✖ 關閉"

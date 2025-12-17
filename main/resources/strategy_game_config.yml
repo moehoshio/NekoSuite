@@ -26,55 +26,57 @@ game:
 #   item_amount: 需要的數量 (默認1)
 #   gold: 需要持有的最低金幣數
 #   gold_cost: 進入時消耗的金幣
-#   fail_text: 條件不足時的提示
+#   fail_text: 條件不足時的提示 (使用i18n key)
 # choices中的 requirement: 選擇的條件
-#   result_alt: 條件不足時的替代結果文字
+#   result_alt: 條件不足時的替代結果文字 (使用i18n key)
 #   gold_change_alt: 條件不足時的金幣變化
 #   health_change_alt: 條件不足時的生命變化
 #   item_gain: 選擇後獲得的虛擬物品
 #   item_gain_amount: 獲得數量
 #   item_cost: 選擇時消耗的虛擬物品
 #   item_cost_amount: 消耗數量
+# 
+# 所有文本字段現在使用i18n key，在語言文件的 sgame.config 下定義
 
 events:
   mysterious_merchant:
-    name: "&6神秘商人"
+    name: "sgame.config.events.mysterious_merchant.name"
     type: story
     weight: 15
     followup_events:
       - traveling_merchant_shop
     description:
-      - "&7你在路上遇到一位神秘的商人..."
-      - "&7他似乎有些東西想交易。"
+      - "sgame.config.events.mysterious_merchant.desc1"
+      - "sgame.config.events.mysterious_merchant.desc2"
     choices:
-      - text: "&a與他交易"
-        result: "&7商人很高興，給了你一些金幣作為回報！"
+      - text: "sgame.config.events.mysterious_merchant.choice1.text"
+        result: "sgame.config.events.mysterious_merchant.choice1.result"
         gold_change: 20
         health_change: 0
         item_gain: merchant_token
         item_gain_amount: 1
-      - text: "&c忽略他離開"
-        result: "&7你繼續你的旅程，什麼也沒發生。"
+      - text: "sgame.config.events.mysterious_merchant.choice2.text"
+        result: "sgame.config.events.mysterious_merchant.choice2.result"
         gold_change: 0
         health_change: 0
-      - text: "&e嘗試搶劫"
-        result: "&c商人是個偽裝的盜賊！你被攻擊了！"
+      - text: "sgame.config.events.mysterious_merchant.choice3.text"
+        result: "sgame.config.events.mysterious_merchant.choice3.result"
         gold_change: -30
         health_change: -15
 
   injured_traveler:
-    name: "&b受傷的旅人"
+    name: "sgame.config.events.injured_traveler.name"
     type: story
     weight: 12
     followup_events:
       - village_festival
     description:
-      - "&7路邊躺著一個受傷的旅人..."
-      - "&7他似乎需要幫助。"
+      - "sgame.config.events.injured_traveler.desc1"
+      - "sgame.config.events.injured_traveler.desc2"
     choices:
-      - text: "&a幫助他 (使用治療藥水)"
-        result: "&7旅人非常感激，給了你豐厚的報酬！"
-        result_alt: "&7你盡力幫助了他，他給了你一些金幣。"
+      - text: "sgame.config.events.injured_traveler.choice1.text"
+        result: "sgame.config.events.injured_traveler.choice1.result"
+        result_alt: "sgame.config.events.injured_traveler.choice1.result_alt"
         gold_change: 40
         gold_change_alt: 15
         health_change: 0
@@ -84,58 +86,58 @@ events:
         requirement:
           item: healing_potion
           item_amount: 1
-      - text: "&e查看他的背包"
-        result: "&7你發現了一些金幣，但感覺有些不安..."
+      - text: "sgame.config.events.injured_traveler.choice2.text"
+        result: "sgame.config.events.injured_traveler.choice2.result"
         gold_change: 25
         health_change: 0
-      - text: "&c離開"
-        result: "&7你繼續趕路。"
+      - text: "sgame.config.events.injured_traveler.choice3.text"
+        result: "sgame.config.events.injured_traveler.choice3.result"
         gold_change: 0
         health_change: 0
 
   ancient_shrine:
-    name: "&d古老的神殿"
+    name: "sgame.config.events.ancient_shrine.name"
     type: story
     weight: 8
     followup_events:
       - secret_vault
     requirement:
       gold: 20
-      fail_text: "&c你需要至少20金幣才能進入神殿"
+      fail_text: "sgame.config.events.ancient_shrine.fail_text"
     description:
-      - "&7你發現了一座古老的神殿..."
-      - "&7神殿中央有一個祭壇。"
+      - "sgame.config.events.ancient_shrine.desc1"
+      - "sgame.config.events.ancient_shrine.desc2"
     choices:
-      - text: "&a獻上金幣祈禱 (花費20金幣)"
-        result: "&7神明保佑了你，恢復了生命力！"
+      - text: "sgame.config.events.ancient_shrine.choice1.text"
+        result: "sgame.config.events.ancient_shrine.choice1.result"
         gold_change: -20
         health_change: 30
         item_gain: blessed_amulet
         item_gain_amount: 1
-      - text: "&e探索神殿"
-        result: "&7你找到了一些寶物！"
+      - text: "sgame.config.events.ancient_shrine.choice2.text"
+        result: "sgame.config.events.ancient_shrine.choice2.result"
         gold_change: 40
         health_change: -10
-      - text: "&c離開神殿"
-        result: "&7你尊重這個地方，繼續前進。"
+      - text: "sgame.config.events.ancient_shrine.choice3.text"
+        result: "sgame.config.events.ancient_shrine.choice3.result"
         gold_change: 5
         health_change: 5
 
   forest_crossroads:
-    name: "&2森林岔路"
+    name: "sgame.config.events.forest_crossroads.name"
     type: story
     weight: 12
     description:
-      - "&7你來到了一個分岔路口..."
-      - "&7左邊看起來很陰暗，右邊陽光明媚。"
+      - "sgame.config.events.forest_crossroads.desc1"
+      - "sgame.config.events.forest_crossroads.desc2"
     choices:
-      - text: "&a走右邊的路"
-        result: "&7安全的道路，你找到了一些金幣。"
+      - text: "sgame.config.events.forest_crossroads.choice1.text"
+        result: "sgame.config.events.forest_crossroads.choice1.result"
         gold_change: 10
         health_change: 0
-      - text: "&c走左邊的路 (需要護身符)"
-        result: "&7護身符保護了你，你發現了大量寶藏！"
-        result_alt: "&7危險的道路，你受傷了但找到了一些寶物。"
+      - text: "sgame.config.events.forest_crossroads.choice2.text"
+        result: "sgame.config.events.forest_crossroads.choice2.result"
+        result_alt: "sgame.config.events.forest_crossroads.choice2.result_alt"
         gold_change: 60
         gold_change_alt: 35
         health_change: 0
@@ -143,61 +145,61 @@ events:
         requirement:
           item: blessed_amulet
           item_amount: 1
-      - text: "&e原路返回"
-        result: "&7你決定謹慎行事。"
+      - text: "sgame.config.events.forest_crossroads.choice3.text"
+        result: "sgame.config.events.forest_crossroads.choice3.result"
         gold_change: 0
         health_change: 5
 
   treasure_chest:
-    name: "&6寶箱"
+    name: "sgame.config.events.treasure_chest.name"
     type: story
     weight: 10
     followup_events:
       - secret_vault
     description:
-      - "&7你發現了一個閃閃發光的寶箱！"
-      - "&7你會如何處理它？"
+      - "sgame.config.events.treasure_chest.desc1"
+      - "sgame.config.events.treasure_chest.desc2"
     choices:
-      - text: "&a小心地打開"
-        result: "&7你成功避開陷阱，獲得了獎勵！"
+      - text: "sgame.config.events.treasure_chest.choice1.text"
+        result: "sgame.config.events.treasure_chest.choice1.result"
         gold_change: 30
         health_change: 0
         item_gain: treasure_key
         item_gain_amount: 1
-      - text: "&e直接打開"
-        result: "&c觸發了陷阱！但裡面的寶物很豐富。"
+      - text: "sgame.config.events.treasure_chest.choice2.text"
+        result: "sgame.config.events.treasure_chest.choice2.result"
         gold_change: 50
         health_change: -20
-      - text: "&c不碰它離開"
-        result: "&7安全第一。"
+      - text: "sgame.config.events.treasure_chest.choice3.text"
+        result: "sgame.config.events.treasure_chest.choice3.result"
         gold_change: 0
         health_change: 0
 
   village_festival:
-    name: "&e村莊慶典"
+    name: "sgame.config.events.village_festival.name"
     type: story
     weight: 10
     description:
-      - "&7你路過一個正在舉辦慶典的村莊。"
-      - "&7村民們很熱情地邀請你參加。"
+      - "sgame.config.events.village_festival.desc1"
+      - "sgame.config.events.village_festival.desc2"
     choices:
-      - text: "&a參加慶典 (花費10金幣)"
-        result: "&7你度過了愉快的時光，恢復了精力！"
+      - text: "sgame.config.events.village_festival.choice1.text"
+        result: "sgame.config.events.village_festival.choice1.result"
         gold_change: -10
         health_change: 20
-      - text: "&e表演賺錢"
-        result: "&7村民們很喜歡你的表演！"
+      - text: "sgame.config.events.village_festival.choice2.text"
+        result: "sgame.config.events.village_festival.choice2.result"
         gold_change: 25
         health_change: 0
         item_gain: performer_badge
         item_gain_amount: 1
-      - text: "&c繼續趕路"
-        result: "&7你沒有時間休息。"
+      - text: "sgame.config.events.village_festival.choice3.text"
+        result: "sgame.config.events.village_festival.choice3.result"
         gold_change: 0
         health_change: -5
 
   secret_vault:
-    name: "&5秘密金庫"
+    name: "sgame.config.events.secret_vault.name"
     type: story
     weight: 5
     prerequisite_events:
@@ -205,24 +207,24 @@ events:
     requirement:
       item: treasure_key
       item_amount: 1
-      fail_text: "&c你需要一把寶藏鑰匙才能進入"
+      fail_text: "sgame.config.events.secret_vault.fail_text"
     description:
-      - "&7你發現了一個隱藏的金庫入口！"
-      - "&7需要鑰匙才能打開。"
+      - "sgame.config.events.secret_vault.desc1"
+      - "sgame.config.events.secret_vault.desc2"
     choices:
-      - text: "&a使用鑰匙開門"
-        result: "&7金庫裡滿是財寶！你發財了！"
+      - text: "sgame.config.events.secret_vault.choice1.text"
+        result: "sgame.config.events.secret_vault.choice1.result"
         gold_change: 100
         health_change: 0
         item_cost: treasure_key
         item_cost_amount: 1
-      - text: "&c離開"
-        result: "&7你決定保留鑰匙，以後再來。"
+      - text: "sgame.config.events.secret_vault.choice2.text"
+        result: "sgame.config.events.secret_vault.choice2.result"
         gold_change: 0
         health_change: 0
 
   traveling_merchant_shop:
-    name: "&6旅行商人的商店"
+    name: "sgame.config.events.traveling_merchant_shop.name"
     type: shop
     weight: 8
     prerequisite_events:
@@ -230,39 +232,39 @@ events:
     requirement:
       item: merchant_token
       item_amount: 1
-      fail_text: "&c需要商人代幣才能進入特別商店"
+      fail_text: "sgame.config.events.traveling_merchant_shop.fail_text"
     description:
-      - "&7一位旅行商人願意與你交易..."
-      - "&7他有一些特殊的物品出售。"
+      - "sgame.config.events.traveling_merchant_shop.desc1"
+      - "sgame.config.events.traveling_merchant_shop.desc2"
     choices:
-      - text: "&a查看商品"
-        result: "&7歡迎光臨！"
+      - text: "sgame.config.events.traveling_merchant_shop.choice1.text"
+        result: "sgame.config.events.traveling_merchant_shop.choice1.result"
         gold_change: 0
         health_change: 0
 
   monster_ambush:
-    name: "&c怪物伏擊"
+    name: "sgame.config.events.monster_ambush.name"
     type: battle
     weight: 12
     description:
-      - "&7你走進了一個黑暗的區域..."
-      - "&7突然，一個怪物從暗處跳出！"
+      - "sgame.config.events.monster_ambush.desc1"
+      - "sgame.config.events.monster_ambush.desc2"
     choices:
-      - text: "&c準備戰鬥"
-        result: "&7你拔出武器準備迎戰！"
+      - text: "sgame.config.events.monster_ambush.choice1.text"
+        result: "sgame.config.events.monster_ambush.choice1.result"
         gold_change: 0
         health_change: 0
 
   blacksmith_shop:
-    name: "&8鐵匠鋪"
+    name: "sgame.config.events.blacksmith_shop.name"
     type: shop
     weight: 8
     description:
-      - "&7你來到了一間鐵匠鋪。"
-      - "&7這裡有各種裝備可以購買。"
+      - "sgame.config.events.blacksmith_shop.desc1"
+      - "sgame.config.events.blacksmith_shop.desc2"
     choices:
-      - text: "&a瀏覽裝備"
-        result: "&7歡迎來到我的鐵匠鋪！"
+      - text: "sgame.config.events.blacksmith_shop.choice1.text"
+        result: "sgame.config.events.blacksmith_shop.choice1.result"
         gold_change: 0
         health_change: 0
 
@@ -270,47 +272,47 @@ events:
 shop:
   items:
     - id: small_potion
-      name: "&a小型治療藥水"
+      name: "sgame.config.shop.small_potion.name"
       price: 20
       material: POTION
       effect_type: heal
       effect_value: 25
-      effect_description: "恢復 25 點生命值"
+      effect_description: "sgame.config.shop.small_potion.effect"
     - id: large_potion
-      name: "&a大型治療藥水"
+      name: "sgame.config.shop.large_potion.name"
       price: 45
       material: SPLASH_POTION
       effect_type: heal
       effect_value: 50
-      effect_description: "恢復 50 點生命值"
+      effect_description: "sgame.config.shop.large_potion.effect"
     - id: health_upgrade
-      name: "&c生命強化"
+      name: "sgame.config.shop.health_upgrade.name"
       price: 80
       material: GOLDEN_APPLE
       effect_type: max_health
       effect_value: 20
-      effect_description: "永久增加 20 點最大生命值"
+      effect_description: "sgame.config.shop.health_upgrade.effect"
     - id: lucky_coin
-      name: "&6幸運金幣"
+      name: "sgame.config.shop.lucky_coin.name"
       price: 30
       material: GOLD_NUGGET
       effect_type: heal
       effect_value: 10
-      effect_description: "恢復 10 點生命值並帶來好運"
+      effect_description: "sgame.config.shop.lucky_coin.effect"
     - id: healing_potion
-      name: "&d治療藥水"
+      name: "sgame.config.shop.healing_potion.name"
       price: 25
       material: LINGERING_POTION
       effect_type: item
       effect_value: 1
-      effect_description: "獲得1個可在事件中使用的治療藥水"
+      effect_description: "sgame.config.shop.healing_potion.effect"
 
 # 裝備配置
 # slot: weapon (武器), armor (護甲), accessory (飾品)
 equipment:
   items:
     - id: iron_sword
-      name: "&f鐵劍"
+      name: "sgame.config.equipment.iron_sword.name"
       slot: weapon
       price: 50
       material: IRON_SWORD
@@ -319,7 +321,7 @@ equipment:
       health_bonus: 0
       magic_bonus: 0
     - id: steel_sword
-      name: "&b鋼劍"
+      name: "sgame.config.equipment.steel_sword.name"
       slot: weapon
       price: 100
       material: DIAMOND_SWORD
@@ -328,7 +330,7 @@ equipment:
       health_bonus: 0
       magic_bonus: 0
     - id: leather_armor
-      name: "&6皮甲"
+      name: "sgame.config.equipment.leather_armor.name"
       slot: armor
       price: 40
       material: LEATHER_CHESTPLATE
@@ -337,7 +339,7 @@ equipment:
       health_bonus: 10
       magic_bonus: 0
     - id: iron_armor
-      name: "&f鐵甲"
+      name: "sgame.config.equipment.iron_armor.name"
       slot: armor
       price: 80
       material: IRON_CHESTPLATE
@@ -346,7 +348,7 @@ equipment:
       health_bonus: 20
       magic_bonus: 0
     - id: magic_ring
-      name: "&d魔法戒指"
+      name: "sgame.config.equipment.magic_ring.name"
       slot: accessory
       price: 60
       material: GOLD_INGOT
@@ -355,7 +357,7 @@ equipment:
       health_bonus: 0
       magic_bonus: 10
     - id: amulet_of_protection
-      name: "&5守護護符"
+      name: "sgame.config.equipment.amulet_of_protection.name"
       slot: accessory
       price: 75
       material: EMERALD
@@ -369,8 +371,8 @@ equipment:
 battles:
   enemies:
     - id: slime
-      name: "&a史萊姆"
-      description: "一個綠色的彈跳生物"
+      name: "sgame.config.enemies.slime.name"
+      description: "sgame.config.enemies.slime.desc"
       power: 20
       damage: 8
       health: 30
@@ -380,8 +382,8 @@ battles:
       gold_reward: 15
       min_stage: 0
     - id: skeleton
-      name: "&f骷髏弓箭手"
-      description: "一個拿著弓的骷髏"
+      name: "sgame.config.enemies.skeleton.name"
+      description: "sgame.config.enemies.skeleton.desc"
       power: 35
       damage: 12
       health: 40
@@ -391,8 +393,8 @@ battles:
       gold_reward: 25
       min_stage: 2
     - id: zombie
-      name: "&2殭屍"
-      description: "一個緩慢但強壯的不死生物"
+      name: "sgame.config.enemies.zombie.name"
+      description: "sgame.config.enemies.zombie.desc"
       power: 40
       damage: 15
       health: 60
@@ -402,8 +404,8 @@ battles:
       gold_reward: 30
       min_stage: 3
     - id: spider
-      name: "&8巨型蜘蛛"
-      description: "一隻可怕的巨型蜘蛛"
+      name: "sgame.config.enemies.spider.name"
+      description: "sgame.config.enemies.spider.desc"
       power: 45
       damage: 18
       health: 45
@@ -413,8 +415,8 @@ battles:
       gold_reward: 35
       min_stage: 4
     - id: witch
-      name: "&5女巫"
-      description: "一個邪惡的魔法使用者"
+      name: "sgame.config.enemies.witch.name"
+      description: "sgame.config.enemies.witch.desc"
       power: 55
       damage: 22
       health: 35
@@ -424,8 +426,8 @@ battles:
       gold_reward: 45
       min_stage: 5
     - id: dark_knight
-      name: "&8黑暗騎士"
-      description: "一個強大的黑暗戰士"
+      name: "sgame.config.enemies.dark_knight.name"
+      description: "sgame.config.enemies.dark_knight.desc"
       power: 70
       damage: 28
       health: 80
@@ -435,8 +437,8 @@ battles:
       gold_reward: 60
       min_stage: 7
     - id: dragon
-      name: "&4暗影龍"
-      description: "最終的挑戰，傳說中的龍"
+      name: "sgame.config.enemies.dragon.name"
+      description: "sgame.config.enemies.dragon.desc"
       power: 90
       damage: 35
       health: 120
@@ -448,23 +450,23 @@ battles:
 
 # 結束獎勵配置 (根據分數發放真實獎勵)
 end_rewards:
-  - name: "&6冒險新手獎勵"
+  - name: "sgame.config.rewards.novice.name"
     min_score: 100
     commands:
       - "minecraft:give {player} minecraft:iron_ingot 5"
-  - name: "&a冒險者獎勵"
+  - name: "sgame.config.rewards.adventurer.name"
     min_score: 300
     commands:
       - "minecraft:give {player} minecraft:gold_ingot 3"
-  - name: "&b資深冒險者獎勵"
+  - name: "sgame.config.rewards.veteran.name"
     min_score: 500
     commands:
       - "minecraft:give {player} minecraft:diamond 2"
-  - name: "&d傳奇冒險者獎勵"
+  - name: "sgame.config.rewards.legendary.name"
     min_score: 800
     commands:
       - "minecraft:give {player} minecraft:emerald 5"
-  - name: "&6&l王者獎勵"
+  - name: "sgame.config.rewards.king.name"
     min_score: 1000
     commands:
       - "minecraft:give {player} minecraft:netherite_ingot 1"
