@@ -11,9 +11,16 @@ game:
   starting_health: 100
   # 完成遊戲所需的最大階段數
   max_stages: 10
+  # 起始戰鬥屬性
+  starting_attack: 10
+  starting_defense: 5
+  starting_magic: 20
 
 # 遊戲事件配置
 # type: story (普通劇情), shop (商店), battle (戰鬥)
+# weight: 隨機選擇時的基礎權重 (默認10)
+# followup_events: 完成此事件後，這些事件的權重會提高
+# prerequisite_events: 必須先經過這些事件才能進入
 # requirement: 進入事件的條件
 #   item: 需要的虛擬物品ID
 #   item_amount: 需要的數量 (默認1)
@@ -33,6 +40,9 @@ events:
   mysterious_merchant:
     name: "&6神秘商人"
     type: story
+    weight: 15
+    followup_events:
+      - traveling_merchant_shop
     description:
       - "&7你在路上遇到一位神秘的商人..."
       - "&7他似乎有些東西想交易。"
@@ -55,6 +65,9 @@ events:
   injured_traveler:
     name: "&b受傷的旅人"
     type: story
+    weight: 12
+    followup_events:
+      - village_festival
     description:
       - "&7路邊躺著一個受傷的旅人..."
       - "&7他似乎需要幫助。"
@@ -83,6 +96,9 @@ events:
   ancient_shrine:
     name: "&d古老的神殿"
     type: story
+    weight: 8
+    followup_events:
+      - secret_vault
     requirement:
       gold: 20
       fail_text: "&c你需要至少20金幣才能進入神殿"
@@ -108,6 +124,7 @@ events:
   forest_crossroads:
     name: "&2森林岔路"
     type: story
+    weight: 12
     description:
       - "&7你來到了一個分岔路口..."
       - "&7左邊看起來很陰暗，右邊陽光明媚。"
@@ -134,6 +151,9 @@ events:
   treasure_chest:
     name: "&6寶箱"
     type: story
+    weight: 10
+    followup_events:
+      - secret_vault
     description:
       - "&7你發現了一個閃閃發光的寶箱！"
       - "&7但它可能有陷阱..."
@@ -156,6 +176,7 @@ events:
   village_festival:
     name: "&e村莊慶典"
     type: story
+    weight: 10
     description:
       - "&7你路過一個正在舉辦慶典的村莊。"
       - "&7村民們很熱情地邀請你參加。"
@@ -178,6 +199,9 @@ events:
   secret_vault:
     name: "&5秘密金庫"
     type: story
+    weight: 5
+    prerequisite_events:
+      - treasure_chest
     requirement:
       item: treasure_key
       item_amount: 1
@@ -200,6 +224,9 @@ events:
   traveling_merchant_shop:
     name: "&6旅行商人的商店"
     type: shop
+    weight: 8
+    prerequisite_events:
+      - mysterious_merchant
     requirement:
       item: merchant_token
       item_amount: 1
@@ -210,6 +237,32 @@ events:
     choices:
       - text: "&a查看商品"
         result: "&7歡迎光臨！"
+        gold_change: 0
+        health_change: 0
+
+  monster_ambush:
+    name: "&c怪物伏擊"
+    type: battle
+    weight: 12
+    description:
+      - "&7你走進了一個黑暗的區域..."
+      - "&7突然，一個怪物從暗處跳出！"
+    choices:
+      - text: "&c準備戰鬥"
+        result: "&7你拔出武器準備迎戰！"
+        gold_change: 0
+        health_change: 0
+
+  blacksmith_shop:
+    name: "&8鐵匠鋪"
+    type: shop
+    weight: 8
+    description:
+      - "&7你來到了一間鐵匠鋪。"
+      - "&7這裡有各種裝備可以購買。"
+    choices:
+      - text: "&a瀏覽裝備"
+        result: "&7歡迎來到我的鐵匠鋪！"
         gold_change: 0
         health_change: 0
 
@@ -252,7 +305,67 @@ shop:
       effect_value: 1
       effect_description: "獲得1個可在事件中使用的治療藥水"
 
+# 裝備配置
+# slot: weapon (武器), armor (護甲), accessory (飾品)
+equipment:
+  items:
+    - id: iron_sword
+      name: "&f鐵劍"
+      slot: weapon
+      price: 50
+      material: IRON_SWORD
+      attack_bonus: 5
+      defense_bonus: 0
+      health_bonus: 0
+      magic_bonus: 0
+    - id: steel_sword
+      name: "&b鋼劍"
+      slot: weapon
+      price: 100
+      material: DIAMOND_SWORD
+      attack_bonus: 12
+      defense_bonus: 0
+      health_bonus: 0
+      magic_bonus: 0
+    - id: leather_armor
+      name: "&6皮甲"
+      slot: armor
+      price: 40
+      material: LEATHER_CHESTPLATE
+      attack_bonus: 0
+      defense_bonus: 3
+      health_bonus: 10
+      magic_bonus: 0
+    - id: iron_armor
+      name: "&f鐵甲"
+      slot: armor
+      price: 80
+      material: IRON_CHESTPLATE
+      attack_bonus: 0
+      defense_bonus: 8
+      health_bonus: 20
+      magic_bonus: 0
+    - id: magic_ring
+      name: "&d魔法戒指"
+      slot: accessory
+      price: 60
+      material: GOLD_INGOT
+      attack_bonus: 2
+      defense_bonus: 2
+      health_bonus: 0
+      magic_bonus: 10
+    - id: amulet_of_protection
+      name: "&5守護護符"
+      slot: accessory
+      price: 75
+      material: EMERALD
+      attack_bonus: 0
+      defense_bonus: 5
+      health_bonus: 15
+      magic_bonus: 5
+
 # 戰鬥敵人配置
+# 新增: attack, defense, magic 屬性用於戰鬥計算
 battles:
   enemies:
     - id: slime
@@ -260,6 +373,10 @@ battles:
       description: "一個綠色的彈跳生物"
       power: 20
       damage: 8
+      health: 30
+      attack: 5
+      defense: 2
+      magic: 0
       gold_reward: 15
       min_stage: 0
     - id: skeleton
@@ -267,6 +384,10 @@ battles:
       description: "一個拿著弓的骷髏"
       power: 35
       damage: 12
+      health: 40
+      attack: 10
+      defense: 3
+      magic: 0
       gold_reward: 25
       min_stage: 2
     - id: zombie
@@ -274,6 +395,10 @@ battles:
       description: "一個緩慢但強壯的不死生物"
       power: 40
       damage: 15
+      health: 60
+      attack: 12
+      defense: 8
+      magic: 0
       gold_reward: 30
       min_stage: 3
     - id: spider
@@ -281,6 +406,10 @@ battles:
       description: "一隻可怕的巨型蜘蛛"
       power: 45
       damage: 18
+      health: 45
+      attack: 15
+      defense: 5
+      magic: 0
       gold_reward: 35
       min_stage: 4
     - id: witch
@@ -288,6 +417,10 @@ battles:
       description: "一個邪惡的魔法使用者"
       power: 55
       damage: 22
+      health: 35
+      attack: 8
+      defense: 3
+      magic: 20
       gold_reward: 45
       min_stage: 5
     - id: dark_knight
@@ -295,6 +428,10 @@ battles:
       description: "一個強大的黑暗戰士"
       power: 70
       damage: 28
+      health: 80
+      attack: 20
+      defense: 15
+      magic: 5
       gold_reward: 60
       min_stage: 7
     - id: dragon
@@ -302,6 +439,10 @@ battles:
       description: "最終的挑戰，傳說中的龍"
       power: 90
       damage: 35
+      health: 120
+      attack: 30
+      defense: 20
+      magic: 25
       gold_reward: 100
       min_stage: 9
 

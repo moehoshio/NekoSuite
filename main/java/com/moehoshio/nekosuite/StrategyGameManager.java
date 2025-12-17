@@ -55,10 +55,14 @@ public class StrategyGameManager {
     private int startingGold = DEFAULT_STARTING_GOLD;
     private int startingHealth = DEFAULT_STARTING_HEALTH;
     private int maxStages = DEFAULT_MAX_STAGES;
+    private int startingAttack = 10;
+    private int startingDefense = 5;
+    private int startingMagic = 20;
     private final List<GameEvent> gameEvents = new ArrayList<GameEvent>();
     private final List<ShopItem> shopItems = new ArrayList<ShopItem>();
     private final List<BattleEnemy> enemies = new ArrayList<BattleEnemy>();
     private final List<EndReward> endRewards = new ArrayList<EndReward>();
+    private final List<Equipment> equipments = new ArrayList<Equipment>();
 
     // Active game sessions
     private final Map<String, GameSession> activeSessions = new HashMap<String, GameSession>();
@@ -80,6 +84,9 @@ public class StrategyGameManager {
         startingGold = config.getInt("game.starting_gold", 100);
         startingHealth = config.getInt("game.starting_health", 100);
         maxStages = config.getInt("game.max_stages", 10);
+        startingAttack = config.getInt("game.starting_attack", 10);
+        startingDefense = config.getInt("game.starting_defense", 5);
+        startingMagic = config.getInt("game.starting_magic", 20);
 
         // Load events
         gameEvents.clear();
@@ -103,6 +110,16 @@ public class StrategyGameManager {
             ShopItem item = ShopItem.fromMap(raw);
             if (item != null) {
                 shopItems.add(item);
+            }
+        }
+
+        // Load equipment
+        equipments.clear();
+        List<Map<?, ?>> equipList = config.getMapList("equipment.items");
+        for (Map<?, ?> raw : equipList) {
+            Equipment eq = Equipment.fromMap(raw);
+            if (eq != null) {
+                equipments.add(eq);
             }
         }
 
@@ -140,6 +157,12 @@ public class StrategyGameManager {
         }
 
         GameSession session = new GameSession(playerName, startingGold, startingHealth);
+        // Initialize combat stats
+        session.setAttack(startingAttack);
+        session.setDefense(startingDefense);
+        session.setMagic(startingMagic);
+        session.setMaxMagic(startingMagic);
+        
         activeSessions.put(playerName, session);
         saveSession(session);
 
@@ -291,6 +314,15 @@ public class StrategyGameManager {
             });
         safeSet(inv, layout.getShopSlot(), shopItem);
 
+        // Equipment button (slot 21, next to shop)
+        ItemStack equipItem = createItem(Material.DIAMOND_CHESTPLATE,
+            messages.format(player, "menu.sgame.equipment_title"),
+            new String[]{
+                messages.format(player, "menu.sgame.equipment_lore"),
+                "ID:equipment"
+            });
+        safeSet(inv, 21, equipItem);
+
         // End game button (only if completed enough stages)
         if (session.getCurrentStage() >= maxStages) {
             ItemStack endItem = createItem(Material.NETHER_STAR,
@@ -328,10 +360,14 @@ public class StrategyGameManager {
         String title = messages.format(player, "menu.sgame.event_selection_title");
         Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.EVENT_SELECTION), layout.getSize(), title);
 
-        // Status display
+        // Status display with combat stats
         Map<String, String> statusMap = new HashMap<String, String>();
         statusMap.put("gold", String.valueOf(session.getGold()));
         statusMap.put("health", String.valueOf(session.getHealth()));
+        statusMap.put("max_health", String.valueOf(session.getMaxHealth()));
+        statusMap.put("attack", String.valueOf(session.getAttack() + getEquipmentAttackBonus(session)));
+        statusMap.put("defense", String.valueOf(session.getDefense() + getEquipmentDefenseBonus(session)));
+        statusMap.put("magic", String.valueOf(session.getMagic()));
         statusMap.put("stage", String.valueOf(session.getCurrentStage()));
         statusMap.put("max_stage", String.valueOf(maxStages));
         
@@ -340,23 +376,33 @@ public class StrategyGameManager {
             new String[]{
                 messages.format(player, "menu.sgame.gold_lore", statusMap),
                 messages.format(player, "menu.sgame.health_lore", statusMap),
+                messages.format(player, "menu.sgame.combat_stats_lore", statusMap),
                 messages.format(player, "menu.sgame.stage_lore", statusMap)
             });
         safeSet(inv, 4, statusItem);
 
-        // Pick 3 random events to show
-        List<GameEvent> availableEvents = new ArrayList<GameEvent>(gameEvents);
-        java.util.Collections.shuffle(availableEvents, random);
-        int eventsToShow = Math.min(3, availableEvents.size());
+        // Use weighted selection for events based on history
+        List<GameEvent> selectedEvents = selectEventsForStage(session, 3);
         
         int[] eventSlots = {11, 13, 15};
-        for (int i = 0; i < eventsToShow; i++) {
-            GameEvent event = availableEvents.get(i);
+        for (int i = 0; i < selectedEvents.size(); i++) {
+            GameEvent event = selectedEvents.get(i);
             
             // Check if event has requirements and if player meets them
             boolean meetsRequirements = true;
             List<String> loreList = new ArrayList<String>();
             loreList.addAll(event.getDescription());
+            
+            // Show event type indicator
+            String typeIndicator = "&7類型: ";
+            if ("battle".equals(event.getEventType())) {
+                typeIndicator += "&c戰鬥";
+            } else if ("shop".equals(event.getEventType())) {
+                typeIndicator += "&6商店";
+            } else {
+                typeIndicator += "&a劇情";
+            }
+            loreList.add(typeIndicator);
             
             if (event.hasRequirement()) {
                 EventRequirement req = event.getRequirement();
@@ -536,15 +582,19 @@ public class StrategyGameManager {
         String title = messages.format(player, "menu.sgame.battle_menu_title");
         Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.BATTLE), layout.getSize(), title);
 
-        // Enemy display
+        // Enemy display with combat stats
         Map<String, String> enemyMap = new HashMap<String, String>();
         enemyMap.put("enemy", enemy.getName());
         enemyMap.put("power", String.valueOf(enemy.getPower()));
+        enemyMap.put("attack", String.valueOf(enemy.getAttack()));
+        enemyMap.put("defense", String.valueOf(enemy.getDefense()));
+        enemyMap.put("health", String.valueOf(enemy.getHealth()));
+        enemyMap.put("magic", String.valueOf(enemy.getMagic()));
         
         ItemStack enemyItem = createItem(Material.ZOMBIE_HEAD,
             messages.format(player, "menu.sgame.enemy_title", enemyMap),
             new String[]{
-                messages.format(player, "menu.sgame.enemy_power_lore", enemyMap),
+                messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap),
                 "&7" + enemy.getDescription()
             });
         safeSet(inv, 4, enemyItem);
@@ -643,6 +693,116 @@ public class StrategyGameManager {
         player.openInventory(inv);
     }
 
+    /**
+     * Open the equipment management menu.
+     */
+    public void openEquipmentMenu(Player player) {
+        GameSession session = getOrLoadSession(player.getName());
+        if (session == null || session.isEnded()) {
+            return;
+        }
+
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.equipment_menu_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.EQUIPMENT), layout.getSize(), title);
+
+        // Status display
+        Map<String, String> statusMap = new HashMap<String, String>();
+        statusMap.put("gold", String.valueOf(session.getGold()));
+        statusMap.put("attack", String.valueOf(session.getAttack() + getEquipmentAttackBonus(session)));
+        statusMap.put("defense", String.valueOf(session.getDefense() + getEquipmentDefenseBonus(session)));
+        statusMap.put("health", String.valueOf(session.getHealth()));
+        statusMap.put("max_health", String.valueOf(session.getMaxHealth()));
+        statusMap.put("magic", String.valueOf(session.getMagic()));
+        
+        ItemStack statusItem = createItem(Material.BOOK, 
+            messages.format(player, "menu.sgame.status_title", statusMap),
+            new String[]{
+                messages.format(player, "menu.sgame.combat_stats_lore", statusMap),
+                messages.format(player, "menu.sgame.health_lore", statusMap)
+            });
+        safeSet(inv, 4, statusItem);
+
+        // Current equipment slots
+        // Weapon slot
+        String weaponId = session.getEquippedWeapon();
+        Equipment weapon = weaponId != null ? findEquipment(weaponId) : null;
+        ItemStack weaponSlot = createItem(weapon != null ? weapon.getMaterial() : Material.IRON_SWORD,
+            messages.format(player, "menu.sgame.equip_slot_weapon"),
+            new String[]{
+                weapon != null ? "&a已裝備: " + weapon.getName() : messages.format(player, "menu.sgame.equip_empty"),
+                weapon != null ? "&7攻擊: +" + weapon.getAttackBonus() + " 防禦: +" + weapon.getDefenseBonus() : "",
+                messages.format(player, "menu.sgame.equip_click_to_change"),
+                "ID:slot_weapon"
+            });
+        safeSet(inv, 10, weaponSlot);
+
+        // Armor slot
+        String armorId = session.getEquippedArmor();
+        Equipment armor = armorId != null ? findEquipment(armorId) : null;
+        ItemStack armorSlot = createItem(armor != null ? armor.getMaterial() : Material.LEATHER_CHESTPLATE,
+            messages.format(player, "menu.sgame.equip_slot_armor"),
+            new String[]{
+                armor != null ? "&a已裝備: " + armor.getName() : messages.format(player, "menu.sgame.equip_empty"),
+                armor != null ? "&7防禦: +" + armor.getDefenseBonus() + " 生命: +" + armor.getHealthBonus() : "",
+                messages.format(player, "menu.sgame.equip_click_to_change"),
+                "ID:slot_armor"
+            });
+        safeSet(inv, 13, armorSlot);
+
+        // Accessory slot
+        String accessoryId = session.getEquippedAccessory();
+        Equipment accessory = accessoryId != null ? findEquipment(accessoryId) : null;
+        ItemStack accessorySlot = createItem(accessory != null ? accessory.getMaterial() : Material.GOLD_INGOT,
+            messages.format(player, "menu.sgame.equip_slot_accessory"),
+            new String[]{
+                accessory != null ? "&a已裝備: " + accessory.getName() : messages.format(player, "menu.sgame.equip_empty"),
+                accessory != null ? "&7各種加成" : "",
+                messages.format(player, "menu.sgame.equip_click_to_change"),
+                "ID:slot_accessory"
+            });
+        safeSet(inv, 16, accessorySlot);
+
+        // Available equipment to buy (bottom row)
+        int[] equipSlots = {28, 29, 30, 31, 32, 33, 34};
+        int slotIndex = 0;
+        for (Equipment eq : equipments) {
+            if (slotIndex >= equipSlots.length) break;
+            
+            boolean canAfford = session.getGold() >= eq.getPrice();
+            boolean isEquipped = eq.getId().equals(weaponId) || eq.getId().equals(armorId) || eq.getId().equals(accessoryId);
+            
+            List<String> lore = new ArrayList<String>();
+            lore.add("&7類型: " + ("weapon".equals(eq.getSlot()) ? "&c武器" : "armor".equals(eq.getSlot()) ? "&e護甲" : "&d飾品"));
+            if (eq.getAttackBonus() > 0) lore.add("&c攻擊: +" + eq.getAttackBonus());
+            if (eq.getDefenseBonus() > 0) lore.add("&e防禦: +" + eq.getDefenseBonus());
+            if (eq.getHealthBonus() > 0) lore.add("&a生命: +" + eq.getHealthBonus());
+            if (eq.getMagicBonus() > 0) lore.add("&d魔法: +" + eq.getMagicBonus());
+            lore.add("&6價格: " + eq.getPrice() + " 金幣");
+            
+            if (isEquipped) {
+                lore.add("&a✔ 已裝備");
+            } else if (canAfford) {
+                lore.add("&a點擊購買並裝備");
+            } else {
+                lore.add("&c金幣不足");
+            }
+            lore.add("ID:buy_equip_" + eq.getId());
+            
+            ItemStack eqItem = createItem(eq.getMaterial(), eq.getName(), lore.toArray(new String[0]));
+            safeSet(inv, equipSlots[slotIndex], eqItem);
+            slotIndex++;
+        }
+
+        // Back button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.sgame.back"),
+            new String[]{"ID:back"});
+        safeSet(inv, layout.getCloseSlot(), backItem);
+
+        player.openInventory(inv);
+    }
+
     // ============ Menu Click Handler ============
 
     public void handleMenuClick(Player player, ItemStack clicked, StrategyGameMenuHolder holder) {
@@ -682,6 +842,9 @@ public class StrategyGameManager {
             case SHOP:
                 handleShopMenuClick(player, session, id);
                 break;
+            case EQUIPMENT:
+                handleEquipmentMenuClick(player, session, id);
+                break;
         }
     }
 
@@ -695,6 +858,9 @@ public class StrategyGameManager {
                 break;
             case "shop":
                 openShopMenu(player);
+                break;
+            case "equipment":
+                openEquipmentMenu(player);
                 break;
             case "end_game":
                 player.closeInventory();
@@ -731,6 +897,7 @@ public class StrategyGameManager {
             }
 
             session.setCurrentEventId(eventId);
+            session.addVisitedEvent(eventId); // Track visited event for weighted selection
             saveSession(session);
             openEventMenu(player);
         }
@@ -828,6 +995,67 @@ public class StrategyGameManager {
         }
     }
 
+    private void handleEquipmentMenuClick(Player player, GameSession session, String id) {
+        if ("back".equals(id)) {
+            openMainMenu(player);
+            return;
+        }
+
+        if (id.startsWith("buy_equip_")) {
+            String equipId = id.substring(10);
+            Equipment eq = findEquipment(equipId);
+            if (eq == null) {
+                return;
+            }
+
+            // Check if already equipped
+            boolean isEquipped = equipId.equals(session.getEquippedWeapon()) || 
+                                 equipId.equals(session.getEquippedArmor()) || 
+                                 equipId.equals(session.getEquippedAccessory());
+            
+            if (isEquipped) {
+                // Unequip - just remove the equipment reference
+                // Bonuses are calculated dynamically, so no need to reverse stats
+                if ("weapon".equals(eq.getSlot())) {
+                    session.setEquippedWeapon(null);
+                } else if ("armor".equals(eq.getSlot())) {
+                    session.setEquippedArmor(null);
+                } else {
+                    session.setEquippedAccessory(null);
+                }
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", eq.getName());
+                player.sendMessage(messages.format(player, "sgame.unequipped", map));
+            } else {
+                // Check if can afford
+                if (session.getGold() < eq.getPrice()) {
+                    player.sendMessage(messages.format(player, "sgame.not_enough_gold"));
+                    return;
+                }
+                
+                // Purchase and equip
+                // Bonuses (attack, defense) are calculated dynamically via getEquipmentAttackBonus/DefenseBonus
+                // Health and magic bonuses are also calculated dynamically
+                session.addGold(-eq.getPrice());
+                
+                if ("weapon".equals(eq.getSlot())) {
+                    session.setEquippedWeapon(equipId);
+                } else if ("armor".equals(eq.getSlot())) {
+                    session.setEquippedArmor(equipId);
+                } else {
+                    session.setEquippedAccessory(equipId);
+                }
+                
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", eq.getName());
+                player.sendMessage(messages.format(player, "sgame.equipped", map));
+            }
+            
+            saveSession(session);
+            openEquipmentMenu(player);
+        }
+    }
+
     // ============ Game Logic ============
 
     private void applyEventChoice(Player player, GameSession session, GameEvent event, EventChoice choice) {
@@ -883,29 +1111,50 @@ public class StrategyGameManager {
         openMainMenu(player);
     }
 
+    /**
+     * Enhanced battle resolution using multi-dimensional combat stats.
+     * Formula:
+     * - Player Power = Attack + (Health/5) + (Magic/3) + Equipment bonuses + Random(0-20)
+     * - Enemy Power = Enemy.Attack + (Enemy.Health/5) + (Enemy.Magic/3) + Random(0-15)
+     * - Defense reduces incoming damage
+     */
     private void resolveBattle(Player player, GameSession session, BattleEnemy enemy) {
-        // Simple battle resolution: compare power with random factor
-        int playerPower = 50 + session.getHealth() / 2 + random.nextInt(30);
-        int enemyPower = enemy.getPower() + random.nextInt(20);
-
+        // Calculate player power with equipment bonuses
+        int playerAttack = session.getAttack() + getEquipmentAttackBonus(session);
+        int playerDefense = session.getDefense() + getEquipmentDefenseBonus(session);
+        int playerPower = playerAttack + (session.getHealth() / 5) + (session.getMagic() / 3) + random.nextInt(21);
+        
+        // Calculate enemy power
+        int enemyPower = enemy.getAttack() + (enemy.getHealth() / 5) + (enemy.getMagic() / 3) + random.nextInt(16);
+        
         Map<String, String> map = new HashMap<String, String>();
         map.put("enemy", enemy.getName());
+        map.put("player_power", String.valueOf(playerPower));
+        map.put("enemy_power", String.valueOf(enemyPower));
 
-        if (playerPower >= enemyPower) {
+        if (playerPower > enemyPower) {
             // Victory
             int goldReward = enemy.getGoldReward();
             session.addGold(goldReward);
             session.incrementBattleVictories();
             session.incrementStage();
             
+            // Magic usage costs some magic points
+            if (session.getMagic() > 0) {
+                session.addMagic(-5);
+            }
+            
             map.put("gold", String.valueOf(goldReward));
             player.sendMessage(messages.format(player, "sgame.battle_victory", map));
         } else {
-            // Defeat
-            int damage = enemy.getDamage();
-            session.addHealth(-damage);
+            // Defeat - calculate damage reduced by defense
+            int baseDamage = enemy.getDamage();
+            int reducedDamage = Math.max(1, baseDamage - (playerDefense / 2));
+            session.addHealth(-reducedDamage);
             
-            map.put("damage", String.valueOf(damage));
+            map.put("damage", String.valueOf(reducedDamage));
+            map.put("base_damage", String.valueOf(baseDamage));
+            map.put("defense_reduction", String.valueOf(baseDamage - reducedDamage));
             player.sendMessage(messages.format(player, "sgame.battle_defeat", map));
 
             if (session.getHealth() <= 0) {
@@ -922,11 +1171,14 @@ public class StrategyGameManager {
     }
 
     private void resolveFlee(Player player, GameSession session, BattleEnemy enemy) {
-        // 70% chance to flee successfully
-        if (random.nextInt(100) < 70) {
+        // Flee success based on player speed (defense stat) vs enemy power
+        int fleeChance = 50 + (session.getDefense() * 2) - (enemy.getPower() / 3);
+        fleeChance = Math.min(90, Math.max(20, fleeChance)); // Clamp between 20-90%
+        
+        if (random.nextInt(100) < fleeChance) {
             player.sendMessage(messages.format(player, "sgame.flee_success"));
         } else {
-            int damage = enemy.getDamage() / 2;
+            int damage = Math.max(1, enemy.getDamage() / 2 - session.getDefense() / 3);
             session.addHealth(-damage);
             
             Map<String, String> map = new HashMap<String, String>();
@@ -1072,6 +1324,159 @@ public class StrategyGameManager {
         return null;
     }
 
+    private Equipment findEquipment(String id) {
+        if (id == null) {
+            return null;
+        }
+        for (Equipment eq : equipments) {
+            if (eq.getId().equals(id)) {
+                return eq;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Calculate total attack bonus from equipped items.
+     */
+    private int getEquipmentAttackBonus(GameSession session) {
+        int bonus = 0;
+        Equipment weapon = findEquipment(session.getEquippedWeapon());
+        if (weapon != null) bonus += weapon.getAttackBonus();
+        Equipment armor = findEquipment(session.getEquippedArmor());
+        if (armor != null) bonus += armor.getAttackBonus();
+        Equipment accessory = findEquipment(session.getEquippedAccessory());
+        if (accessory != null) bonus += accessory.getAttackBonus();
+        return bonus;
+    }
+
+    /**
+     * Calculate total defense bonus from equipped items.
+     */
+    private int getEquipmentDefenseBonus(GameSession session) {
+        int bonus = 0;
+        Equipment weapon = findEquipment(session.getEquippedWeapon());
+        if (weapon != null) bonus += weapon.getDefenseBonus();
+        Equipment armor = findEquipment(session.getEquippedArmor());
+        if (armor != null) bonus += armor.getDefenseBonus();
+        Equipment accessory = findEquipment(session.getEquippedAccessory());
+        if (accessory != null) bonus += accessory.getDefenseBonus();
+        return bonus;
+    }
+
+    /**
+     * Calculate total health bonus from equipped items.
+     */
+    private int getEquipmentHealthBonus(GameSession session) {
+        int bonus = 0;
+        Equipment weapon = findEquipment(session.getEquippedWeapon());
+        if (weapon != null) bonus += weapon.getHealthBonus();
+        Equipment armor = findEquipment(session.getEquippedArmor());
+        if (armor != null) bonus += armor.getHealthBonus();
+        Equipment accessory = findEquipment(session.getEquippedAccessory());
+        if (accessory != null) bonus += accessory.getHealthBonus();
+        return bonus;
+    }
+
+    /**
+     * Calculate total magic bonus from equipped items.
+     */
+    private int getEquipmentMagicBonus(GameSession session) {
+        int bonus = 0;
+        Equipment weapon = findEquipment(session.getEquippedWeapon());
+        if (weapon != null) bonus += weapon.getMagicBonus();
+        Equipment armor = findEquipment(session.getEquippedArmor());
+        if (armor != null) bonus += armor.getMagicBonus();
+        Equipment accessory = findEquipment(session.getEquippedAccessory());
+        if (accessory != null) bonus += accessory.getMagicBonus();
+        return bonus;
+    }
+
+    /**
+     * Select events for current stage using weighted randomization.
+     * Events are weighted based on:
+     * - Base weight from config
+     * - Boost if event is a followup to last completed event
+     * - Requirements check (excluded if prerequisites not met)
+     */
+    private List<GameEvent> selectEventsForStage(GameSession session, int count) {
+        List<GameEvent> available = new ArrayList<GameEvent>();
+        Map<GameEvent, Integer> weights = new HashMap<GameEvent, Integer>();
+        
+        String lastEventId = session.getLastEventId();
+        GameEvent lastEvent = lastEventId != null ? findEvent(lastEventId) : null;
+        
+        for (GameEvent event : gameEvents) {
+            // Check prerequisites - must have visited all required events
+            if (event.hasPrerequisites()) {
+                boolean meetsPrereqs = true;
+                for (String prereqId : event.getPrerequisiteEvents()) {
+                    if (!session.hasVisitedEvent(prereqId)) {
+                        meetsPrereqs = false;
+                        break;
+                    }
+                }
+                if (!meetsPrereqs) {
+                    continue; // Skip this event
+                }
+            }
+            
+            available.add(event);
+            
+            // Calculate weight
+            int weight = event.getWeight();
+            
+            // Boost weight if this is a followup to the last event
+            if (lastEvent != null && lastEvent.getFollowupEvents().contains(event.getId())) {
+                weight *= 3; // Triple the weight for followup events
+            }
+            
+            weights.put(event, weight);
+        }
+        
+        // Select events using weighted random
+        List<GameEvent> selected = new ArrayList<GameEvent>();
+        while (selected.size() < count && !available.isEmpty()) {
+            GameEvent chosen = weightedRandomSelect(available, weights);
+            if (chosen != null) {
+                selected.add(chosen);
+                available.remove(chosen);
+            }
+        }
+        
+        return selected;
+    }
+
+    /**
+     * Weighted random selection from a list of events.
+     */
+    private GameEvent weightedRandomSelect(List<GameEvent> events, Map<GameEvent, Integer> weights) {
+        if (events.isEmpty()) {
+            return null;
+        }
+        
+        int totalWeight = 0;
+        for (GameEvent e : events) {
+            totalWeight += weights.getOrDefault(e, 10);
+        }
+        
+        if (totalWeight <= 0) {
+            return events.get(random.nextInt(events.size()));
+        }
+        
+        int randomValue = random.nextInt(totalWeight);
+        int currentWeight = 0;
+        
+        for (GameEvent e : events) {
+            currentWeight += weights.getOrDefault(e, 10);
+            if (randomValue < currentWeight) {
+                return e;
+            }
+        }
+        
+        return events.get(events.size() - 1);
+    }
+
     private String extractId(ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
             return null;
@@ -1156,6 +1561,24 @@ public class StrategyGameManager {
         session.setCurrentEventId(data.getString("sgame.current_event_id", null));
         session.setCurrentEnemyId(data.getString("sgame.current_enemy_id", null));
         
+        // Load combat stats
+        session.setAttack(data.getInt("sgame.attack", startingAttack));
+        session.setDefense(data.getInt("sgame.defense", startingDefense));
+        session.setMagic(data.getInt("sgame.magic", startingMagic));
+        session.setMaxMagic(data.getInt("sgame.max_magic", startingMagic));
+        
+        // Load equipment
+        session.setEquippedWeapon(data.getString("sgame.equipped_weapon", null));
+        session.setEquippedArmor(data.getString("sgame.equipped_armor", null));
+        session.setEquippedAccessory(data.getString("sgame.equipped_accessory", null));
+        
+        // Load visited events
+        List<String> visited = data.getStringList("sgame.visited_events");
+        for (String eventId : visited) {
+            session.addVisitedEvent(eventId);
+        }
+        session.setLastEventId(data.getString("sgame.last_event_id", null));
+        
         // Load inventory
         ConfigurationSection invSection = data.getConfigurationSection("sgame.inventory");
         if (invSection != null) {
@@ -1189,6 +1612,21 @@ public class StrategyGameManager {
         data.set("sgame.current_event_id", session.getCurrentEventId());
         data.set("sgame.current_enemy_id", session.getCurrentEnemyId());
         
+        // Save combat stats
+        data.set("sgame.attack", session.getAttack());
+        data.set("sgame.defense", session.getDefense());
+        data.set("sgame.magic", session.getMagic());
+        data.set("sgame.max_magic", session.getMaxMagic());
+        
+        // Save equipment
+        data.set("sgame.equipped_weapon", session.getEquippedWeapon());
+        data.set("sgame.equipped_armor", session.getEquippedArmor());
+        data.set("sgame.equipped_accessory", session.getEquippedAccessory());
+        
+        // Save visited events
+        data.set("sgame.visited_events", session.getVisitedEvents());
+        data.set("sgame.last_event_id", session.getLastEventId());
+        
         // Save inventory
         data.set("sgame.inventory", null);
         for (Map.Entry<String, Integer> entry : session.getInventory().entrySet()) {
@@ -1220,7 +1658,7 @@ public class StrategyGameManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, EVENT_SELECTION, EVENT, BATTLE, SHOP
+        MAIN, EVENT_SELECTION, EVENT, BATTLE, SHOP, EQUIPMENT
     }
 
     public static class StrategyGameMenuHolder implements InventoryHolder {
@@ -1250,6 +1688,21 @@ public class StrategyGameManager {
         private String currentEventId;
         private String currentEnemyId;
         private final Map<String, Integer> inventory; // Virtual items held in this game session
+        
+        // Combat stats
+        private int attack;
+        private int defense;
+        private int magic;
+        private int maxMagic;
+        
+        // Equipment slots
+        private String equippedWeapon;
+        private String equippedArmor;
+        private String equippedAccessory;
+        
+        // Event tracking for weighted randomization
+        private final List<String> visitedEvents;
+        private String lastEventId;
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -1260,6 +1713,13 @@ public class StrategyGameManager {
             this.battleVictories = 0;
             this.ended = false;
             this.inventory = new HashMap<String, Integer>();
+            this.visitedEvents = new ArrayList<String>();
+            
+            // Default combat stats
+            this.attack = 10;
+            this.defense = 5;
+            this.magic = 20;
+            this.maxMagic = 20;
         }
 
         String getPlayerName() { return playerName; }
@@ -1283,6 +1743,39 @@ public class StrategyGameManager {
         String getCurrentEnemyId() { return currentEnemyId; }
         void setCurrentEnemyId(String id) { this.currentEnemyId = id; }
         
+        // Combat stats
+        int getAttack() { return attack; }
+        void setAttack(int attack) { this.attack = Math.max(0, attack); }
+        void addAttack(int amount) { this.attack = Math.max(0, this.attack + amount); }
+        int getDefense() { return defense; }
+        void setDefense(int defense) { this.defense = Math.max(0, defense); }
+        void addDefense(int amount) { this.defense = Math.max(0, this.defense + amount); }
+        int getMagic() { return magic; }
+        void setMagic(int magic) { this.magic = Math.min(maxMagic, Math.max(0, magic)); }
+        void addMagic(int amount) { setMagic(this.magic + amount); }
+        int getMaxMagic() { return maxMagic; }
+        void setMaxMagic(int maxMagic) { this.maxMagic = maxMagic; }
+        
+        // Equipment management
+        String getEquippedWeapon() { return equippedWeapon; }
+        void setEquippedWeapon(String weapon) { this.equippedWeapon = weapon; }
+        String getEquippedArmor() { return equippedArmor; }
+        void setEquippedArmor(String armor) { this.equippedArmor = armor; }
+        String getEquippedAccessory() { return equippedAccessory; }
+        void setEquippedAccessory(String accessory) { this.equippedAccessory = accessory; }
+        
+        // Event tracking
+        List<String> getVisitedEvents() { return visitedEvents; }
+        boolean hasVisitedEvent(String eventId) { return visitedEvents.contains(eventId); }
+        void addVisitedEvent(String eventId) { 
+            if (!visitedEvents.contains(eventId)) {
+                visitedEvents.add(eventId);
+            }
+            this.lastEventId = eventId;
+        }
+        String getLastEventId() { return lastEventId; }
+        void setLastEventId(String id) { this.lastEventId = id; }
+        
         // Inventory management
         Map<String, Integer> getInventory() { return inventory; }
         int getItemCount(String itemId) { 
@@ -1304,6 +1797,10 @@ public class StrategyGameManager {
                 inventory.remove(itemId);
             }
         }
+        
+        // Calculate total stats including equipment bonuses
+        int getTotalAttack() { return attack; } // Equipment bonus added when calculated
+        int getTotalDefense() { return defense; }
     }
 
     private static class GameEvent {
@@ -1313,15 +1810,22 @@ public class StrategyGameManager {
         private final List<EventChoice> choices;
         private final String eventType; // "story", "shop", "battle"
         private final EventRequirement requirement;
+        private final int weight; // Base weight for random selection
+        private final List<String> followupEvents; // Events that get boosted weight after this one
+        private final List<String> prerequisiteEvents; // Must have visited these events first
 
         GameEvent(String id, String name, List<String> description, List<EventChoice> choices, 
-                  String eventType, EventRequirement requirement) {
+                  String eventType, EventRequirement requirement, int weight, 
+                  List<String> followupEvents, List<String> prerequisiteEvents) {
             this.id = id;
             this.name = name;
             this.description = description != null ? description : new ArrayList<String>();
             this.choices = choices != null ? choices : new ArrayList<EventChoice>();
             this.eventType = eventType != null ? eventType : "story";
             this.requirement = requirement;
+            this.weight = weight > 0 ? weight : 10;
+            this.followupEvents = followupEvents != null ? followupEvents : new ArrayList<String>();
+            this.prerequisiteEvents = prerequisiteEvents != null ? prerequisiteEvents : new ArrayList<String>();
         }
 
         static GameEvent fromSection(String id, ConfigurationSection section) {
@@ -1329,6 +1833,9 @@ public class StrategyGameManager {
             List<String> desc = section.getStringList("description");
             String eventType = section.getString("type", "story");
             EventRequirement requirement = EventRequirement.fromSection(section.getConfigurationSection("requirement"));
+            int weight = section.getInt("weight", 10);
+            List<String> followups = section.getStringList("followup_events");
+            List<String> prereqs = section.getStringList("prerequisite_events");
             
             List<EventChoice> choices = new ArrayList<EventChoice>();
             List<Map<?, ?>> choiceList = section.getMapList("choices");
@@ -1339,7 +1846,7 @@ public class StrategyGameManager {
                 }
             }
             
-            return new GameEvent(id, name, desc, choices, eventType, requirement);
+            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs);
         }
 
         String getId() { return id; }
@@ -1349,6 +1856,10 @@ public class StrategyGameManager {
         String getEventType() { return eventType; }
         EventRequirement getRequirement() { return requirement; }
         boolean hasRequirement() { return requirement != null; }
+        int getWeight() { return weight; }
+        List<String> getFollowupEvents() { return followupEvents; }
+        List<String> getPrerequisiteEvents() { return prerequisiteEvents; }
+        boolean hasPrerequisites() { return !prerequisiteEvents.isEmpty(); }
     }
 
     /**
@@ -1563,8 +2074,14 @@ public class StrategyGameManager {
         private final int damage;
         private final int goldReward;
         private final int minStage;
+        // Enhanced combat stats
+        private final int health;
+        private final int attack;
+        private final int defense;
+        private final int magic;
 
-        BattleEnemy(String id, String name, String description, int power, int damage, int goldReward, int minStage) {
+        BattleEnemy(String id, String name, String description, int power, int damage, int goldReward, int minStage,
+                   int health, int attack, int defense, int magic) {
             this.id = id;
             this.name = name != null ? name : id;
             this.description = description != null ? description : "";
@@ -1572,6 +2089,10 @@ public class StrategyGameManager {
             this.damage = damage > 0 ? damage : DEFAULT_ENEMY_DAMAGE;
             this.goldReward = goldReward;
             this.minStage = minStage;
+            this.health = health > 0 ? health : 50;
+            this.attack = attack > 0 ? attack : 10;
+            this.defense = defense > 0 ? defense : 5;
+            this.magic = magic > 0 ? magic : 0;
         }
 
         static BattleEnemy fromMap(Map<?, ?> raw) {
@@ -1585,7 +2106,11 @@ public class StrategyGameManager {
             int damage = parseInt(raw.get("damage"));
             int gold = parseInt(raw.get("gold_reward"));
             int minStage = parseInt(raw.get("min_stage"));
-            return new BattleEnemy(id, name, desc, power, damage, gold, minStage);
+            int health = parseInt(raw.get("health"));
+            int attack = parseInt(raw.get("attack"));
+            int defense = parseInt(raw.get("defense"));
+            int magic = parseInt(raw.get("magic"));
+            return new BattleEnemy(id, name, desc, power, damage, gold, minStage, health, attack, defense, magic);
         }
 
         String getId() { return id; }
@@ -1595,6 +2120,71 @@ public class StrategyGameManager {
         int getDamage() { return damage; }
         int getGoldReward() { return goldReward; }
         int getMinStage() { return minStage; }
+        int getHealth() { return health; }
+        int getAttack() { return attack; }
+        int getDefense() { return defense; }
+        int getMagic() { return magic; }
+    }
+
+    /**
+     * Represents an equippable item that provides stat bonuses.
+     */
+    private static class Equipment {
+        private final String id;
+        private final String name;
+        private final String slot; // weapon, armor, accessory
+        private final int attackBonus;
+        private final int defenseBonus;
+        private final int healthBonus;
+        private final int magicBonus;
+        private final Material material;
+        private final int price;
+
+        Equipment(String id, String name, String slot, int attackBonus, int defenseBonus, 
+                 int healthBonus, int magicBonus, Material material, int price) {
+            this.id = id;
+            this.name = name != null ? name : id;
+            this.slot = slot != null ? slot : "accessory";
+            this.attackBonus = attackBonus;
+            this.defenseBonus = defenseBonus;
+            this.healthBonus = healthBonus;
+            this.magicBonus = magicBonus;
+            this.material = material != null ? material : Material.IRON_INGOT;
+            this.price = price;
+        }
+
+        static Equipment fromMap(Map<?, ?> raw) {
+            if (raw == null || raw.get("id") == null) {
+                return null;
+            }
+            String id = raw.get("id").toString();
+            String name = raw.get("name") != null ? raw.get("name").toString() : id;
+            String slot = raw.get("slot") != null ? raw.get("slot").toString() : "accessory";
+            int attackBonus = parseInt(raw.get("attack_bonus"));
+            int defenseBonus = parseInt(raw.get("defense_bonus"));
+            int healthBonus = parseInt(raw.get("health_bonus"));
+            int magicBonus = parseInt(raw.get("magic_bonus"));
+            int price = parseInt(raw.get("price"));
+            
+            Material mat = Material.IRON_INGOT;
+            if (raw.get("material") != null) {
+                mat = Material.matchMaterial(raw.get("material").toString().toUpperCase());
+                if (mat == null) {
+                    mat = Material.IRON_INGOT;
+                }
+            }
+            return new Equipment(id, name, slot, attackBonus, defenseBonus, healthBonus, magicBonus, mat, price);
+        }
+
+        String getId() { return id; }
+        String getName() { return name; }
+        String getSlot() { return slot; }
+        int getAttackBonus() { return attackBonus; }
+        int getDefenseBonus() { return defenseBonus; }
+        int getHealthBonus() { return healthBonus; }
+        int getMagicBonus() { return magicBonus; }
+        Material getMaterial() { return material; }
+        int getPrice() { return price; }
     }
 
     private static class EndReward {
