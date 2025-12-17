@@ -44,10 +44,17 @@ public class StrategyGameManager {
     private final File storageDir;
     private final Random random = new Random();
 
+    // Default values for game configuration
+    private static final int DEFAULT_STARTING_GOLD = 100;
+    private static final int DEFAULT_STARTING_HEALTH = 100;
+    private static final int DEFAULT_MAX_STAGES = 10;
+    private static final int DEFAULT_ENEMY_POWER = 30;
+    private static final int DEFAULT_ENEMY_DAMAGE = 10;
+
     // Game configuration
-    private int startingGold = 100;
-    private int startingHealth = 100;
-    private int maxStages = 10;
+    private int startingGold = DEFAULT_STARTING_GOLD;
+    private int startingHealth = DEFAULT_STARTING_HEALTH;
+    private int maxStages = DEFAULT_MAX_STAGES;
     private final List<GameEvent> gameEvents = new ArrayList<GameEvent>();
     private final List<ShopItem> shopItems = new ArrayList<ShopItem>();
     private final List<BattleEnemy> enemies = new ArrayList<BattleEnemy>();
@@ -611,13 +618,7 @@ public class StrategyGameManager {
 
         // Check for game over
         if (session.getHealth() <= 0) {
-            session.setHealth(0);
-            session.setEnded(true);
-            saveSession(session);
-            
-            player.closeInventory();
-            player.sendMessage(messages.format(player, "sgame.game_over_health"));
-            endGame(player);
+            handleGameOverDeath(player, session);
             return;
         }
 
@@ -658,13 +659,7 @@ public class StrategyGameManager {
             player.sendMessage(messages.format(player, "sgame.battle_defeat", map));
 
             if (session.getHealth() <= 0) {
-                session.setHealth(0);
-                session.setEnded(true);
-                saveSession(session);
-                
-                player.closeInventory();
-                player.sendMessage(messages.format(player, "sgame.game_over_health"));
-                endGame(player);
+                handleGameOverDeath(player, session);
                 return;
             }
         }
@@ -689,13 +684,7 @@ public class StrategyGameManager {
             player.sendMessage(messages.format(player, "sgame.flee_failed", map));
 
             if (session.getHealth() <= 0) {
-                session.setHealth(0);
-                session.setEnded(true);
-                saveSession(session);
-                
-                player.closeInventory();
-                player.sendMessage(messages.format(player, "sgame.game_over_health"));
-                endGame(player);
+                handleGameOverDeath(player, session);
                 return;
             }
         }
@@ -722,6 +711,31 @@ public class StrategyGameManager {
             default:
                 break;
         }
+    }
+
+    /**
+     * Handle game over when player's health reaches zero.
+     * This is a private helper to avoid calling endGame() which has different logic.
+     */
+    private void handleGameOverDeath(Player player, GameSession session) {
+        session.setHealth(0);
+        session.setEnded(true);
+        saveSession(session);
+        
+        player.closeInventory();
+        player.sendMessage(messages.format(player, "sgame.game_over_health"));
+        
+        // Grant end rewards based on progress (even if died)
+        List<String> rewardNames = grantEndRewards(player, session);
+        
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("rewards", rewardNames.isEmpty() ? messages.format(player, "sgame.no_rewards") : String.join(", ", rewardNames));
+        player.sendMessage(messages.format(player, "sgame.game_ended", map));
+        
+        // Clear the session
+        String playerName = player.getName();
+        activeSessions.remove(playerName);
+        clearSessionFile(playerName);
     }
 
     private List<String> grantEndRewards(Player player, GameSession session) {
@@ -1125,8 +1139,8 @@ public class StrategyGameManager {
             this.id = id;
             this.name = name != null ? name : id;
             this.description = description != null ? description : "";
-            this.power = power > 0 ? power : 30;
-            this.damage = damage > 0 ? damage : 10;
+            this.power = power > 0 ? power : DEFAULT_ENEMY_POWER;
+            this.damage = damage > 0 ? damage : DEFAULT_ENEMY_DAMAGE;
             this.goldReward = goldReward;
             this.minStage = minStage;
         }
