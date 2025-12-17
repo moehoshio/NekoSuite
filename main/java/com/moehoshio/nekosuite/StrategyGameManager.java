@@ -379,43 +379,51 @@ public class StrategyGameManager {
             List<String> loreList = new ArrayList<String>();
             loreList.addAll(event.getDescription());
             
-            // Show event type indicator
-            String typeIndicator = "&7類型: ";
-            if ("battle".equals(event.getEventType())) {
-                typeIndicator += "&c戰鬥";
-            } else if ("shop".equals(event.getEventType())) {
-                typeIndicator += "&6商店";
+            // Show event type indicator using i18n
+            String eventType = event.getEventType();
+            Map<String, String> typeMap = new HashMap<String, String>();
+            if ("battle".equals(eventType)) {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_battle"));
+            } else if ("shop".equals(eventType)) {
+                typeMap.put("type", messages.format(player, "menu.sgame.type_shop"));
             } else {
-                typeIndicator += "&a劇情";
+                typeMap.put("type", messages.format(player, "menu.sgame.type_story"));
             }
-            loreList.add(typeIndicator);
+            loreList.add(messages.format(player, "menu.sgame.event_type_lore", typeMap));
             
             if (event.hasRequirement()) {
                 EventRequirement req = event.getRequirement();
                 meetsRequirements = req.checkRequirements(session);
                 
-                // Show requirement info
+                // Show requirement info using i18n
                 if (req.hasItemRequirement()) {
                     boolean hasItem = session.hasItem(req.getRequiredItem(), req.getRequiredItemAmount());
-                    String itemColor = hasItem ? "&a✔" : "&c✖";
-                    loreList.add(itemColor + " &7需要: &f" + req.getRequiredItem() + " x" + req.getRequiredItemAmount());
+                    Map<String, String> itemReqMap = new HashMap<String, String>();
+                    itemReqMap.put("item", req.getRequiredItem());
+                    itemReqMap.put("amount", String.valueOf(req.getRequiredItemAmount()));
+                    String reqText = messages.format(player, "menu.sgame.require_item", itemReqMap);
+                    loreList.add((hasItem ? "&a✔ " : "&c✖ ") + reqText);
                 }
                 if (req.hasGoldRequirement()) {
                     boolean hasGold = session.getGold() >= req.getRequiredGold();
-                    String goldColor = hasGold ? "&a✔" : "&c✖";
-                    loreList.add(goldColor + " &7需要金幣: &6" + req.getRequiredGold());
+                    Map<String, String> goldReqMap = new HashMap<String, String>();
+                    goldReqMap.put("gold", String.valueOf(req.getRequiredGold()));
+                    String reqText = messages.format(player, "menu.sgame.require_gold", goldReqMap);
+                    loreList.add((hasGold ? "&a✔ " : "&c✖ ") + reqText);
                 }
                 if (req.hasGoldCost()) {
                     boolean canPay = session.getGold() >= req.getGoldCost();
-                    String costColor = canPay ? "&e" : "&c";
-                    loreList.add(costColor + "⚡ &7消耗金幣: &6" + req.getGoldCost());
+                    Map<String, String> costMap = new HashMap<String, String>();
+                    costMap.put("gold", String.valueOf(req.getGoldCost()));
+                    String costText = messages.format(player, "menu.sgame.cost_gold", costMap);
+                    loreList.add((canPay ? "&e" : "&c") + costText);
                 }
             }
             
             if (meetsRequirements) {
-                loreList.add("&a點擊進入事件");
+                loreList.add(messages.format(player, "menu.sgame.click_enter_event"));
             } else {
-                loreList.add("&c無法進入 - 條件不足");
+                loreList.add(messages.format(player, "menu.sgame.cannot_enter_event"));
             }
             loreList.add("ID:select_event_" + event.getId());
             
@@ -484,54 +492,53 @@ public class StrategyGameManager {
             event.getDescription().toArray(new String[0]));
         safeSet(inv, 4, descItem);
 
-        // Choice buttons with requirement indicators
+        // Choice buttons - no spoilers about outcomes, only show requirements
         List<EventChoice> choices = event.getChoices();
         int[] choiceSlots = {11, 13, 15};
         for (int i = 0; i < choices.size() && i < choiceSlots.length; i++) {
             EventChoice choice = choices.get(i);
             List<String> loreList = new ArrayList<String>();
             
-            // Show potential outcomes
-            if (choice.getGoldChange() != 0) {
-                loreList.add("&7金幣: " + formatChange(choice.getGoldChange()));
-            }
-            if (choice.getHealthChange() != 0) {
-                loreList.add("&7生命: " + formatChange(choice.getHealthChange()));
-            }
-            if (choice.getItemGain() != null) {
-                loreList.add("&a獲得: &f" + choice.getItemGain() + " x" + choice.getItemGainAmount());
-            }
+            // Only show item cost if required (player needs to know what they're consuming)
             if (choice.getItemCost() != null) {
                 boolean hasItem = session.hasItem(choice.getItemCost(), choice.getItemCostAmount());
-                String costColor = hasItem ? "&e" : "&c";
-                loreList.add(costColor + "消耗: &f" + choice.getItemCost() + " x" + choice.getItemCostAmount());
+                Map<String, String> costMap = new HashMap<String, String>();
+                costMap.put("item", choice.getItemCost());
+                costMap.put("amount", String.valueOf(choice.getItemCostAmount()));
+                String costText = messages.format(player, "menu.sgame.choice_item_cost", costMap);
+                loreList.add((hasItem ? "&e" : "&c") + costText);
             }
             
-            // Check choice requirements
+            // Check choice requirements and show them
             boolean meetsReq = true;
             if (choice.hasRequirement()) {
                 EventRequirement req = choice.getRequirement();
                 meetsReq = req.checkRequirements(session);
                 if (req.hasItemRequirement()) {
                     boolean hasItem = session.hasItem(req.getRequiredItem(), req.getRequiredItemAmount());
-                    String itemColor = hasItem ? "&a✔" : "&c✖";
-                    loreList.add(itemColor + " &7需要: &f" + req.getRequiredItem() + " x" + req.getRequiredItemAmount());
+                    Map<String, String> itemReqMap = new HashMap<String, String>();
+                    itemReqMap.put("item", req.getRequiredItem());
+                    itemReqMap.put("amount", String.valueOf(req.getRequiredItemAmount()));
+                    String reqText = messages.format(player, "menu.sgame.require_item", itemReqMap);
+                    loreList.add((hasItem ? "&a✔ " : "&c✖ ") + reqText);
                 }
                 if (req.hasGoldRequirement()) {
                     boolean hasGold = session.getGold() >= req.getRequiredGold();
-                    String goldColor = hasGold ? "&a✔" : "&c✖";
-                    loreList.add(goldColor + " &7需要金幣: &6" + req.getRequiredGold());
+                    Map<String, String> goldReqMap = new HashMap<String, String>();
+                    goldReqMap.put("gold", String.valueOf(req.getRequiredGold()));
+                    String reqText = messages.format(player, "menu.sgame.require_gold", goldReqMap);
+                    loreList.add((hasGold ? "&a✔ " : "&c✖ ") + reqText);
                 }
                 
                 if (!meetsReq && choice.hasAltResult()) {
-                    loreList.add("&e(條件不足時有不同結果)");
+                    loreList.add(messages.format(player, "menu.sgame.alt_result_hint"));
                 } else if (!meetsReq) {
-                    loreList.add("&c條件不足");
+                    loreList.add(messages.format(player, "menu.sgame.requirement_not_met"));
                 }
             }
             
             loreList.add("");
-            loreList.add("&7做出你的選擇...");
+            loreList.add(messages.format(player, "menu.sgame.make_your_choice"));
             loreList.add("ID:choice_" + i);
             
             Material choiceMat = meetsReq ? Material.OAK_SIGN : (choice.hasAltResult() ? Material.BIRCH_SIGN : Material.OAK_SIGN);
@@ -651,7 +658,7 @@ public class StrategyGameManager {
                 new String[]{
                     priceColor + messages.format(player, "menu.sgame.item_price_lore", itemMap),
                     "&7" + item.getEffectDescription(),
-                    canAfford ? "&a點擊購買" : "&c金幣不足",
+                    canAfford ? messages.format(player, "menu.sgame.click_to_buy") : messages.format(player, "menu.sgame.not_enough_gold"),
                     "ID:buy_" + item.getId()
                 });
             safeSet(inv, itemSlots[i], shopItemStack);
@@ -706,11 +713,17 @@ public class StrategyGameManager {
         // Weapon slot
         String weaponId = session.getEquippedWeapon();
         Equipment weapon = weaponId != null ? findEquipment(weaponId) : null;
+        Map<String, String> weaponMap = new HashMap<String, String>();
+        if (weapon != null) {
+            weaponMap.put("name", weapon.getName());
+            weaponMap.put("attack", String.valueOf(weapon.getAttackBonus()));
+            weaponMap.put("defense", String.valueOf(weapon.getDefenseBonus()));
+        }
         ItemStack weaponSlot = createItem(weapon != null ? weapon.getMaterial() : Material.IRON_SWORD,
             messages.format(player, "menu.sgame.equip_slot_weapon"),
             new String[]{
-                weapon != null ? "&a已裝備: " + weapon.getName() : messages.format(player, "menu.sgame.equip_empty"),
-                weapon != null ? "&7攻擊: +" + weapon.getAttackBonus() + " 防禦: +" + weapon.getDefenseBonus() : "",
+                weapon != null ? messages.format(player, "menu.sgame.equipped_item", weaponMap) : messages.format(player, "menu.sgame.equip_empty"),
+                weapon != null ? messages.format(player, "menu.sgame.equip_weapon_stats", weaponMap) : "",
                 messages.format(player, "menu.sgame.equip_click_to_change"),
                 "ID:slot_weapon"
             });
@@ -719,11 +732,17 @@ public class StrategyGameManager {
         // Armor slot
         String armorId = session.getEquippedArmor();
         Equipment armor = armorId != null ? findEquipment(armorId) : null;
+        Map<String, String> armorMap = new HashMap<String, String>();
+        if (armor != null) {
+            armorMap.put("name", armor.getName());
+            armorMap.put("defense", String.valueOf(armor.getDefenseBonus()));
+            armorMap.put("health", String.valueOf(armor.getHealthBonus()));
+        }
         ItemStack armorSlot = createItem(armor != null ? armor.getMaterial() : Material.LEATHER_CHESTPLATE,
             messages.format(player, "menu.sgame.equip_slot_armor"),
             new String[]{
-                armor != null ? "&a已裝備: " + armor.getName() : messages.format(player, "menu.sgame.equip_empty"),
-                armor != null ? "&7防禦: +" + armor.getDefenseBonus() + " 生命: +" + armor.getHealthBonus() : "",
+                armor != null ? messages.format(player, "menu.sgame.equipped_item", armorMap) : messages.format(player, "menu.sgame.equip_empty"),
+                armor != null ? messages.format(player, "menu.sgame.equip_armor_stats", armorMap) : "",
                 messages.format(player, "menu.sgame.equip_click_to_change"),
                 "ID:slot_armor"
             });
@@ -732,11 +751,15 @@ public class StrategyGameManager {
         // Accessory slot
         String accessoryId = session.getEquippedAccessory();
         Equipment accessory = accessoryId != null ? findEquipment(accessoryId) : null;
+        Map<String, String> accessoryMap = new HashMap<String, String>();
+        if (accessory != null) {
+            accessoryMap.put("name", accessory.getName());
+        }
         ItemStack accessorySlot = createItem(accessory != null ? accessory.getMaterial() : Material.GOLD_INGOT,
             messages.format(player, "menu.sgame.equip_slot_accessory"),
             new String[]{
-                accessory != null ? "&a已裝備: " + accessory.getName() : messages.format(player, "menu.sgame.equip_empty"),
-                accessory != null ? "&7各種加成" : "",
+                accessory != null ? messages.format(player, "menu.sgame.equipped_item", accessoryMap) : messages.format(player, "menu.sgame.equip_empty"),
+                accessory != null ? messages.format(player, "menu.sgame.equip_accessory_stats") : "",
                 messages.format(player, "menu.sgame.equip_click_to_change"),
                 "ID:slot_accessory"
             });
@@ -752,19 +775,48 @@ public class StrategyGameManager {
             boolean isEquipped = eq.getId().equals(weaponId) || eq.getId().equals(armorId) || eq.getId().equals(accessoryId);
             
             List<String> lore = new ArrayList<String>();
-            lore.add("&7類型: " + ("weapon".equals(eq.getSlot()) ? "&c武器" : "armor".equals(eq.getSlot()) ? "&e護甲" : "&d飾品"));
-            if (eq.getAttackBonus() > 0) lore.add("&c攻擊: +" + eq.getAttackBonus());
-            if (eq.getDefenseBonus() > 0) lore.add("&e防禦: +" + eq.getDefenseBonus());
-            if (eq.getHealthBonus() > 0) lore.add("&a生命: +" + eq.getHealthBonus());
-            if (eq.getMagicBonus() > 0) lore.add("&d魔法: +" + eq.getMagicBonus());
-            lore.add("&6價格: " + eq.getPrice() + " 金幣");
+            Map<String, String> eqMap = new HashMap<String, String>();
+            eqMap.put("price", String.valueOf(eq.getPrice()));
+            
+            // Slot type
+            if ("weapon".equals(eq.getSlot())) {
+                eqMap.put("type", messages.format(player, "menu.sgame.type_weapon"));
+            } else if ("armor".equals(eq.getSlot())) {
+                eqMap.put("type", messages.format(player, "menu.sgame.type_armor"));
+            } else {
+                eqMap.put("type", messages.format(player, "menu.sgame.type_accessory"));
+            }
+            lore.add(messages.format(player, "menu.sgame.equip_type_lore", eqMap));
+            
+            // Stats
+            if (eq.getAttackBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getAttackBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_attack_bonus", statMap));
+            }
+            if (eq.getDefenseBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getDefenseBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_defense_bonus", statMap));
+            }
+            if (eq.getHealthBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getHealthBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_health_bonus", statMap));
+            }
+            if (eq.getMagicBonus() > 0) {
+                Map<String, String> statMap = new HashMap<String, String>();
+                statMap.put("value", String.valueOf(eq.getMagicBonus()));
+                lore.add(messages.format(player, "menu.sgame.equip_magic_bonus", statMap));
+            }
+            lore.add(messages.format(player, "menu.sgame.equip_price_lore", eqMap));
             
             if (isEquipped) {
-                lore.add("&a✔ 已裝備");
+                lore.add(messages.format(player, "menu.sgame.already_equipped"));
             } else if (canAfford) {
-                lore.add("&a點擊購買並裝備");
+                lore.add(messages.format(player, "menu.sgame.click_to_buy_equip"));
             } else {
-                lore.add("&c金幣不足");
+                lore.add(messages.format(player, "menu.sgame.not_enough_gold"));
             }
             lore.add("ID:buy_equip_" + eq.getId());
             

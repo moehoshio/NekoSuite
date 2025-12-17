@@ -156,7 +156,7 @@ events:
       - secret_vault
     description:
       - "&7你發現了一個閃閃發光的寶箱！"
-      - "&7但它可能有陷阱..."
+      - "&7你會如何處理它？"
     choices:
       - text: "&a小心地打開"
         result: "&7你成功避開陷阱，獲得了獎勵！"
