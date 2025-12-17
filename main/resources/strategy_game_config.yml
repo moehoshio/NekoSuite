@@ -6,11 +6,11 @@ storage:
 
 game:
   # 起始金幣
-  starting_gold: 100
+  starting_gold: 20
   # 起始生命值
-  starting_health: 100
+  starting_health: 50
   # 完成遊戲所需的最大階段數
-  max_stages: 10
+  max_stages: 12
   # 起始戰鬥屬性
   starting_attack: 10
   starting_defense: 5

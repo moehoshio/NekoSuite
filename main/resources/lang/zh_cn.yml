@@ -1,5 +1,7 @@
 common:
   only_player: "&c✖ 该指令只能由玩家使用。"
+  no_permission: "&c✖ 你没有权限使用此指令。"
+  reload_success: "&a✔ &7配置已重载。"
 
 wish:
   usage: "&7用法: &f/wish &6<pool> [count] &7或 &f/wish query &6<pool> &7或 &f/wish menu"
@@ -84,6 +86,82 @@ menu:
     next_page: "&7下一页 ▶"
     info_title: "&7邮件信息 &8({page}/{total_pages})"
     info_lore: "&7未读: &a{unread} &8| &7待领取: &6{unclaimed}"
+  sgame:
+    title: "&#ffcc00✦ 猫咪王国冒险"
+    victory_title: "&#ffcc00✦ 冒险成功！"
+    status_title: "&7冒险状态"
+    gold_lore: "&6金币: &f{gold}"
+    health_lore: "&c生命: &f{health}/{max_health}"
+    combat_stats_lore: "&b攻击: &f{attack} &8| &e防御: &f{defense} &8| &d魔法: &f{magic}"
+    stage_lore: "&a进度: &f{stage}/{max_stage}"
+    adventure_title: "&a探索冒险"
+    adventure_lore: "&7选择要进行的事件"
+    battle_title: "&c战斗"
+    battle_lore: "&7与怪物战斗获得奖励"
+    shop_title: "&6商店"
+    shop_lore: "&7购买道具增强实力"
+    equipment_title: "&9装备"
+    equipment_lore: "&7管理你的装备"
+    end_game_title: "&d结束冒险"
+    end_game_lore: "&7完成冒险并领取奖励"
+    back: "&7返回"
+    event_selection_title: "&#60a5fa✦ 选择事件"
+    event_title: "&#60a5fa✦ 事件"
+    battle_menu_title: "&#ff6666✦ 战斗"
+    shop_menu_title: "&#ffcc00✦ 商店"
+    equipment_menu_title: "&#3399ff✦ 装备管理"
+    shop_leave: "&a离开商店"
+    shop_leave_lore: "&7完成购物，前往下一关"
+    shop_continue: "&a继续冒险"
+    shop_continue_lore: "&7购买完成，前往下一关"
+    enemy_title: "&c敌人: &f{enemy}"
+    enemy_power_lore: "&7战力: &c{power}"
+    enemy_stats_lore: "&7攻击: &c{attack} &8| &7防御: &e{defense} &8| &7生命: &a{health}"
+    fight_button: "&a战斗"
+    fight_lore: "&7与敌人战斗"
+    flee_button: "&e逃跑"
+    flee_lore: "&7尝试逃跑"
+    your_gold: "&6你的金币: &f{gold}"
+    item_price_lore: "&7价格: &6{price} &7金币"
+    equip_slot_weapon: "&f武器槽"
+    equip_slot_armor: "&f护甲槽"
+    equip_slot_accessory: "&f饰品槽"
+    equip_empty: "&7空"
+    equip_click_to_change: "&e点击更换装备"
+    # Event selection i18n
+    event_type_lore: "&7类型: {type}"
+    type_story: "&a剧情"
+    type_battle: "&c战斗"
+    type_shop: "&6商店"
+    require_item: "&7需要: &f{item} x{amount}"
+    require_gold: "&7需要金币: &6{gold}"
+    cost_gold: "⚡ &7消耗金币: &6{gold}"
+    click_enter_event: "&a点击进入事件"
+    cannot_enter_event: "&c无法进入 - 条件不足"
+    # Choice menu i18n
+    choice_item_cost: "消耗: &f{item} x{amount}"
+    alt_result_hint: "&e(条件不足时有不同结果)"
+    requirement_not_met: "&c条件不足"
+    make_your_choice: "&7做出你的选择..."
+    # Shop i18n
+    click_to_buy: "&a点击购买"
+    not_enough_gold: "&c金币不足"
+    # Equipment i18n
+    equipped_item: "&a已装备: {name}"
+    equip_weapon_stats: "&7攻击: +{attack} 防御: +{defense}"
+    equip_armor_stats: "&7防御: +{defense} 生命: +{health}"
+    equip_accessory_stats: "&7各种加成"
+    type_weapon: "&c武器"
+    type_armor: "&e护甲"
+    type_accessory: "&d饰品"
+    equip_type_lore: "&7类型: {type}"
+    equip_attack_bonus: "&c攻击: +{value}"
+    equip_defense_bonus: "&e防御: +{value}"
+    equip_health_bonus: "&a生命: +{value}"
+    equip_magic_bonus: "&d魔法: +{value}"
+    equip_price_lore: "&6价格: {price} 金币"
+    already_equipped: "&a✔ 已装备"
+    click_to_buy_equip: "&a点击购买并装备"
   close: "&c✖ 关闭"
 
 cdk:
@@ -106,6 +184,106 @@ buy:
   insufficient_balance: "&c✖ 余额不足，需 &6{cost}&c，当前 &6{balance}&c。"
   economy_missing: "&c✖ 未找到经济插件，无法完成购买。"
   cost_failure: "&c✖ 扣款失败，请稍后再试。"
+
+  product:
+    vip1:
+      name: "&#d946ef✦ VIP I"
+      lore:
+        - "&7价格: &6688 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    vip2:
+      name: "&#d946ef✦ VIP II"
+      lore:
+        - "&7价格: &61588 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    vip3:
+      name: "&#d946ef✦ VIP III"
+      lore:
+        - "&7价格: &63399 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    vip4:
+      name: "&#d946ef✦ VIP IV"
+      lore:
+        - "&7价格: &67688 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    vip5:
+      name: "&#d946ef✦ VIP V"
+      lore:
+        - "&7价格: &623999 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    vip6:
+      name: "&#d946ef✦ VIP VI"
+      lore:
+        - "&7价格: &6128888 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    mcd1:
+      name: "&#5cd6e8✦ 月卡 I"
+      lore:
+        - "&7价格: &6799 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    mcd2:
+      name: "&#5cd6e8✦ 月卡 II"
+      lore:
+        - "&7价格: &62688 &7金币"
+        - "&7时长: &631 &7天"
+        - ""
+        - "&7点击购买此特权"
+    bag1:
+      name: "&#80e85c✦ 背包 I"
+      lore:
+        - "&7价格: &6360 &7金币"
+        - "&7时长: &a永久"
+        - ""
+        - "&7点击购买此特权"
+    bag2:
+      name: "&#80e85c✦ 背包 II"
+      lore:
+        - "&7价格: &61200 &7金币"
+        - "&7时长: &a永久"
+        - ""
+        - "&7点击购买此特权"
+    bag3:
+      name: "&#80e85c✦ 背包 III"
+      lore:
+        - "&7价格: &63600 &7金币"
+        - "&7时长: &a永久"
+        - ""
+        - "&7点击购买此特权"
+    bag4:
+      name: "&#80e85c✦ 背包 IV"
+      lore:
+        - "&7价格: &66888 &7金币"
+        - "&7时长: &a永久"
+        - ""
+        - "&7点击购买此特权"
+    bag5:
+      name: "&#80e85c✦ 背包 V"
+      lore:
+        - "&7价格: &613999 &7金币"
+        - "&7时长: &a永久"
+        - ""
+        - "&7点击购买此特权"
+    bag6:
+      name: "&#80e85c✦ 背包 VI"
+      lore:
+        - "&7价格: &636888 &7金币"
+        - "&7时长: &a永久"
+        - ""
+        - "&7点击购买此特权"
 
 i18n:
   usage: "&7用法: &f/language &6<code> &8| &f/language list &8| &f/language reset"
@@ -170,3 +348,40 @@ mail:
   subject_line: "&7主题: &f{subject}"
   sender_line: "&7发件人: &6{sender}"
   footer: "&8&m───────────────────────────────────&r"
+
+# 策略游戏模块
+sgame:
+  usage: "&7用法: &f/sgame &6<start|continue|status|end|abandon|menu>"
+  already_in_game: "&e⚠ &7你已经在游戏中！使用 &f/sgame continue &7继续游戏。"
+  no_active_game: "&e⚠ &7你没有进行中的游戏。使用 &f/sgame start &7开始新游戏。"
+  game_already_ended: "&e⚠ &7此游戏已结束。使用 &f/sgame start &7开始新游戏。"
+  game_started: "&a✔ &7新的冒险开始了！"
+  story_intro: |-
+    &8&m─────────────&r &6✦ 猫咪王国冒险 ✦ &8&m─────────────&r
+    &7在神秘的猫咪王国「喵科利亚」中...
+    &7一股古老的黑暗力量正在威胁这片土地。
+    &7作为一名勇敢的冒险者，你必须探索这片土地，
+    &7做出明智的选择，战胜怪物，与商人交易，
+    &7收集资源来拯救王国！
+    &8&m───────────────────────────────────&r
+  game_ended: "&a✔ &7冒险结束！获得奖励: &6{rewards}"
+  game_abandoned: "&c✖ &7你放弃了这次冒险，没有获得奖励。"
+  game_over_health: "&c✖ &7你的生命值耗尽了...冒险结束！"
+  no_rewards: "无奖励"
+  status: "&7金币: &6{gold} &8| &7生命: &c{health} &8| &7进度: &a{stage}&7/&a{max_stage} &8| &7战斗胜利: &e{victories}"
+  no_events_available: "&e⚠ &7目前没有可用的事件。"
+  no_enemies: "&e⚠ &7目前没有可战斗的敌人。"
+  shop_empty: "&e⚠ &7商店目前没有商品。"
+  not_enough_gold: "&c✖ &7你没有足够的金币！"
+  item_purchased: "&a✔ &7成功购买: &6{item}"
+  choice_result: "&7结果: &f{result} &8(&6金币{gold_change}&8, &c生命{health_change}&8)"
+  battle_victory: "&a✔ &7你击败了 &c{enemy}&7！获得 &6{gold} &7金币！"
+  battle_defeat: "&c✖ &7你被 &c{enemy} &7击败了！受到 &c{damage} &7点伤害！"
+  flee_success: "&a✔ &7你成功逃跑了！"
+  flee_failed: "&c✖ &7逃跑失败！受到 &c{damage} &7点伤害！"
+  event_not_found: "&c✖ &7事件不存在。"
+  missing_item_cost: "&c✖ &7你缺少必要的物品。"
+  item_gained: "&a✔ &7获得: &6{item} x{amount}"
+  shop_left: "&a✔ &7你离开了商店，继续冒险。"
+  equipped: "&a✔ &7已装备: &6{item}"
+  unequipped: "&a✔ &7已卸下: &6{item}"

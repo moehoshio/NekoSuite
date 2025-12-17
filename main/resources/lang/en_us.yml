@@ -1,5 +1,7 @@
 common:
   only_player: "&c✖ This command can only be used by players."
+  no_permission: "&c✖ You do not have permission to use this command."
+  reload_success: "&a✔ &7Configuration reloaded."
 
 wish:
   usage: "&7Usage: &f/wish &6<pool> [count] &7or &f/wish query &6<pool> &7or &f/wish menu"
@@ -84,6 +86,82 @@ menu:
     next_page: "&7Next ▶"
     info_title: "&7Mail Info &8({page}/{total_pages})"
     info_lore: "&7Unread: &a{unread} &8| &7Unclaimed: &6{unclaimed}"
+  sgame:
+    title: "&#ffcc00✦ Cat Kingdom Adventure"
+    victory_title: "&#ffcc00✦ Adventure Complete!"
+    status_title: "&7Adventure Status"
+    gold_lore: "&6Gold: &f{gold}"
+    health_lore: "&cHealth: &f{health}/{max_health}"
+    combat_stats_lore: "&bAttack: &f{attack} &8| &eDefense: &f{defense} &8| &dMagic: &f{magic}"
+    stage_lore: "&aProgress: &f{stage}/{max_stage}"
+    adventure_title: "&aExplore"
+    adventure_lore: "&7Choose an event to play"
+    battle_title: "&cBattle"
+    battle_lore: "&7Fight monsters for rewards"
+    shop_title: "&6Shop"
+    shop_lore: "&7Buy items to grow stronger"
+    equipment_title: "&9Equipment"
+    equipment_lore: "&7Manage your gear"
+    end_game_title: "&dEnd Adventure"
+    end_game_lore: "&7Finish and claim rewards"
+    back: "&7Back"
+    event_selection_title: "&#60a5fa✦ Choose Event"
+    event_title: "&#60a5fa✦ Event"
+    battle_menu_title: "&#ff6666✦ Battle"
+    shop_menu_title: "&#ffcc00✦ Shop"
+    equipment_menu_title: "&#3399ff✦ Equipment"
+    shop_leave: "&aLeave Shop"
+    shop_leave_lore: "&7Done shopping, go to next stage"
+    shop_continue: "&aContinue Adventure"
+    shop_continue_lore: "&7Proceed to the next stage"
+    enemy_title: "&cEnemy: &f{enemy}"
+    enemy_power_lore: "&7Power: &c{power}"
+    enemy_stats_lore: "&7Attack: &c{attack} &8| &7Defense: &e{defense} &8| &7Health: &a{health}"
+    fight_button: "&aFight"
+    fight_lore: "&7Battle the enemy"
+    flee_button: "&eFlee"
+    flee_lore: "&7Attempt to flee"
+    your_gold: "&6Your Gold: &f{gold}"
+    item_price_lore: "&7Price: &6{price} &7gold"
+    equip_slot_weapon: "&fWeapon Slot"
+    equip_slot_armor: "&fArmor Slot"
+    equip_slot_accessory: "&fAccessory Slot"
+    equip_empty: "&7Empty"
+    equip_click_to_change: "&eClick to change equipment"
+    # Event selection i18n
+    event_type_lore: "&7Type: {type}"
+    type_story: "&aStory"
+    type_battle: "&cBattle"
+    type_shop: "&6Shop"
+    require_item: "&7Require: &f{item} x{amount}"
+    require_gold: "&7Require Gold: &6{gold}"
+    cost_gold: "⚡ &7Gold Cost: &6{gold}"
+    click_enter_event: "&aClick to enter"
+    cannot_enter_event: "&cCannot enter - requirements not met"
+    # Choice menu i18n
+    choice_item_cost: "Cost: &f{item} x{amount}"
+    alt_result_hint: "&e(Alternate result when requirements fail)"
+    requirement_not_met: "&cRequirements not met"
+    make_your_choice: "&7Make your choice..."
+    # Shop i18n
+    click_to_buy: "&aClick to buy"
+    not_enough_gold: "&cNot enough gold"
+    # Equipment i18n
+    equipped_item: "&aEquipped: {name}"
+    equip_weapon_stats: "&7Attack: +{attack} Defense: +{defense}"
+    equip_armor_stats: "&7Defense: +{defense} Health: +{health}"
+    equip_accessory_stats: "&7Various bonuses"
+    type_weapon: "&cWeapon"
+    type_armor: "&eArmor"
+    type_accessory: "&dAccessory"
+    equip_type_lore: "&7Type: {type}"
+    equip_attack_bonus: "&cAttack: +{value}"
+    equip_defense_bonus: "&eDefense: +{value}"
+    equip_health_bonus: "&aHealth: +{value}"
+    equip_magic_bonus: "&dMagic: +{value}"
+    equip_price_lore: "&6Price: {price} gold"
+    already_equipped: "&a✔ Equipped"
+    click_to_buy_equip: "&aBuy and equip"
   close: "&c✖ Close"
 
 cdk:
@@ -106,6 +184,106 @@ buy:
   insufficient_balance: "&c✖ Insufficient balance, need &6{cost}&c, you have &6{balance}&c."
   economy_missing: "&c✖ Economy plugin not found; unable to complete purchase."
   cost_failure: "&c✖ Payment failed, please try again."
+
+  product:
+    vip1:
+      name: "&#d946ef✦ VIP I"
+      lore:
+        - "&7Price: &6688 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    vip2:
+      name: "&#d946ef✦ VIP II"
+      lore:
+        - "&7Price: &61588 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    vip3:
+      name: "&#d946ef✦ VIP III"
+      lore:
+        - "&7Price: &63399 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    vip4:
+      name: "&#d946ef✦ VIP IV"
+      lore:
+        - "&7Price: &67688 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    vip5:
+      name: "&#d946ef✦ VIP V"
+      lore:
+        - "&7Price: &623999 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    vip6:
+      name: "&#d946ef✦ VIP VI"
+      lore:
+        - "&7Price: &6128888 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    mcd1:
+      name: "&#5cd6e8✦ Monthly Card I"
+      lore:
+        - "&7Price: &6799 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    mcd2:
+      name: "&#5cd6e8✦ Monthly Card II"
+      lore:
+        - "&7Price: &62688 &7gold"
+        - "&7Duration: &631 &7days"
+        - ""
+        - "&7Click to purchase this perk"
+    bag1:
+      name: "&#80e85c✦ Backpack I"
+      lore:
+        - "&7Price: &6360 &7gold"
+        - "&7Duration: &aPermanent"
+        - ""
+        - "&7Click to purchase this perk"
+    bag2:
+      name: "&#80e85c✦ Backpack II"
+      lore:
+        - "&7Price: &61200 &7gold"
+        - "&7Duration: &aPermanent"
+        - ""
+        - "&7Click to purchase this perk"
+    bag3:
+      name: "&#80e85c✦ Backpack III"
+      lore:
+        - "&7Price: &63600 &7gold"
+        - "&7Duration: &aPermanent"
+        - ""
+        - "&7Click to purchase this perk"
+    bag4:
+      name: "&#80e85c✦ Backpack IV"
+      lore:
+        - "&7Price: &66888 &7gold"
+        - "&7Duration: &aPermanent"
+        - ""
+        - "&7Click to purchase this perk"
+    bag5:
+      name: "&#80e85c✦ Backpack V"
+      lore:
+        - "&7Price: &613999 &7gold"
+        - "&7Duration: &aPermanent"
+        - ""
+        - "&7Click to purchase this perk"
+    bag6:
+      name: "&#80e85c✦ Backpack VI"
+      lore:
+        - "&7Price: &636888 &7gold"
+        - "&7Duration: &aPermanent"
+        - ""
+        - "&7Click to purchase this perk"
 
 i18n:
   usage: "&7Usage: &f/language &6<code> &8| &f/language list &8| &f/language reset"
@@ -170,3 +348,40 @@ mail:
   subject_line: "&7Subject: &f{subject}"
   sender_line: "&7From: &6{sender}"
   footer: "&8&m───────────────────────────────────&r"
+
+# Strategy game module
+sgame:
+  usage: "&7Usage: &f/sgame &6<start|continue|status|end|abandon|menu>"
+  already_in_game: "&e⚠ &7You are already in a game! Use &f/sgame continue &7to resume."
+  no_active_game: "&e⚠ &7You have no ongoing game. Use &f/sgame start &7to begin a new adventure."
+  game_already_ended: "&e⚠ &7This game has ended. Use &f/sgame start &7to start a new one."
+  game_started: "&a✔ &7A new adventure begins!"
+  story_intro: |-
+    &8&m─────────────&r &6✦ Cat Kingdom Adventure ✦ &8&m─────────────&r
+    &7In the mysterious cat kingdom of "Meoceria"...
+    &7An ancient darkness threatens the land.
+    &7As a brave adventurer, you must explore,
+    &7make wise choices, defeat monsters, trade with merchants,
+    &7and gather resources to save the kingdom!
+    &8&m───────────────────────────────────&r
+  game_ended: "&a✔ &7Adventure ended! Rewards: &6{rewards}"
+  game_abandoned: "&c✖ &7You abandoned this adventure and earned no rewards."
+  game_over_health: "&c✖ &7Your health was depleted... adventure over!"
+  no_rewards: "No rewards"
+  status: "&7Gold: &6{gold} &8| &7Health: &c{health} &8| &7Progress: &a{stage}&7/&a{max_stage} &8| &7Battle wins: &e{victories}"
+  no_events_available: "&e⚠ &7No events are currently available."
+  no_enemies: "&e⚠ &7No enemies available to fight."
+  shop_empty: "&e⚠ &7The shop currently has no items."
+  not_enough_gold: "&c✖ &7You do not have enough gold!"
+  item_purchased: "&a✔ &7Purchased: &6{item}"
+  choice_result: "&7Result: &f{result} &8(&6Gold {gold_change}&8, &cHealth {health_change}&8)"
+  battle_victory: "&a✔ &7You defeated &c{enemy}&7! Gained &6{gold} &7gold!"
+  battle_defeat: "&c✖ &7You were defeated by &c{enemy}&7! Took &c{damage} &7damage!"
+  flee_success: "&a✔ &7You fled successfully!"
+  flee_failed: "&c✖ &7Failed to flee! Took &c{damage} &7damage!"
+  event_not_found: "&c✖ &7Event not found."
+  missing_item_cost: "&c✖ &7You lack the required items."
+  item_gained: "&a✔ &7Gained: &6{item} x{amount}"
+  shop_left: "&a✔ &7You left the shop and continue the adventure."
+  equipped: "&a✔ &7Equipped: &6{item}"
+  unequipped: "&a✔ &7Unequipped: &6{item}"
