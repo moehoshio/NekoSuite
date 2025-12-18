@@ -55,6 +55,14 @@ tickets:
 pools:
     # 星途
     StarPath:
+        display:
+            material: "PAPER"
+            custom_model_data: 1202
+            name: "&e星途"
+            description:
+                - "&7[ &o初心未改，步步皆光 &7]"
+                - ""
+                - "&b星光始终于空中闪耀，指引踏上旅途的人"
         counts_name: "StarPath" # 如果所有祈愿池填写相同名即可共享计数
         max_count: 200
         cost:
@@ -99,6 +107,14 @@ pools:
 
     # 星光如梦
     StarryMirage:
+        display:
+            material: "PAPER"
+            custom_model_data: 1104
+            name: "&b星光如梦"
+            description:
+                - "&7[ &o星河倒映梦中影，浮光织就幻世形 &7]"
+                - ""
+                - "&7星光幻梦将于 2025-&509-01&7 前消退"
         limit_modes:
             count: 999
             time: 24h
@@ -156,6 +172,14 @@ pools:
 
     # 红玫的誓约 (情人节)
     OathOfTheRedRose:
+        display:
+            material: "PAPER"
+            custom_model_data: 1203
+            name: "&d红玫的誓约"
+            description:
+                - "&7[ &o情人节限定活动 &7]"
+                - ""
+                - "&d限时祈愿池"
         limit_modes:
             count: 999
             time: 24h
@@ -205,6 +229,13 @@ pools:
 
     # 微光之愿 (每日)
     GlimmeringPrayer:
+        display:
+            material: "SUNFLOWER"
+            name: "&6微光之愿"
+            description:
+                - "&7[ &o一缕微光穿星夜，轻声祷语寄心愿 &7]"
+                - ""
+                - "&7每日曦光赠送恩赐，&e可进行一次祈愿"
         limit_modes:
             count: 1
             time: 1d

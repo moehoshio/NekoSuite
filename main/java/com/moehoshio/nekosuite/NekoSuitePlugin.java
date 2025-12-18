@@ -1113,21 +1113,69 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         return null;
     }
 
+    private String extractActionFromMeta(ItemMeta meta) {
+        if (meta == null || meta.getLore() == null) {
+            return null;
+        }
+        List<String> lore = meta.getLore();
+        for (String line : lore) {
+            if (line == null) {
+                continue;
+            }
+            String cleaned = ChatColor.stripColor(line);
+            if (cleaned.startsWith("ACTION:")) {
+                return cleaned.substring(7).trim();
+            }
+        }
+        return null;
+    }
+
     private void openWishMenu(Player player) {
         MenuLayout.WishLayout layout = menuLayout.getWishLayout();
         Inventory inv = Bukkit.createInventory(new WishMenuHolder(), layout.getSize(), messages.format(player, "menu.wish.title"));
         int index = 0;
+        Instant now = Instant.now();
         for (WishPool pool : wishManager.getPools().values()) {
+            // Only show active pools
+            if (!pool.isActive(now)) {
+                continue;
+            }
             if (index >= layout.getItemSlots().size()) {
                 break;
             }
-            ItemStack stack = new ItemStack(org.bukkit.Material.NETHER_STAR);
+            
+            // Use display configuration
+            PoolDisplay display = pool.getDisplay();
+            org.bukkit.Material material = org.bukkit.Material.NETHER_STAR;
+            try {
+                material = org.bukkit.Material.valueOf(display.getMaterial().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Fallback to NETHER_STAR if material is invalid
+            }
+            
+            ItemStack stack = new ItemStack(material);
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ChatColor.LIGHT_PURPLE + pool.getId());
+                // Use display name from config
+                meta.setDisplayName(messages.colorize(display.getName()));
+                
                 List<String> lore = new ArrayList<String>();
                 lore.add(ChatColor.GRAY + "ID: " + pool.getId());
+                
+                // Add description from config
+                for (String line : display.getDescription()) {
+                    lore.add(messages.colorize(line));
+                }
+                
+                lore.add("");
+                lore.add(messages.format(player, "menu.wish.pool.click_to_view"));
                 meta.setLore(lore);
+                
+                // Set custom model data if configured
+                if (display.getCustomModelData() > 0) {
+                    meta.setCustomModelData(display.getCustomModelData());
+                }
+                
                 stack.setItemMeta(meta);
             }
             int slot = layout.getItemSlots().get(index++);
@@ -1138,6 +1186,142 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         if (layout.getCloseSlot() >= 0 && layout.getCloseSlot() < inv.getSize()) {
             inv.setItem(layout.getCloseSlot(), createCloseItem(player));
         }
+        player.openInventory(inv);
+    }
+
+    private void openWishPoolDetailMenu(Player player, String poolId) {
+        WishPool pool = wishManager.getPools().get(poolId);
+        if (pool == null) {
+            player.sendMessage(messages.format(player, "wish.pool_missing"));
+            return;
+        }
+
+        PoolDisplay display = pool.getDisplay();
+        
+        // Use size 54 for the detail menu to fit rewards preview and buttons
+        Map<String, String> titlePlaceholders = new HashMap<String, String>();
+        titlePlaceholders.put("pool", messages.colorize(display.getName()));
+        titlePlaceholders.put("pool_id", poolId);
+        Inventory inv = Bukkit.createInventory(new WishPoolDetailMenuHolder(poolId), 54, 
+            messages.format(player, "menu.wish.pool_detail.title", titlePlaceholders));
+
+        WishStatus status = wishManager.queryStatus(player.getName(), poolId);
+
+        // Slot 0: Player info with pool status
+        ItemStack infoItem = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
+        ItemMeta infoMeta = infoItem.getItemMeta();
+        if (infoMeta != null) {
+            infoMeta.setDisplayName(messages.colorize(display.getName()));
+            List<String> infoLore = new ArrayList<String>();
+            Map<String, String> placeholders = new HashMap<String, String>();
+            placeholders.put("count", String.valueOf(status.getCount()));
+            placeholders.put("max_count", String.valueOf(pool.getMaxCount()));
+            placeholders.put("tickets", String.valueOf(status.getTicketCount()));
+            infoLore.add(messages.format(player, "menu.wish.pool_detail.fate_mark", placeholders));
+            infoLore.add(messages.format(player, "menu.wish.pool_detail.tickets", placeholders));
+            // Add pool description
+            for (String line : display.getDescription()) {
+                infoLore.add(messages.colorize(line));
+            }
+            infoMeta.setLore(infoLore);
+            infoItem.setItemMeta(infoMeta);
+        }
+        inv.setItem(0, infoItem);
+
+        // Slots 9-26: Reward previews
+        WeightedList items = pool.getItems();
+        if (items != null) {
+            List<RewardEntry> entries = items.getEntries();
+            double totalWeight = items.getTotalWeight();
+            int rewardSlot = 9;
+            for (int i = 0; i < entries.size() && rewardSlot <= 26; i++) {
+                RewardEntry entry = entries.get(i);
+                if (entry.getWeight() <= 0) {
+                    continue;
+                }
+                ItemStack rewardItem = new ItemStack(org.bukkit.Material.PAPER);
+                ItemMeta rewardMeta = rewardItem.getItemMeta();
+                if (rewardMeta != null) {
+                    double percent = (entry.getWeight() / totalWeight) * 100;
+                    String percentStr = String.format("%.2f%%", percent);
+                    String displayName = entry.getDisplayName();
+                    rewardMeta.setDisplayName(ChatColor.GOLD + displayName + ChatColor.GRAY + " (" + percentStr + ")");
+                    List<String> rewardLore = new ArrayList<String>();
+                    Map<String, String> rewardPlaceholders = new HashMap<String, String>();
+                    rewardPlaceholders.put("name", displayName);
+                    rewardPlaceholders.put("percent", percentStr);
+                    rewardLore.add(messages.format(player, "menu.wish.pool_detail.reward_lore", rewardPlaceholders));
+                    rewardMeta.setLore(rewardLore);
+                    rewardItem.setItemMeta(rewardMeta);
+                }
+                inv.setItem(rewardSlot++, rewardItem);
+            }
+        }
+
+        // Slots 39 and 41: Wish buttons
+        Map<Integer, Integer> costs = pool.getCosts();
+        int cost1 = costs.getOrDefault(1, 0);
+        int cost5 = costs.getOrDefault(5, cost1 * 5);
+
+        // Wish 1x button at slot 39
+        ItemStack wish1Item = new ItemStack(org.bukkit.Material.PAPER);
+        ItemMeta wish1Meta = wish1Item.getItemMeta();
+        if (wish1Meta != null) {
+            wish1Meta.setDisplayName(messages.format(player, "menu.wish.pool_detail.wish_once"));
+            List<String> wish1Lore = new ArrayList<String>();
+            Map<String, String> wish1Placeholders = new HashMap<String, String>();
+            wish1Placeholders.put("count", String.valueOf(status.getCount()));
+            wish1Placeholders.put("max_count", String.valueOf(pool.getMaxCount()));
+            wish1Placeholders.put("tickets", String.valueOf(status.getTicketCount()));
+            wish1Placeholders.put("cost", String.valueOf(cost1));
+            wish1Lore.add(messages.format(player, "menu.wish.pool_detail.fate_mark", wish1Placeholders));
+            wish1Lore.add(messages.format(player, "menu.wish.pool_detail.tickets", wish1Placeholders));
+            wish1Lore.add(messages.format(player, "menu.wish.pool_detail.cost", wish1Placeholders));
+            wish1Lore.add("");
+            wish1Lore.add(ChatColor.GRAY + "ACTION:WISH:1");
+            wish1Meta.setLore(wish1Lore);
+            wish1Item.setItemMeta(wish1Meta);
+        }
+        inv.setItem(39, wish1Item);
+
+        // Wish 5x button at slot 41
+        ItemStack wish5Item = new ItemStack(org.bukkit.Material.PAPER);
+        ItemMeta wish5Meta = wish5Item.getItemMeta();
+        if (wish5Meta != null) {
+            wish5Meta.setDisplayName(messages.format(player, "menu.wish.pool_detail.wish_five"));
+            List<String> wish5Lore = new ArrayList<String>();
+            Map<String, String> wish5Placeholders = new HashMap<String, String>();
+            wish5Placeholders.put("count", String.valueOf(status.getCount()));
+            wish5Placeholders.put("max_count", String.valueOf(pool.getMaxCount()));
+            wish5Placeholders.put("tickets", String.valueOf(status.getTicketCount()));
+            wish5Placeholders.put("cost", String.valueOf(cost5));
+            wish5Lore.add(messages.format(player, "menu.wish.pool_detail.fate_mark", wish5Placeholders));
+            wish5Lore.add(messages.format(player, "menu.wish.pool_detail.tickets", wish5Placeholders));
+            wish5Lore.add(messages.format(player, "menu.wish.pool_detail.cost", wish5Placeholders));
+            wish5Lore.add("");
+            wish5Lore.add(ChatColor.GRAY + "ACTION:WISH:5");
+            wish5Meta.setLore(wish5Lore);
+            wish5Item.setItemMeta(wish5Meta);
+        }
+        inv.setItem(41, wish5Item);
+
+        // Bottom buttons
+        // Back button at slot 45
+        ItemStack backItem = new ItemStack(org.bukkit.Material.ARROW);
+        ItemMeta backMeta = backItem.getItemMeta();
+        if (backMeta != null) {
+            backMeta.setDisplayName(messages.format(player, "menu.wish.pool_detail.back"));
+            List<String> backLore = new ArrayList<String>();
+            backLore.add(messages.format(player, "menu.wish.pool_detail.back_lore"));
+            backLore.add(ChatColor.GRAY + "ACTION:BACK");
+            backMeta.setLore(backLore);
+            backItem.setItemMeta(backMeta);
+        }
+        inv.setItem(45, backItem);
+
+        // Close button at slot 53
+        inv.setItem(53, createCloseItem(player));
+
         player.openInventory(inv);
     }
 
@@ -1206,16 +1390,58 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             ItemMeta meta = clicked.getItemMeta();
             String id = extractIdFromMeta(meta);
             if (id != null) {
+                // Open the pool detail menu instead of immediately performing a wish
+                openWishPoolDetailMenu(player, id);
+                return;
+            }
+            return;
+        }
+        if (holder instanceof WishPoolDetailMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.ARROW) {
+                // Back button - return to main wish menu
+                openWishMenu(player);
+                return;
+            }
+            // Check for wish action in lore
+            ItemMeta meta = clicked.getItemMeta();
+            String action = extractActionFromMeta(meta);
+            if (action != null && action.startsWith("WISH:")) {
+                String countStr = action.substring(5);
+                int wishCount = 1;
                 try {
-                    List<String> rewards = wishManager.performWish(player, id, 1);
+                    wishCount = Integer.parseInt(countStr);
+                } catch (NumberFormatException ignored) {
+                }
+                WishPoolDetailMenuHolder detailHolder = (WishPoolDetailMenuHolder) holder;
+                String poolId = detailHolder.getPoolId();
+                try {
+                    List<String> rewards = wishManager.performWish(player, poolId, wishCount);
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("rewards", String.join(", ", rewards));
                     player.sendMessage(messages.format(player, "wish.success", map));
+                    // Refresh the detail menu to show updated counts
+                    openWishPoolDetailMenu(player, poolId);
                 } catch (WishException e) {
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("reason", e.getMessage());
                     player.sendMessage(messages.format(player, "wish.failure", map));
                 }
+                return;
+            }
+            if (action != null && action.equals("BACK")) {
+                openWishMenu(player);
                 return;
             }
             return;
@@ -1317,6 +1543,22 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     }
 
     private static class WishMenuHolder implements InventoryHolder {
+        public Inventory getInventory() {
+            return null;
+        }
+    }
+
+    private static class WishPoolDetailMenuHolder implements InventoryHolder {
+        private final String poolId;
+
+        WishPoolDetailMenuHolder(String poolId) {
+            this.poolId = poolId;
+        }
+
+        String getPoolId() {
+            return poolId;
+        }
+
         public Inventory getInventory() {
             return null;
         }
@@ -1593,8 +1835,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private final WeightedList guaranteeItems;
         private final TimeWindow window;
         private final WishLimit limit;
+        private final PoolDisplay display;
 
-        WishPool(String id, String countsName, int maxCount, Map<Integer, Integer> costs, boolean autoCost, WeightedList items, WeightedList guaranteeItems, TimeWindow window, WishLimit limit) {
+        WishPool(String id, String countsName, int maxCount, Map<Integer, Integer> costs, boolean autoCost, WeightedList items, WeightedList guaranteeItems, TimeWindow window, WishLimit limit, PoolDisplay display) {
             this.id = id;
             this.countsName = countsName;
             this.maxCount = maxCount;
@@ -1604,6 +1847,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             this.guaranteeItems = guaranteeItems;
             this.window = window;
             this.limit = limit;
+            this.display = display;
         }
 
         static WishPool fromSection(String id, ConfigurationSection section, java.util.logging.Logger logger) {
@@ -1615,7 +1859,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             WeightedList guarantee = WeightedList.fromSection(section.getConfigurationSection("guarantee_items"));
             TimeWindow window = TimeWindow.fromSection(section.getConfigurationSection("duration"), logger);
             WishLimit limit = WishLimit.fromSection(section.getConfigurationSection("limit_modes"), logger);
-            return new WishPool(id, countsName, maxCount, costs, autoCost, itemList, guarantee, window, limit);
+            PoolDisplay display = PoolDisplay.fromSection(section.getConfigurationSection("display"), id);
+            return new WishPool(id, countsName, maxCount, costs, autoCost, itemList, guarantee, window, limit, display);
         }
 
         int calculateCost(int count) {
@@ -1682,6 +1927,67 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         WishLimit getLimit() {
             return limit;
+        }
+
+        int getMaxCount() {
+            return maxCount;
+        }
+
+        Map<Integer, Integer> getCosts() {
+            return costs;
+        }
+
+        WeightedList getItems() {
+            return items;
+        }
+
+        WeightedList getGuaranteeItems() {
+            return guaranteeItems;
+        }
+
+        PoolDisplay getDisplay() {
+            return display;
+        }
+    }
+
+    private static class PoolDisplay {
+        private final String material;
+        private final int customModelData;
+        private final String name;
+        private final List<String> description;
+
+        PoolDisplay(String material, int customModelData, String name, List<String> description) {
+            this.material = material;
+            this.customModelData = customModelData;
+            this.name = name;
+            this.description = description;
+        }
+
+        static PoolDisplay fromSection(ConfigurationSection section, String poolId) {
+            if (section == null) {
+                return new PoolDisplay("NETHER_STAR", 0, poolId, new ArrayList<String>());
+            }
+            String material = section.getString("material", "NETHER_STAR");
+            int customModelData = section.getInt("custom_model_data", 0);
+            String name = section.getString("name", poolId);
+            List<String> description = section.getStringList("description");
+            return new PoolDisplay(material, customModelData, name, description);
+        }
+
+        String getMaterial() {
+            return material;
+        }
+
+        int getCustomModelData() {
+            return customModelData;
+        }
+
+        String getName() {
+            return name;
+        }
+
+        List<String> getDescription() {
+            return description;
         }
     }
 
@@ -1902,6 +2208,17 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         double getWeight() {
             return weight;
+        }
+
+        List<RewardAction> getActions() {
+            return actions;
+        }
+
+        String getDisplayName() {
+            if (actions == null || actions.isEmpty()) {
+                return "unknown";
+            }
+            return actions.get(0).getName();
         }
     }
 
