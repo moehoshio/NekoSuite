@@ -62,6 +62,18 @@ exp:
 menu:
   wish:
     title: "&#c084fc✦ 祈愿菜单"
+    pool:
+      click_to_view: "&7点击查看详情"
+    pool_detail:
+      title: "&#c084fc✦ {pool}"
+      fate_mark: "&7命运刻痕: &6{count}&7/&e{max_count}"
+      tickets: "&7可用祈愿券: &b{tickets}"
+      cost: "&7消耗金币: &6{cost}"
+      wish_once: "&a祈愿一次"
+      wish_five: "&6祈愿五次"
+      reward_lore: "&7获得 &6{name}"
+      back: "&a返回主页"
+      back_lore: "&7返回祈愿主页"
   event:
     title: "&#60a5fa✦ 活动菜单"
   exp:

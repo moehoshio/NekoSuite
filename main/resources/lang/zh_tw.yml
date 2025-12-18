@@ -599,6 +599,18 @@ sgame:
 menu:
   wish:
     title: "&#c084fc✦ 祈願選單"
+    pool:
+      click_to_view: "&7點擊查看詳情"
+    pool_detail:
+      title: "&#c084fc✦ {pool}"
+      fate_mark: "&7命運刻痕: &6{count}&7/&e{max_count}"
+      tickets: "&7可用祈願券: &b{tickets}"
+      cost: "&7消耗金幣: &6{cost}"
+      wish_once: "&a祈願一次"
+      wish_five: "&6祈願五次"
+      reward_lore: "&7獲得 &6{name}"
+      back: "&a返回主頁"
+      back_lore: "&7返回祈願主頁"
   event:
     title: "&#60a5fa✦ 活動選單"
   exp:

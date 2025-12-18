@@ -62,6 +62,18 @@ exp:
 menu:
   wish:
     title: "&#c084fc✦ Wish Menu"
+    pool:
+      click_to_view: "&7Click to view details"
+    pool_detail:
+      title: "&#c084fc✦ {pool}"
+      fate_mark: "&7Fate Mark: &6{count}&7/&e{max_count}"
+      tickets: "&7Available Tickets: &b{tickets}"
+      cost: "&7Cost: &6{cost} coins"
+      wish_once: "&aWish Once"
+      wish_five: "&6Wish Five Times"
+      reward_lore: "&7Get &6{name}"
+      back: "&aBack to Menu"
+      back_lore: "&7Return to wish menu"
   event:
     title: "&#60a5fa✦ Event Menu"
   exp:
