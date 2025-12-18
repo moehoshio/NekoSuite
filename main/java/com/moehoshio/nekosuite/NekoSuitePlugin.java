@@ -1172,8 +1172,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 meta.setLore(lore);
                 
                 // Set custom model data if configured
+                // Note: Custom model data requires a client-side resource pack with 
+                // matching JSON models to display custom textures
                 if (display.getCustomModelData() > 0) {
                     meta.setCustomModelData(display.getCustomModelData());
+                    if (getLogger().isLoggable(java.util.logging.Level.FINE)) {
+                        getLogger().fine("Applied custom model data " + display.getCustomModelData() + " to pool " + pool.getId());
+                    }
                 }
                 
                 stack.setItemMeta(meta);

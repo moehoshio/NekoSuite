@@ -13,6 +13,15 @@
 #       <minecraft:item>:
 #         probability: ...
 
+# 祈愿池显示配置说明 (display section):
+#   material: 物品材质类型 (如 PAPER, NETHER_STAR 等)
+#   custom_model_data: 自定义模型数据值 (整数)
+#     注意: custom_model_data 需要客户端安装相应的资源包才能显示自定义贴图
+#     资源包需要包含对应的 JSON 模型文件，将 custom_model_data 值映射到自定义贴图
+#     如果没有资源包，物品将显示为默认材质
+#   name: 显示名称 (支持颜色代码)
+#   description: 描述文字列表 (支持颜色代码)
+
 # 數據存儲配置
 storage:
     # 存儲類型: yaml, sqlite 和 mysql (未來支持)
