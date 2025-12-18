@@ -163,32 +163,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         switch (name) {
             case "wish":
                 return handleWish(sender, args);
-            case "wishquery":
-                return handleWishQuery(sender, args);
-            case "wishmenu":
-                return handleWishMenu(sender);
-            case "eventcheck":
-                return handleEventCheck(sender);
-            case "eventparticipate":
-                return handleEventParticipate(sender, args);
             case "event":
                 return handleEvent(sender, args);
-            case "eventmenu":
-                return handleEventMenu(sender);
             case "exp":
                 return handleExp(sender, args);
-            case "expmenu":
-                return handleExpMenu(sender);
             case "cdk":
                 return handleCdk(sender, args);
             case "buy":
                 return handleBuy(sender, args);
-            case "buymenu":
-                return handleBuyMenu(sender);
             case "mail":
                 return handleMail(sender, args);
-            case "mailmenu":
-                return handleMailMenu(sender);
             case "mailsend":
                 return handleMailSend(sender, args);
             case "mailadmin":
@@ -199,8 +183,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleReload(sender);
             case "sgame":
                 return handleStrategyGame(sender, args);
-            case "sgamemenu":
-                return handleStrategyGameMenu(sender);
             default:
                 return false;
         }
@@ -219,13 +201,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         if ("menu".equalsIgnoreCase(args[0])) {
             openWishMenu(player);
             return true;
-        }
-        if ("query".equalsIgnoreCase(args[0])) {
-            if (args.length < 2) {
-                sender.sendMessage(messages.format(sender, "wish.query.usage"));
-                return true;
-            }
-            return handleWishQuery(sender, new String[]{args[1]});
         }
         String pool = args[0];
         int count = 1;
@@ -248,29 +223,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             map.put("reason", e.getMessage());
             sender.sendMessage(messages.format(sender, "wish.failure", map));
         }
-        return true;
-    }
-
-    private boolean handleWishQuery(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(messages.format(sender, "common.only_player"));
-            return true;
-        }
-        if (args.length == 0) {
-            sender.sendMessage(messages.format(sender, "wish.query.usage"));
-            return true;
-        }
-        Player player = (Player) sender;
-        WishStatus status = wishManager.queryStatus(player.getName(), args[0]);
-        if (!status.isValidPool()) {
-            sender.sendMessage(messages.format(sender, "wish.pool_missing"));
-            return true;
-        }
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("pool", status.getPool());
-        map.put("count", String.valueOf(status.getCount()));
-        map.put("tickets", String.valueOf(status.getTicketCount()));
-        sender.sendMessage(messages.format(sender, "wish.status", map));
         return true;
     }
 
@@ -305,23 +257,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return true;
         }
         if (args.length == 0) {
-            return handleEventCheck(sender);
+            // Show available events and open menu
+            return handleEventMenu(sender);
         }
         String sub = args[0].toLowerCase();
         if ("menu".equals(sub)) {
             return handleEventMenu(sender);
         }
-        if ("check".equals(sub)) {
-            return handleEventCheck(sender);
-        }
-        if ("participate".equals(sub)) {
-            if (args.length < 2) {
-                sender.sendMessage(messages.format(sender, "event.participate.usage"));
-                return true;
-            }
-            return handleEventParticipate(sender, new String[]{args[1]});
-        }
-        // Default fallback: treat first argument as eventId to participate
+        // Treat first argument as eventId to participate directly
         return handleEventParticipate(sender, new String[]{args[0]});
     }
 
@@ -385,15 +328,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         Player player = (Player) sender;
         if (args.length == 0) {
-            sender.sendMessage(messages.format(sender, "exp.usage"));
+            // No args: open menu directly
+            expManager.openMenu(player);
             return true;
         }
         String sub = args[0].toLowerCase();
-        if ("balance".equals(sub)) {
-            Map<String, String> map = new HashMap<String, String>();
-            map.put("stored", String.valueOf(expManager.getStored(player.getName())));
-            map.put("carried", String.valueOf(player.getTotalExperience()));
-            sender.sendMessage(messages.format(sender, "exp.balance", map));
+        if ("menu".equals(sub)) {
+            expManager.openMenu(player);
             return true;
         }
         if ("deposit".equals(sub)) {
@@ -421,10 +362,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             String target = args[1];
             long amount = parseLong(args[2]);
             expManager.transfer(player, target, amount);
-            return true;
-        }
-        if ("menu".equals(sub)) {
-            expManager.openMenu(player);
             return true;
         }
         if ("exchange".equals(sub)) {
@@ -518,36 +455,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         Player player = (Player) sender;
         if (args.length == 0) {
-            sender.sendMessage(messages.format(sender, "mail.usage"));
+            // No args: open menu directly
+            mailManager.openMenu(player);
             return true;
         }
         String sub = args[0].toLowerCase();
         if ("menu".equals(sub)) {
             mailManager.openMenu(player);
-            return true;
-        }
-        if ("list".equals(sub)) {
-            List<MailManager.Mail> mails = mailManager.getMails(player.getName());
-            if (mails.isEmpty()) {
-                sender.sendMessage(messages.format(sender, "mail.list_empty"));
-                return true;
-            }
-            sender.sendMessage(messages.format(sender, "mail.list_header"));
-            for (MailManager.Mail mail : mails) {
-                Map<String, String> map = new HashMap<String, String>();
-                map.put("subject", mail.getSubject());
-                map.put("sender", mail.getSender());
-                String status;
-                if (!mail.isRead()) {
-                    status = messages.format(sender, "mail.list_status_unread");
-                } else if (mail.hasCommands() && !mail.isClaimed()) {
-                    status = messages.format(sender, "mail.list_status_unclaimed");
-                } else {
-                    status = messages.format(sender, "mail.list_status_read");
-                }
-                map.put("status", status);
-                sender.sendMessage(messages.format(sender, "mail.list_entry", map));
-            }
             return true;
         }
         if ("claim".equals(sub)) {
@@ -668,16 +582,59 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         
         if ("template".equals(sub)) {
-            // Load template from config and send
-            // For now, just send a basic template
-            String templateId = args[2];
-            List<String> commands = new ArrayList<String>();
-            commands.add("minecraft:give " + recipient + " minecraft:diamond 1");
-            boolean success = mailManager.sendSystemMail(recipient, "Template: " + templateId, "This is a template mail.", commands);
+            // /mailadmin template <templateId> <recipient> [content...]
+            // Load template from config and send with optional custom content
+            if (args.length < 3) {
+                sender.sendMessage(messages.format(sender, "mail.template_usage"));
+                return true;
+            }
+            String templateId = args[1];
+            String templateRecipient = args[2];
+            
+            // Try to load template from mail config
+            File mailConfigFile = new File(getDataFolder(), "mail_config.yml");
+            if (!mailConfigFile.exists()) {
+                sender.sendMessage(messages.format(sender, "mail.template_not_found"));
+                return true;
+            }
+            YamlConfiguration mailConfig = YamlConfiguration.loadConfiguration(mailConfigFile);
+            ConfigurationSection templateSection = mailConfig.getConfigurationSection("templates." + templateId);
+            if (templateSection == null) {
+                Map<String, String> errMap = new HashMap<String, String>();
+                errMap.put("template", templateId);
+                sender.sendMessage(messages.format(sender, "mail.template_not_found", errMap));
+                return true;
+            }
+            
+            String subject = templateSection.getString("subject", "System Mail");
+            String templateContent = templateSection.getString("content", "");
+            List<String> templateCommands = templateSection.getStringList("commands");
+            
+            // If custom content is provided, use it instead of template content
+            String finalContent = templateContent;
+            if (args.length > 3) {
+                StringBuilder customContent = new StringBuilder();
+                for (int i = 3; i < args.length; i++) {
+                    if (customContent.length() > 0) {
+                        customContent.append(" ");
+                    }
+                    customContent.append(args[i]);
+                }
+                finalContent = customContent.toString();
+            }
+            
+            // Replace {player} placeholder in commands
+            List<String> processedCommands = new ArrayList<String>();
+            for (String cmd : templateCommands) {
+                processedCommands.add(cmd.replace("{player}", templateRecipient));
+            }
+            
+            boolean success = mailManager.sendSystemMail(templateRecipient, subject, finalContent, processedCommands);
             if (success) {
                 Map<String, String> map = new HashMap<String, String>();
-                map.put("recipient", recipient);
-                sender.sendMessage(messages.format(sender, "mail.sent", map));
+                map.put("recipient", templateRecipient);
+                map.put("template", templateId);
+                sender.sendMessage(messages.format(sender, "mail.template_sent", map));
             } else {
                 sender.sendMessage(messages.format(sender, "mail.mailbox_full"));
             }
@@ -694,100 +651,137 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         switch (name) {
             case "wish":
                 if (args.length == 1) {
-                    List<String> dynamic = new ArrayList<String>(wishManager.getPools().keySet());
-                    dynamic.add("menu");
-                    dynamic.add("query");
-                    dynamic.add(messages.getRaw(sender, "tab.wish.pool"));
-                    return filter(dynamic, args[0]);
+                    List<String> options = new ArrayList<String>();
+                    options.add("menu");
+                    options.addAll(wishManager.getPools().keySet());
+                    options.add(messages.getRaw(sender, "tab.wish.select_pool"));
+                    return filter(options, args[0]);
                 }
                 if (args.length == 2) {
-                    if ("query".equalsIgnoreCase(args[0])) {
-                        List<String> pools = new ArrayList<String>(wishManager.getPools().keySet());
-                        pools.add(messages.getRaw(sender, "tab.wish.query_pool"));
-                        return filter(pools, args[1]);
+                    if ("menu".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
                     }
                     // Suggest counts for wish pool
                     List<String> counts = new ArrayList<String>(Arrays.asList("1", "5", "10"));
                     counts.add(messages.getRaw(sender, "tab.wish.count"));
                     return filter(counts, args[1]);
                 }
-                break;
-            case "wishquery":
-                if (args.length == 1) {
-                    List<String> pools = new ArrayList<String>(wishManager.getPools().keySet());
-                    pools.add(messages.getRaw(sender, "tab.wish.query_pool"));
-                    return filter(pools, args[0]);
-                }
-                break;
-            case "eventparticipate":
-                if (args.length == 1) {
-                    List<String> events = new ArrayList<String>(eventManager.getEventIds());
-                    events.add(messages.getRaw(sender, "tab.event.id"));
-                    return filter(events, args[0]);
+                if (args.length == 3) {
+                    if (!"menu".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.wish.execute"));
+                    }
                 }
                 break;
             case "event":
                 if (args.length == 1) {
-                    List<String> options = new ArrayList<String>(Arrays.asList("menu", "check", "participate"));
-                    options.addAll(eventManager.getEventIds());
-                    options.add(messages.getRaw(sender, "tab.event.id"));
+                    List<String> options = new ArrayList<String>();
+                    options.add("menu");
+                    options.addAll(eventManager.getActiveEventIds());
+                    options.add(messages.getRaw(sender, "tab.event.select"));
                     return filter(options, args[0]);
                 }
-                if (args.length == 2 && "participate".equalsIgnoreCase(args[0])) {
-                    List<String> events = new ArrayList<String>(eventManager.getEventIds());
-                    events.add(messages.getRaw(sender, "tab.event.id"));
-                    return filter(events, args[1]);
+                if (args.length == 2) {
+                    if ("menu".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
+                    }
+                    return Arrays.asList(messages.getRaw(sender, "tab.event.participate"));
                 }
                 break;
             case "exp":
                 if (args.length == 1) {
-                    List<String> dynamic = new ArrayList<String>(Arrays.asList("balance", "deposit", "withdraw", "pay", "menu", "exchange"));
-                    dynamic.add(messages.getRaw(sender, "tab.exp.action"));
-                    return filter(dynamic, args[0]);
+                    List<String> options = new ArrayList<String>();
+                    options.add("menu");
+                    options.add("deposit");
+                    options.add("withdraw");
+                    options.add("pay");
+                    options.add("exchange");
+                    options.add(messages.getRaw(sender, "tab.exp.select"));
+                    return filter(options, args[0]);
                 }
                 if (args.length == 2) {
-                    if ("exchange".equalsIgnoreCase(args[0])) {
+                    String sub = args[0].toLowerCase();
+                    if ("menu".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
+                    }
+                    if ("exchange".equals(sub)) {
                         List<String> exchanges = new ArrayList<String>(expManager.getExchangeIds());
-                        exchanges.add(messages.getRaw(sender, "tab.exp.exchange_id"));
+                        exchanges.add(messages.getRaw(sender, "tab.exp.select_exchange"));
                         return filter(exchanges, args[1]);
                     }
-                    if ("deposit".equalsIgnoreCase(args[0])) {
-                        return Arrays.asList("all", messages.getRaw(sender, "tab.exp.deposit_amount"));
+                    if ("deposit".equals(sub)) {
+                        List<String> opts = new ArrayList<String>();
+                        opts.add("all");
+                        opts.add(messages.getRaw(sender, "tab.exp.deposit_amount"));
+                        return filter(opts, args[1]);
                     }
-                    if ("withdraw".equalsIgnoreCase(args[0])) {
+                    if ("withdraw".equals(sub)) {
                         return Arrays.asList(messages.getRaw(sender, "tab.exp.withdraw_amount"));
                     }
-                    if ("pay".equalsIgnoreCase(args[0])) {
-                        return Arrays.asList(messages.getRaw(sender, "tab.exp.pay_target"));
+                    if ("pay".equals(sub)) {
+                        List<String> players = new ArrayList<String>();
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            players.add(p.getName());
+                        }
+                        players.add(messages.getRaw(sender, "tab.exp.select_player"));
+                        return filter(players, args[1]);
                     }
                 }
-                if (args.length == 3 && "pay".equalsIgnoreCase(args[0])) {
-                    return Arrays.asList(messages.getRaw(sender, "tab.exp.pay_amount"));
+                if (args.length == 3) {
+                    String sub = args[0].toLowerCase();
+                    if ("exchange".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.exp.do_exchange"));
+                    }
+                    if ("deposit".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.exp.do_deposit"));
+                    }
+                    if ("pay".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.exp.pay_amount"));
+                    }
+                }
+                if (args.length == 4) {
+                    if ("pay".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.exp.do_pay"));
+                    }
                 }
                 break;
             case "cdk":
-                // Do not expose CDK codes in tab completion, but show hint
                 if (args.length == 1) {
                     return Arrays.asList(messages.getRaw(sender, "tab.cdk.code"));
                 }
-                return Collections.emptyList();
+                if (args.length == 2) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.cdk.redeem"));
+                }
+                break;
             case "buy":
                 if (args.length == 1) {
-                    // Suggest product types or open menu
-                    List<String> types = new ArrayList<String>(Arrays.asList("menu", "vip", "bag", "mcd"));
-                    types.add(messages.getRaw(sender, "tab.buy.type"));
-                    return filter(types, args[0]);
+                    List<String> options = new ArrayList<String>();
+                    options.add("menu");
+                    options.add("vip");
+                    options.add("mcd");
+                    options.add("bag");
+                    options.add(messages.getRaw(sender, "tab.buy.select_type"));
+                    return filter(options, args[0]);
                 }
                 if (args.length == 2) {
                     String type = args[0].toLowerCase();
+                    if ("menu".equals(type)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
+                    }
+                    // Suggest levels based on type
                     List<String> levels = new ArrayList<String>();
                     if ("vip".equals(type) || "bag".equals(type)) {
                         levels.addAll(Arrays.asList("1", "2", "3", "4", "5", "6"));
+                        levels.add(messages.getRaw(sender, "tab.buy.select_level"));
                     } else if ("mcd".equals(type)) {
                         levels.addAll(Arrays.asList("1", "2"));
+                        levels.add(messages.getRaw(sender, "tab.buy.select_level"));
                     }
-                    levels.add(messages.getRaw(sender, "tab.buy.level"));
                     return filter(levels, args[1]);
+                }
+                if (args.length == 3) {
+                    if (!"menu".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.buy.purchase"));
+                    }
                 }
                 break;
             case "language":
@@ -796,18 +790,34 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     options.add("list");
                     options.add("reset");
                     options.add("default");
-                    options.add(messages.getRaw(sender, "tab.language.code"));
+                    options.add(messages.getRaw(sender, "tab.language.select"));
                     return filter(options, args[0]);
+                }
+                if (args.length == 2) {
+                    String sub = args[0].toLowerCase();
+                    if ("list".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.language.list"));
+                    }
+                    if ("reset".equals(sub) || "default".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.language.reset"));
+                    }
+                    return Arrays.asList(messages.getRaw(sender, "tab.language.set"));
                 }
                 break;
             case "mail":
                 if (args.length == 1) {
-                    List<String> actions = new ArrayList<String>(Arrays.asList("menu", "list", "claim", "delete"));
-                    actions.add(messages.getRaw(sender, "tab.mail.action"));
+                    List<String> actions = new ArrayList<String>();
+                    actions.add("menu");
+                    actions.add("claim");
+                    actions.add("delete");
+                    actions.add(messages.getRaw(sender, "tab.mail.select_action"));
                     return filter(actions, args[0]);
                 }
                 if (args.length == 2) {
                     String action = args[0].toLowerCase();
+                    if ("menu".equals(action)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
+                    }
                     if (!(sender instanceof Player)) {
                         return Collections.emptyList();
                     }
@@ -817,7 +827,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     for (MailManager.Mail mail : mails) {
                         boolean claimable = mail.hasCommands() && !mail.isClaimed();
                         boolean deletable = mail.isClaimed() || !mail.hasCommands();
-                        boolean unread = !mail.isRead();
 
                         if ("claim".equals(action) && !claimable) {
                             continue;
@@ -826,64 +835,105 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                             continue;
                         }
 
-                        String status;
-                        if (claimable) {
-                            status = "claimable";
-                        } else if (unread) {
-                            status = "unread";
-                        } else {
-                            status = "read";
-                        }
-
-                        // Only return the raw mail ID to keep parsing simple (no subject included)
                         suggestions.add(mail.getId());
                     }
+                    if ("claim".equals(action)) {
+                        suggestions.add(messages.getRaw(sender, "tab.mail.select_claim"));
+                    } else {
+                        suggestions.add(messages.getRaw(sender, "tab.mail.select_delete"));
+                    }
                     return filter(suggestions, args[1]);
+                }
+                if (args.length == 3) {
+                    String action = args[0].toLowerCase();
+                    if ("claim".equals(action)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.mail.do_claim"));
+                    }
+                    if ("delete".equals(action)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.mail.do_delete"));
+                    }
                 }
                 break;
             case "mailsend":
                 if (args.length == 1) {
-                    // Suggest online players
                     List<String> players = new ArrayList<String>();
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         players.add(p.getName());
                     }
-                    players.add(messages.getRaw(sender, "tab.mail.player"));
+                    players.add(messages.getRaw(sender, "tab.mail.select_player"));
                     return filter(players, args[0]);
                 }
                 if (args.length == 2) {
                     return Arrays.asList(messages.getRaw(sender, "tab.mail.subject"));
                 }
-                if (args.length >= 3) {
+                if (args.length == 3) {
                     return Arrays.asList(messages.getRaw(sender, "tab.mail.content"));
+                }
+                if (args.length >= 4) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.mail.do_send"));
                 }
                 break;
             case "mailadmin":
                 if (args.length == 1) {
-                    return filter(Arrays.asList("send", "template"), args[0]);
+                    List<String> options = new ArrayList<String>(Arrays.asList("send", "template"));
+                    options.add(messages.getRaw(sender, "tab.mail.admin_select"));
+                    return filter(options, args[0]);
                 }
                 if (args.length == 2) {
+                    if ("template".equalsIgnoreCase(args[0])) {
+                        List<String> templates = new ArrayList<String>(mailManager.getTemplateIds());
+                        templates.add(messages.getRaw(sender, "tab.mail.select_template"));
+                        return filter(templates, args[1]);
+                    }
                     List<String> players = new ArrayList<String>();
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         players.add(p.getName());
                     }
-                    players.add(messages.getRaw(sender, "tab.mail.player"));
+                    players.add(messages.getRaw(sender, "tab.mail.select_player"));
                     return filter(players, args[1]);
                 }
                 if (args.length == 3) {
+                    if ("template".equalsIgnoreCase(args[0])) {
+                        List<String> players = new ArrayList<String>();
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            players.add(p.getName());
+                        }
+                        players.add(messages.getRaw(sender, "tab.mail.select_player"));
+                        return filter(players, args[2]);
+                    }
                     return Arrays.asList(messages.getRaw(sender, "tab.mail.subject"));
+                }
+                if (args.length == 4) {
+                    if ("template".equalsIgnoreCase(args[0])) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.mail.template_send"));
+                    }
+                    return Arrays.asList(messages.getRaw(sender, "tab.mail.content"));
+                }
+                if (args.length >= 5) {
+                    return Arrays.asList(messages.getRaw(sender, "tab.mail.content"));
                 }
                 break;
             case "nekoreload":
-                if (args.length <= 1) {
-                    String prefix = args.length == 0 ? "" : args[0];
-                    return filter(Arrays.asList("reload"), prefix);
-                }
                 break;
             case "sgame":
                 if (args.length == 1) {
-                    List<String> actions = new ArrayList<String>(Arrays.asList("start", "continue", "status", "end", "abandon", "menu"));
+                    List<String> actions = new ArrayList<String>();
+                    actions.add("menu");
+                    actions.add("status");
+                    actions.add("abandon");
                     return filter(actions, args[0]);
+                }
+                if (args.length == 2) {
+                    String sub = args[0].toLowerCase();
+                    if ("menu".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
+                    }
+                    if ("status".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.sgame.status"));
+                    }
+                    if ("abandon".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.sgame.abandon"));
+                    }
                 }
                 break;
             default:
@@ -965,29 +1015,24 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         Player player = (Player) sender;
         if (args.length == 0) {
-            sender.sendMessage(messages.format(sender, "sgame.usage"));
+            // No args: open menu (will show start or continue based on game state)
+            strategyGameManager.continueGame(player);
             return true;
         }
         String sub = args[0].toLowerCase();
         switch (sub) {
-            case "start":
-                strategyGameManager.startGame(player);
-                break;
-            case "continue":
             case "menu":
                 strategyGameManager.continueGame(player);
                 break;
             case "status":
                 strategyGameManager.showStatus(player);
                 break;
-            case "end":
-                strategyGameManager.endGame(player);
-                break;
             case "abandon":
                 strategyGameManager.abandonGame(player);
                 break;
             default:
-                sender.sendMessage(messages.format(sender, "sgame.usage"));
+                // Default: open menu
+                strategyGameManager.continueGame(player);
                 break;
         }
         return true;
@@ -2212,6 +2257,17 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         Set<String> getEventIds() {
             return events.keySet();
+        }
+
+        Set<String> getActiveEventIds() {
+            Set<String> active = new java.util.HashSet<String>();
+            long now = System.currentTimeMillis();
+            for (EventDefinition def : events.values()) {
+                if (def.isEnabled() && def.isActive(now)) {
+                    active.add(def.getId());
+                }
+            }
+            return active;
         }
     }
 

@@ -178,17 +178,14 @@ public class StrategyGameManager {
     }
 
     /**
-     * Continue an existing game or show status.
+     * Continue an existing game or show start menu if no game exists.
      */
     public void continueGame(Player player) {
         String playerName = player.getName();
         GameSession session = getOrLoadSession(playerName);
-        if (session == null) {
-            player.sendMessage(messages.format(player, "sgame.no_active_game"));
-            return;
-        }
-        if (session.isEnded()) {
-            player.sendMessage(messages.format(player, "sgame.game_already_ended"));
+        if (session == null || session.isEnded()) {
+            // No active game, show start game menu
+            openStartGameMenu(player);
             return;
         }
         openMainMenu(player);
@@ -263,17 +260,16 @@ public class StrategyGameManager {
     // ============ Menu Operations ============
 
     /**
-     * Open the main game menu - now directly shows event selection.
-     * Players must choose from the random events/battles/shops displayed.
+     * Open the main game menu - shows start game if no active game,
+     * otherwise restores player to their current state in the game.
+     * This prevents players from re-rolling by closing menus.
      */
     public void openMainMenu(Player player) {
         GameSession session = getOrLoadSession(player.getName());
-        if (session == null) {
-            player.sendMessage(messages.format(player, "sgame.no_active_game"));
-            return;
-        }
-        if (session.isEnded()) {
-            player.sendMessage(messages.format(player, "sgame.game_already_ended"));
+        
+        // If no active game or game ended, show start game menu
+        if (session == null || session.isEnded()) {
+            openStartGameMenu(player);
             return;
         }
 
@@ -283,8 +279,81 @@ public class StrategyGameManager {
             return;
         }
 
-        // Directly show event selection - no more separate main menu
+        // IMPORTANT: Check and restore intermediate states to prevent re-rolling
+        
+        // 1. Check if in active battle (has enemy with HP)
+        if (session.getCurrentEnemyId() != null && session.getCurrentEnemyHp() > 0) {
+            // Resume battle action selection
+            openBattleActionMenu(player);
+            return;
+        }
+        
+        // 2. Check if currently in an event (story/shop/battle)
+        String currentEventId = session.getCurrentEventId();
+        if (currentEventId != null) {
+            GameEvent event = findEvent(currentEventId);
+            if (event != null) {
+                String eventType = event.getEventType();
+                if ("battle".equals(eventType)) {
+                    // Battle event but no enemy HP - need to start battle
+                    openBattleMenu(player);
+                } else if ("shop".equals(eventType)) {
+                    openShopMenu(player);
+                } else {
+                    openEventMenu(player);
+                }
+                return;
+            }
+        }
+
+        // No intermediate state - show event selection
         openEventSelectionMenu(player);
+    }
+
+    /**
+     * Open the start game menu - shown when player has no active game.
+     * Allows starting a new game from the menu interface.
+     */
+    private void openStartGameMenu(Player player) {
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.start_game_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.START_GAME), layout.getSize(), title);
+
+        // Game introduction / story
+        ItemStack storyItem = createItem(Material.WRITTEN_BOOK,
+            messages.format(player, "menu.sgame.story_title"),
+            new String[]{
+                messages.format(player, "menu.sgame.story_desc1"),
+                messages.format(player, "menu.sgame.story_desc2"),
+                messages.format(player, "menu.sgame.story_desc3")
+            });
+        safeSet(inv, 4, storyItem);
+
+        // Start new game button
+        Map<String, String> startMap = new HashMap<String, String>();
+        startMap.put("starting_gold", String.valueOf(startingGold));
+        startMap.put("starting_health", String.valueOf(startingHealth));
+        startMap.put("max_stages", String.valueOf(maxStages));
+        
+        ItemStack startItem = createItem(Material.LIME_WOOL,
+            messages.format(player, "menu.sgame.start_button"),
+            new String[]{
+                messages.format(player, "menu.sgame.start_button_lore1", startMap),
+                messages.format(player, "menu.sgame.start_button_lore2", startMap),
+                messages.format(player, "menu.sgame.start_button_lore3", startMap),
+                "",
+                messages.format(player, "menu.sgame.click_to_start"),
+                "ID:start_new_game"
+            });
+        safeSet(inv, 13, startItem);
+
+        // Close button
+        ItemStack closeItem = createItem(Material.BARRIER,
+            messages.format(player, "menu.sgame.close"),
+            new String[]{"ID:close"});
+        safeSet(inv, layout.getCloseSlot(), closeItem);
+
+        player.openInventory(inv);
     }
 
     /**
@@ -373,8 +442,27 @@ public class StrategyGameManager {
             });
         safeSet(inv, 4, statusItem);
 
-        // Use weighted selection for events based on history
-        List<GameEvent> selectedEvents = selectEventsForStage(session, 3);
+        // Only generate events if not already generated for this stage
+        List<String> eventIds = session.getCurrentStageEvents();
+        if (!session.isStageEventsGenerated() || eventIds.isEmpty()) {
+            List<GameEvent> selectedEvents = selectEventsForStage(session, 3);
+            session.clearCurrentStageEvents();
+            for (GameEvent evt : selectedEvents) {
+                session.addCurrentStageEvent(evt.getId());
+            }
+            session.setStageEventsGenerated(true);
+            eventIds = session.getCurrentStageEvents();
+            saveSession(session);
+        }
+        
+        // Get the actual events from stored IDs
+        List<GameEvent> selectedEvents = new ArrayList<GameEvent>();
+        for (String eventId : eventIds) {
+            GameEvent evt = findEvent(eventId);
+            if (evt != null) {
+                selectedEvents.add(evt);
+            }
+        }
         
         int[] eventSlots = {11, 13, 15};
         for (int i = 0; i < selectedEvents.size(); i++) {
@@ -1137,6 +1225,13 @@ public class StrategyGameManager {
         }
 
         MenuType menuType = holder.getMenuType();
+        
+        // Handle start game menu separately since there's no active session
+        if (menuType == MenuType.START_GAME) {
+            handleStartGameMenuClick(player, id);
+            return;
+        }
+        
         GameSession session = getOrLoadSession(player.getName());
         if (session == null || session.isEnded()) {
             player.closeInventory();
@@ -1146,6 +1241,9 @@ public class StrategyGameManager {
         switch (menuType) {
             case MAIN:
                 handleMainMenuClick(player, session, id);
+                break;
+            case START_GAME:
+                // Already handled above
                 break;
             case EVENT_SELECTION:
                 handleEventSelectionClick(player, session, id);
@@ -1191,6 +1289,18 @@ public class StrategyGameManager {
         }
     }
 
+    /**
+     * Handle clicks in the start game menu.
+     */
+    private void handleStartGameMenuClick(Player player, String id) {
+        if ("start_new_game".equals(id)) {
+            player.closeInventory();
+            startGame(player);
+        } else if ("close".equals(id)) {
+            player.closeInventory();
+        }
+    }
+
     private void handleEventSelectionClick(Player player, GameSession session, String id) {
         // Equipment button in event selection
         if ("equipment".equals(id)) {
@@ -1206,20 +1316,21 @@ public class StrategyGameManager {
                 return;
             }
 
-            // Check requirements
+            // Check and apply requirements
             if (event.hasRequirement()) {
                 EventRequirement req = event.getRequirement();
                 if (!req.checkRequirements(session)) {
                     player.sendMessage(messages.colorize(resolveI18n(player, req.getFailText())));
                     return;
                 }
-                // Apply gold cost if any
+                // Apply gold cost
                 req.applyGoldCost(session);
             }
 
+            // Immediately set current event and save - player is now committed
             session.setCurrentEventId(eventId);
-            session.addVisitedEvent(eventId); // Track visited event for weighted selection
-            session.setLastEventId(eventId); // Track last event for followup weighting
+            session.addVisitedEvent(eventId);
+            session.setLastEventId(eventId);
             saveSession(session);
             
             // Route to appropriate menu based on event type
@@ -1564,7 +1675,9 @@ public class StrategyGameManager {
             }
         }
 
+        // Clear battle and event state
         session.setCurrentEnemyId(null);
+        session.setCurrentEventId(null);
         saveSession(session);
         
         player.closeInventory();
@@ -1576,10 +1689,67 @@ public class StrategyGameManager {
      * - ATTACK beats SKILL (interrupts skill casting)
      * - SKILL beats DEFENSE (bypasses defense)
      * - DEFENSE beats ATTACK (blocks damage)
+     * 
+     * Enhanced with:
+     * - Enemy special skills
+     * - Status effects (poison, burn, freeze, stun)
+     * - Critical hits and dodge mechanics
      */
     private void resolveBattleRound(Player player, GameSession session, BattleEnemy enemy, BattleAction playerAction) {
-        // Determine enemy action (random weighted by enemy stats)
-        BattleAction enemyAction = pickEnemyAction(enemy);
+        Map<String, String> resultMap = new HashMap<String, String>();
+        resultMap.put("enemy", resolveI18n(player, enemy.getName()));
+        resultMap.put("round", String.valueOf(session.getBattleRound()));
+        
+        // Process player's status effects at the start of the round
+        int statusDamage = session.processStatusEffects();
+        if (statusDamage > 0) {
+            session.addHealth(-statusDamage);
+            Map<String, String> statusMap = new HashMap<String, String>();
+            statusMap.put("damage", String.valueOf(statusDamage));
+            player.sendMessage(messages.format(player, "sgame.status_damage", statusMap));
+            
+            // Check if player died from status damage
+            if (session.getHealth() <= 0) {
+                handleGameOverDeath(player, session);
+                return;
+            }
+        }
+        
+        // Check if player is stunned or frozen
+        if (session.isStunned() || session.isFrozen()) {
+            String statusType = session.isStunned() ? "stun" : "freeze";
+            player.sendMessage(messages.format(player, "sgame.status_skip_turn_" + statusType));
+            
+            // Enemy gets a free attack
+            int freeDamage = Math.max(1, enemy.getAttack() / 2);
+            session.addHealth(-freeDamage);
+            
+            Map<String, String> freeMap = new HashMap<String, String>();
+            freeMap.put("damage", String.valueOf(freeDamage));
+            player.sendMessage(messages.format(player, "sgame.enemy_free_attack", freeMap));
+            
+            if (session.getHealth() <= 0) {
+                handleGameOverDeath(player, session);
+                return;
+            }
+            
+            session.incrementBattleRound();
+            saveSession(session);
+            openBattleActionMenu(player);
+            return;
+        }
+        
+        // Check if enemy uses a special skill
+        EnemySkill usedSkill = tryUseEnemySkill(enemy);
+        
+        // Determine enemy action
+        BattleAction enemyAction;
+        if (usedSkill != null) {
+            // Enemy is using a skill
+            enemyAction = BattleAction.SKILL;
+        } else {
+            enemyAction = pickEnemyAction(enemy);
+        }
         
         // Calculate base damage values
         int playerAttack = session.getAttack() + getEquipmentAttackBonus(session);
@@ -1596,32 +1766,58 @@ public class StrategyGameManager {
         int playerDamageDealt = 0;
         int enemyDamageDealt = 0;
         String roundResult;
+        boolean playerCrit = false;
+        boolean enemyCrit = false;
+        boolean playerDodged = false;
+        boolean enemyDodged = false;
+        
+        // Check for player critical hit (10% base chance)
+        int playerCritChance = 10 + (playerMagic / 10);
+        playerCrit = random.nextInt(100) < playerCritChance;
+        
+        // Check for enemy critical hit
+        enemyCrit = random.nextInt(100) < enemy.getCritChance();
+        
+        // Check for enemy dodge
+        enemyDodged = random.nextInt(100) < enemy.getDodgeChance();
+        
+        // Player dodge based on defense stat
+        playerDodged = random.nextInt(100) < (playerDefense / 4);
         
         // Determine advantage: 0 = tie, 1 = player wins RPS, -1 = enemy wins RPS
         int advantage = determineRpsAdvantage(playerAction, enemyAction);
         
-        Map<String, String> resultMap = new HashMap<String, String>();
         resultMap.put("player_action", getActionName(player, playerAction));
         resultMap.put("enemy_action", getActionName(player, enemyAction));
-        resultMap.put("enemy", resolveI18n(player, enemy.getName()));
-        resultMap.put("round", String.valueOf(session.getBattleRound()));
         
         if (advantage == 1) {
             // Player wins RPS - deal increased damage, take reduced damage
             if (playerAction == BattleAction.ATTACK) {
                 // Attack beats Skill - interrupt enemy and deal full damage
-                playerDamageDealt = Math.max(1, playerAttack - (enemyDefense / 4) + random.nextInt(damageVariance));
+                if (!enemyDodged) {
+                    playerDamageDealt = Math.max(1, playerAttack - (enemyDefense / 4) + random.nextInt(damageVariance));
+                    if (playerCrit) {
+                        playerDamageDealt = (int)(playerDamageDealt * 1.5);
+                    }
+                }
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_attack_beats_skill");
             } else if (playerAction == BattleAction.SKILL) {
                 // Skill beats Defense - bypass defense and deal magic damage
                 session.addMagic(-10); // Consume magic
-                playerDamageDealt = Math.max(1, (playerMagic / 2) + random.nextInt(damageVariance));
+                if (!enemyDodged) {
+                    playerDamageDealt = Math.max(1, (playerMagic / 2) + random.nextInt(damageVariance));
+                    if (playerCrit) {
+                        playerDamageDealt = (int)(playerDamageDealt * 1.5);
+                    }
+                }
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_skill_beats_defense");
             } else {
                 // Defense beats Attack - block enemy and counter attack
-                playerDamageDealt = Math.max(1, playerDefense / 2);
+                if (!enemyDodged) {
+                    playerDamageDealt = Math.max(1, playerDefense / 2);
+                }
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_defense_beats_attack");
             }
@@ -1630,7 +1826,12 @@ public class StrategyGameManager {
             if (enemyAction == BattleAction.ATTACK) {
                 // Enemy attack beats player skill
                 playerDamageDealt = 0;
-                enemyDamageDealt = Math.max(1, enemyAttackStat - (playerDefense / 4) + random.nextInt(damageVariance));
+                if (!playerDodged) {
+                    enemyDamageDealt = Math.max(1, enemyAttackStat - (playerDefense / 4) + random.nextInt(damageVariance));
+                    if (enemyCrit) {
+                        enemyDamageDealt = (int)(enemyDamageDealt * enemy.getCritMultiplier());
+                    }
+                }
                 if (playerAction == BattleAction.SKILL) {
                     session.addMagic(-5); // Partial magic cost for interrupted skill
                 }
@@ -1638,23 +1839,49 @@ public class StrategyGameManager {
             } else if (enemyAction == BattleAction.SKILL) {
                 // Enemy skill beats player defense
                 playerDamageDealt = 0;
-                enemyDamageDealt = Math.max(1, (enemy.getMagic() / 2) + random.nextInt(damageVariance));
+                if (!playerDodged) {
+                    if (usedSkill != null) {
+                        enemyDamageDealt = Math.max(1, usedSkill.getPower() + random.nextInt(damageVariance));
+                        // Apply status effect from skill
+                        if (usedSkill.hasStatusEffect()) {
+                            session.addStatusEffect(usedSkill.getStatusEffect(), 
+                                usedSkill.getStatusDuration(), usedSkill.getStatusPower());
+                            Map<String, String> effectMap = new HashMap<String, String>();
+                            effectMap.put("effect", messages.format(player, "sgame.status_" + usedSkill.getStatusEffect()));
+                            effectMap.put("duration", String.valueOf(usedSkill.getStatusDuration()));
+                            player.sendMessage(messages.format(player, "sgame.status_applied", effectMap));
+                        }
+                    } else {
+                        enemyDamageDealt = Math.max(1, (enemy.getMagic() / 2) + random.nextInt(damageVariance));
+                    }
+                    if (enemyCrit) {
+                        enemyDamageDealt = (int)(enemyDamageDealt * enemy.getCritMultiplier());
+                    }
+                }
                 roundResult = messages.format(player, "sgame.round_enemy_skill_beats_defense");
             } else {
                 // Enemy defense beats player attack
                 playerDamageDealt = 0;
-                enemyDamageDealt = Math.max(1, enemyDefense / 3);
+                if (!playerDodged) {
+                    enemyDamageDealt = Math.max(1, enemyDefense / 3);
+                }
                 roundResult = messages.format(player, "sgame.round_enemy_defense_beats_attack");
             }
         } else {
             // Tie - both deal reduced damage
             if (playerAction == BattleAction.SKILL) {
                 session.addMagic(-10);
-                playerDamageDealt = Math.max(1, playerMagic / 4 + random.nextInt(3));
+                if (!enemyDodged) {
+                    playerDamageDealt = Math.max(1, playerMagic / 4 + random.nextInt(3));
+                }
             } else {
-                playerDamageDealt = Math.max(1, playerAttack / 3 + random.nextInt(3));
+                if (!enemyDodged) {
+                    playerDamageDealt = Math.max(1, playerAttack / 3 + random.nextInt(3));
+                }
             }
-            enemyDamageDealt = Math.max(1, enemyAttackStat / 3 + random.nextInt(3));
+            if (!playerDodged) {
+                enemyDamageDealt = Math.max(1, enemyAttackStat / 3 + random.nextInt(3));
+            }
             roundResult = messages.format(player, "sgame.round_tie");
         }
         
@@ -1666,18 +1893,34 @@ public class StrategyGameManager {
         resultMap.put("enemy_damage", String.valueOf(enemyDamageDealt));
         resultMap.put("result", roundResult);
         
+        // Add crit/dodge info to message
+        if (playerCrit && playerDamageDealt > 0) {
+            resultMap.put("crit_info", messages.format(player, "sgame.player_crit"));
+        } else if (enemyCrit && enemyDamageDealt > 0) {
+            resultMap.put("crit_info", messages.format(player, "sgame.enemy_crit"));
+        } else if (enemyDodged && playerDamageDealt == 0 && advantage >= 0) {
+            resultMap.put("crit_info", messages.format(player, "sgame.enemy_dodged"));
+        } else if (playerDodged && enemyDamageDealt == 0 && advantage <= 0) {
+            resultMap.put("crit_info", messages.format(player, "sgame.player_dodged"));
+        } else {
+            resultMap.put("crit_info", "");
+        }
+        
         // Send round result message
         player.sendMessage(messages.format(player, "sgame.battle_round_result", resultMap));
         
         // Check if battle ended
         if (session.getCurrentEnemyHp() <= 0) {
-            // Victory!
+            // Victory! Clear status effects
+            session.clearStatusEffects();
             int goldReward = enemy.getGoldReward();
             session.addGold(goldReward);
             session.incrementBattleVictories();
             session.incrementStage();
+            // Clear battle and event state - battle is complete
             session.setCurrentEnemyId(null);
             session.setCurrentEnemyHp(0);
+            session.setCurrentEventId(null);
             saveSession(session);
             
             Map<String, String> victoryMap = new HashMap<String, String>();
@@ -1745,6 +1988,23 @@ public class StrategyGameManager {
     }
 
     /**
+     * Try to use one of the enemy's special skills.
+     * Returns the skill if one is used, null otherwise.
+     */
+    private EnemySkill tryUseEnemySkill(BattleEnemy enemy) {
+        if (!enemy.hasSkills()) {
+            return null;
+        }
+        
+        for (EnemySkill skill : enemy.getSkills()) {
+            if (random.nextInt(100) < skill.getChance()) {
+                return skill;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Get localized action name for display.
      */
     private String getActionName(Player player, BattleAction action) {
@@ -1766,6 +2026,8 @@ public class StrategyGameManager {
         fleeChance = Math.min(90, Math.max(20, fleeChance)); // Clamp between 20-90%
         
         if (random.nextInt(100) < fleeChance) {
+            // Clear status effects on successful flee
+            session.clearStatusEffects();
             player.sendMessage(messages.format(player, "sgame.flee_success"));
         } else {
             int damage = Math.max(1, enemy.getDamage() / 2 - session.getDefense() / 3);
@@ -1990,15 +2252,35 @@ public class StrategyGameManager {
      * - Base weight from config
      * - Boost if event is a followup to last completed event
      * - Requirements check (excluded if prerequisites not met)
+     * - Fixed stage events (must appear at specific stages)
+     * - Exclusive events (only that event appears at the stage)
      */
     private List<GameEvent> selectEventsForStage(GameSession session, int count) {
+        int currentStage = session.getCurrentStage();
+        
+        // First, check for exclusive fixed-stage events (like final boss)
+        for (GameEvent event : gameEvents) {
+            if (event.hasFixedStage() && event.getFixedStage() == currentStage && event.isExclusive()) {
+                // This is an exclusive event for this stage - only return this event
+                List<GameEvent> exclusive = new ArrayList<GameEvent>();
+                exclusive.add(event);
+                return exclusive;
+            }
+        }
+        
         List<GameEvent> available = new ArrayList<GameEvent>();
+        List<GameEvent> fixedForThisStage = new ArrayList<GameEvent>();
         Map<GameEvent, Integer> weights = new HashMap<GameEvent, Integer>();
         
         String lastEventId = session.getLastEventId();
         GameEvent lastEvent = lastEventId != null ? findEvent(lastEventId) : null;
         
         for (GameEvent event : gameEvents) {
+            // Skip events with fixed stages that don't match current stage
+            if (event.hasFixedStage() && event.getFixedStage() != currentStage) {
+                continue;
+            }
+            
             // Check prerequisites - must have visited all required events
             if (event.hasPrerequisites()) {
                 boolean meetsPrereqs = true;
@@ -2011,6 +2293,11 @@ public class StrategyGameManager {
                 if (!meetsPrereqs) {
                     continue; // Skip this event
                 }
+            }
+            
+            // If this is a fixed-stage event for current stage, add to priority list
+            if (event.hasFixedStage() && event.getFixedStage() == currentStage) {
+                fixedForThisStage.add(event);
             }
             
             available.add(event);
@@ -2026,8 +2313,16 @@ public class StrategyGameManager {
             weights.put(event, weight);
         }
         
-        // Select events using weighted random
+        // Start with fixed events for this stage (they must appear)
         List<GameEvent> selected = new ArrayList<GameEvent>();
+        for (GameEvent fixed : fixedForThisStage) {
+            if (selected.size() < count) {
+                selected.add(fixed);
+                available.remove(fixed);
+            }
+        }
+        
+        // Fill remaining slots with weighted random selection
         while (selected.size() < count && !available.isEmpty()) {
             GameEvent chosen = weightedRandomSelect(available, weights);
             if (chosen != null) {
@@ -2205,6 +2500,13 @@ public class StrategyGameManager {
         session.setCurrentEnemyMaxHp(data.getInt("sgame.current_enemy_max_hp", 0));
         session.setBattleRound(data.getInt("sgame.battle_round", 1));
         
+        // Load current stage events
+        List<String> stageEvents = data.getStringList("sgame.current_stage_events");
+        for (String eventId : stageEvents) {
+            session.addCurrentStageEvent(eventId);
+        }
+        session.setStageEventsGenerated(data.getBoolean("sgame.stage_events_generated", false));
+        
         // Load inventory
         ConfigurationSection invSection = data.getConfigurationSection("sgame.inventory");
         if (invSection != null) {
@@ -2258,6 +2560,10 @@ public class StrategyGameManager {
         data.set("sgame.current_enemy_max_hp", session.getCurrentEnemyMaxHp());
         data.set("sgame.battle_round", session.getBattleRound());
         
+        // Save current stage events
+        data.set("sgame.current_stage_events", session.getCurrentStageEvents());
+        data.set("sgame.stage_events_generated", session.isStageEventsGenerated());
+        
         // Save inventory
         data.set("sgame.inventory", null);
         for (Map.Entry<String, Integer> entry : session.getInventory().entrySet()) {
@@ -2289,7 +2595,7 @@ public class StrategyGameManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, EVENT_SELECTION, EVENT, BATTLE, BATTLE_ACTION, SHOP, EQUIPMENT
+        MAIN, START_GAME, EVENT_SELECTION, EVENT, BATTLE, BATTLE_ACTION, SHOP, EQUIPMENT
     }
 
     /**
@@ -2352,6 +2658,13 @@ public class StrategyGameManager {
         
         // Shop offering tracking - stores current shop items with discounts
         private final List<ShopOffering> currentShopOfferings;
+        
+        // Current stage event options - only refreshed when entering new stage
+        private final List<String> currentStageEvents;
+        private boolean stageEventsGenerated;
+        
+        // Status effects tracking (effect_name -> [duration, power])
+        private final Map<String, int[]> statusEffects;
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -2364,6 +2677,9 @@ public class StrategyGameManager {
             this.inventory = new HashMap<String, Integer>();
             this.visitedEvents = new ArrayList<String>();
             this.currentShopOfferings = new ArrayList<ShopOffering>();
+            this.currentStageEvents = new ArrayList<String>();
+            this.stageEventsGenerated = false;
+            this.statusEffects = new HashMap<String, int[]>();
             
             // Default combat stats
             this.attack = 10;
@@ -2382,7 +2698,11 @@ public class StrategyGameManager {
         void setMaxHealth(int maxHealth) { this.maxHealth = maxHealth; }
         int getCurrentStage() { return currentStage; }
         void setCurrentStage(int stage) { this.currentStage = stage; }
-        void incrementStage() { this.currentStage++; }
+        void incrementStage() { 
+            this.currentStage++; 
+            // Clear current stage events so new ones are generated for next stage
+            clearCurrentStageEvents();
+        }
         int getBattleVictories() { return battleVictories; }
         int getVictories() { return battleVictories; } // Alias for getBattleVictories
         void setBattleVictories(int victories) { this.battleVictories = victories; }
@@ -2450,6 +2770,16 @@ public class StrategyGameManager {
             return null;
         }
         
+        // Current stage events management
+        List<String> getCurrentStageEvents() { return currentStageEvents; }
+        void clearCurrentStageEvents() { 
+            currentStageEvents.clear(); 
+            stageEventsGenerated = false;
+        }
+        void addCurrentStageEvent(String eventId) { currentStageEvents.add(eventId); }
+        boolean isStageEventsGenerated() { return stageEventsGenerated; }
+        void setStageEventsGenerated(boolean generated) { this.stageEventsGenerated = generated; }
+        
         // Inventory management
         Map<String, Integer> getInventory() { return inventory; }
         int getItemCount(String itemId) { 
@@ -2475,6 +2805,60 @@ public class StrategyGameManager {
         // Calculate total stats including equipment bonuses
         int getTotalAttack() { return attack; } // Equipment bonus added when calculated
         int getTotalDefense() { return defense; }
+        
+        // Status effects management
+        Map<String, int[]> getStatusEffects() { return statusEffects; }
+        boolean hasStatusEffect(String effect) { 
+            return statusEffects.containsKey(effect) && statusEffects.get(effect)[0] > 0; 
+        }
+        void addStatusEffect(String effect, int duration, int power) {
+            statusEffects.put(effect, new int[]{duration, power});
+        }
+        void removeStatusEffect(String effect) {
+            statusEffects.remove(effect);
+        }
+        void clearStatusEffects() {
+            statusEffects.clear();
+        }
+        /**
+         * Process status effects at the start of each round.
+         * Returns total damage taken from DoT effects.
+         */
+        int processStatusEffects() {
+            int totalDamage = 0;
+            List<String> expired = new ArrayList<String>();
+            
+            for (Map.Entry<String, int[]> entry : statusEffects.entrySet()) {
+                String effect = entry.getKey();
+                int[] data = entry.getValue();
+                int duration = data[0];
+                int power = data[1];
+                
+                // Apply damage for DoT effects
+                if ("poison".equals(effect) || "burn".equals(effect)) {
+                    totalDamage += power;
+                }
+                
+                // Reduce duration
+                data[0] = duration - 1;
+                if (data[0] <= 0) {
+                    expired.add(effect);
+                }
+            }
+            
+            // Remove expired effects
+            for (String effect : expired) {
+                statusEffects.remove(effect);
+            }
+            
+            return totalDamage;
+        }
+        boolean isStunned() {
+            return hasStatusEffect("stun");
+        }
+        boolean isFrozen() {
+            return hasStatusEffect("freeze");
+        }
     }
 
     private static class GameEvent {
@@ -2487,10 +2871,13 @@ public class StrategyGameManager {
         private final int weight; // Base weight for random selection
         private final List<String> followupEvents; // Events that get boosted weight after this one
         private final List<String> prerequisiteEvents; // Must have visited these events first
+        private final int fixedStage; // Stage where this event MUST appear (-1 = no fixed stage)
+        private final boolean exclusive; // If true, only this event appears at fixed stage
 
         GameEvent(String id, String name, List<String> description, List<EventChoice> choices, 
                   String eventType, EventRequirement requirement, int weight, 
-                  List<String> followupEvents, List<String> prerequisiteEvents) {
+                  List<String> followupEvents, List<String> prerequisiteEvents,
+                  int fixedStage, boolean exclusive) {
             this.id = id;
             this.name = name;
             this.description = description != null ? description : new ArrayList<String>();
@@ -2500,6 +2887,8 @@ public class StrategyGameManager {
             this.weight = weight > 0 ? weight : 10;
             this.followupEvents = followupEvents != null ? followupEvents : new ArrayList<String>();
             this.prerequisiteEvents = prerequisiteEvents != null ? prerequisiteEvents : new ArrayList<String>();
+            this.fixedStage = fixedStage;
+            this.exclusive = exclusive;
         }
 
         static GameEvent fromSection(String id, ConfigurationSection section) {
@@ -2510,6 +2899,8 @@ public class StrategyGameManager {
             int weight = section.getInt("weight", 10);
             List<String> followups = section.getStringList("followup_events");
             List<String> prereqs = section.getStringList("prerequisite_events");
+            int fixedStage = section.getInt("fixed_stage", -1);
+            boolean exclusive = section.getBoolean("exclusive", false);
             
             List<EventChoice> choices = new ArrayList<EventChoice>();
             List<Map<?, ?>> choiceList = section.getMapList("choices");
@@ -2520,7 +2911,7 @@ public class StrategyGameManager {
                 }
             }
             
-            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs);
+            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs, fixedStage, exclusive);
         }
 
         String getId() { return id; }
@@ -2534,6 +2925,9 @@ public class StrategyGameManager {
         List<String> getFollowupEvents() { return followupEvents; }
         List<String> getPrerequisiteEvents() { return prerequisiteEvents; }
         boolean hasPrerequisites() { return !prerequisiteEvents.isEmpty(); }
+        int getFixedStage() { return fixedStage; }
+        boolean hasFixedStage() { return fixedStage >= 0; }
+        boolean isExclusive() { return exclusive; }
     }
 
     /**
@@ -2782,9 +3176,15 @@ public class StrategyGameManager {
         private final int attack;
         private final int defense;
         private final int magic;
+        // Enemy special abilities
+        private final List<EnemySkill> skills;
+        private final int critChance; // Percentage chance for critical hit
+        private final double critMultiplier; // Damage multiplier on crit
+        private final int dodgeChance; // Percentage chance to dodge
 
         BattleEnemy(String id, String name, String description, int power, int damage, int goldReward, int minStage,
-                   int health, int attack, int defense, int magic) {
+                   int health, int attack, int defense, int magic,
+                   List<EnemySkill> skills, int critChance, double critMultiplier, int dodgeChance) {
             this.id = id;
             this.name = name != null ? name : id;
             this.description = description != null ? description : "";
@@ -2796,6 +3196,10 @@ public class StrategyGameManager {
             this.attack = attack > 0 ? attack : 10;
             this.defense = defense > 0 ? defense : 5;
             this.magic = magic > 0 ? magic : 0;
+            this.skills = skills != null ? skills : new ArrayList<EnemySkill>();
+            this.critChance = Math.min(50, Math.max(0, critChance));
+            this.critMultiplier = critMultiplier > 1.0 ? critMultiplier : 1.5;
+            this.dodgeChance = Math.min(40, Math.max(0, dodgeChance));
         }
 
         static BattleEnemy fromMap(Map<?, ?> raw) {
@@ -2813,7 +3217,26 @@ public class StrategyGameManager {
             int attack = parseInt(raw.get("attack"));
             int defense = parseInt(raw.get("defense"));
             int magic = parseInt(raw.get("magic"));
-            return new BattleEnemy(id, name, desc, power, damage, gold, minStage, health, attack, defense, magic);
+            int critChance = parseInt(raw.get("crit_chance"));
+            double critMult = parseDouble(raw.get("crit_multiplier"));
+            int dodgeChance = parseInt(raw.get("dodge_chance"));
+            
+            // Parse skills
+            List<EnemySkill> skills = new ArrayList<EnemySkill>();
+            Object skillsObj = raw.get("skills");
+            if (skillsObj instanceof List) {
+                for (Object skillRaw : (List<?>) skillsObj) {
+                    if (skillRaw instanceof Map) {
+                        EnemySkill skill = EnemySkill.fromMap((Map<?, ?>) skillRaw);
+                        if (skill != null) {
+                            skills.add(skill);
+                        }
+                    }
+                }
+            }
+            
+            return new BattleEnemy(id, name, desc, power, damage, gold, minStage, health, attack, defense, magic,
+                                  skills, critChance, critMult, dodgeChance);
         }
 
         String getId() { return id; }
@@ -2827,6 +3250,64 @@ public class StrategyGameManager {
         int getAttack() { return attack; }
         int getDefense() { return defense; }
         int getMagic() { return magic; }
+        List<EnemySkill> getSkills() { return skills; }
+        boolean hasSkills() { return !skills.isEmpty(); }
+        int getCritChance() { return critChance; }
+        double getCritMultiplier() { return critMultiplier; }
+        int getDodgeChance() { return dodgeChance; }
+    }
+
+    /**
+     * Represents an enemy special skill/ability.
+     */
+    private static class EnemySkill {
+        private final String id;
+        private final String name;
+        private final String description;
+        private final String type; // "damage", "heal", "buff", "debuff", "status"
+        private final int power; // Damage/heal amount
+        private final int chance; // Percentage chance to use this skill
+        private final String statusEffect; // "poison", "burn", "freeze", "stun" etc.
+        private final int statusDuration; // Number of rounds the effect lasts
+        private final int statusPower; // Damage per turn for DoT effects
+        
+        EnemySkill(String id, String name, String description, String type, int power, int chance,
+                   String statusEffect, int statusDuration, int statusPower) {
+            this.id = id;
+            this.name = name != null ? name : id;
+            this.description = description != null ? description : "";
+            this.type = type != null ? type : "damage";
+            this.power = power;
+            this.chance = Math.min(100, Math.max(1, chance));
+            this.statusEffect = statusEffect;
+            this.statusDuration = statusDuration > 0 ? statusDuration : 2;
+            this.statusPower = statusPower;
+        }
+        
+        static EnemySkill fromMap(Map<?, ?> raw) {
+            if (raw == null) return null;
+            String id = raw.get("id") != null ? raw.get("id").toString() : "unknown";
+            String name = raw.get("name") != null ? raw.get("name").toString() : id;
+            String desc = raw.get("description") != null ? raw.get("description").toString() : "";
+            String type = raw.get("type") != null ? raw.get("type").toString() : "damage";
+            int power = parseInt(raw.get("power"));
+            int chance = parseInt(raw.get("chance"));
+            String statusEffect = raw.get("status_effect") != null ? raw.get("status_effect").toString() : null;
+            int statusDuration = parseInt(raw.get("status_duration"));
+            int statusPower = parseInt(raw.get("status_power"));
+            return new EnemySkill(id, name, desc, type, power, chance, statusEffect, statusDuration, statusPower);
+        }
+        
+        String getId() { return id; }
+        String getName() { return name; }
+        String getDescription() { return description; }
+        String getType() { return type; }
+        int getPower() { return power; }
+        int getChance() { return chance; }
+        String getStatusEffect() { return statusEffect; }
+        int getStatusDuration() { return statusDuration; }
+        int getStatusPower() { return statusPower; }
+        boolean hasStatusEffect() { return statusEffect != null && !statusEffect.isEmpty(); }
     }
 
     /**
@@ -2932,6 +3413,17 @@ public class StrategyGameManager {
             return Integer.parseInt(o.toString());
         } catch (NumberFormatException e) {
             return 0;
+        }
+    }
+    
+    private static double parseDouble(Object o) {
+        if (o == null) {
+            return 0.0;
+        }
+        try {
+            return Double.parseDouble(o.toString());
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
     }
 }

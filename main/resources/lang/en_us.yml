@@ -535,6 +535,46 @@ sgame:
         choice1:
           text: "&aBrowse equipment"
           result: "&7Welcome to my blacksmith shop!"
+      # Fixed stage events
+      starter_shop:
+        name: "&aStarter Supply Station"
+        desc1: "&7Welcome to the start of your adventure!"
+        desc2: "&7Basic supplies are available here."
+        choice1:
+          text: "&aView goods"
+          result: "&7Good luck on your journey!"
+      rest_station:
+        name: "&bRoadside Rest Stop"
+        desc1: "&7You arrive at a peaceful resting spot."
+        desc2: "&7Recover your strength before the next challenges."
+        choice1:
+          text: "&aPaid rest (costs 15 gold)"
+          result: "&7You rested well and recovered a lot of health!"
+        choice2:
+          text: "&eQuick rest"
+          result: "&7You took a short break and recovered some health."
+        choice3:
+          text: "&cKeep moving"
+          result: "&7You decide not to waste time and move on."
+      final_warning:
+        name: "&c⚠ Final Battle Approaches"
+        desc1: "&7You sense a powerful darkness ahead..."
+        desc2: "&7This is your last chance to prepare before the final battlefield."
+        desc3: "&c&lWarning: Next stage is the final Boss!"
+        choice1:
+          text: "&aPray for blessing (restore health)"
+          result: "&7Holy power shields you; you feel empowered!"
+        choice2:
+          text: "&cAdvance immediately"
+          result: "&7You take a deep breath and march toward the final challenge."
+      final_boss:
+        name: "&4&l⚔ Dark Lord Descends"
+        desc1: "&cThe sky turns black, the ground trembles..."
+        desc2: "&4The Dark Lord emerges from the void, radiating terror!"
+        desc3: "&cThis is the final battle to save the kingdom of Meoceria!"
+        choice1:
+          text: "&c&lFace the final challenge"
+          result: "&4Dark Lord: ""Foolish adventurer... I will end your journey!"""
     # Shop items
     shop:
       small_potion:
@@ -589,6 +629,10 @@ sgame:
       dragon:
         name: "&4Shadow Dragon"
         desc: "The ultimate challenge, a legendary dragon"
+      # Final Boss
+      dark_lord:
+        name: "&4&lDark Lord"
+        desc: "The ultimate threat to Meoceria, a terrifying master of darkness"
     # End rewards
     rewards:
       novice:

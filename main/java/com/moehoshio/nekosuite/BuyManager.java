@@ -131,34 +131,37 @@ public class BuyManager {
 
     public void openMenu(Player player) {
         MenuLayout.BuyLayout buyLayout = layout.getBuyLayout();
-        Inventory inv = Bukkit.createInventory(new BuyMenuHolder(), buyLayout.getSize(), messages.format(player, "menu.buy.title"));
-        int slotIndex = 0;
+        // Use 54 slots (6 rows) to fit categorized layout, each category gets its own row
+        int inventorySize = Math.max(buyLayout.getSize(), 54);
+        Inventory inv = Bukkit.createInventory(new BuyMenuHolder(), inventorySize, messages.format(player, "menu.buy.title"));
         
-        // Sort products by type (vip, mcd, bag) and level
-        List<Product> sortedProducts = new ArrayList<Product>(products.values());
-        Collections.sort(sortedProducts, new java.util.Comparator<Product>() {
-            public int compare(Product a, Product b) {
-                int typeOrderA = getTypeOrder(a.getId());
-                int typeOrderB = getTypeOrder(b.getId());
-                if (typeOrderA != typeOrderB) {
-                    return typeOrderA - typeOrderB;
-                }
-                // Same type, sort by level number
-                int levelA = extractLevel(a.getId());
-                int levelB = extractLevel(b.getId());
-                return levelA - levelB;
+        // Group products by category
+        Map<String, List<Product>> categorizedProducts = new HashMap<String, List<Product>>();
+        categorizedProducts.put("vip", new ArrayList<Product>());
+        categorizedProducts.put("mcd", new ArrayList<Product>());
+        categorizedProducts.put("bag", new ArrayList<Product>());
+        categorizedProducts.put("other", new ArrayList<Product>());
+        
+        for (Product product : products.values()) {
+            String id = product.getId().toLowerCase();
+            if (id.startsWith("vip")) {
+                categorizedProducts.get("vip").add(product);
+            } else if (id.startsWith("mcd")) {
+                categorizedProducts.get("mcd").add(product);
+            } else if (id.startsWith("bag")) {
+                categorizedProducts.get("bag").add(product);
+            } else {
+                categorizedProducts.get("other").add(product);
             }
-            
-            private int getTypeOrder(String id) {
-                String lower = id.toLowerCase();
-                if (lower.startsWith("vip")) return 0;
-                if (lower.startsWith("mcd")) return 1;
-                if (lower.startsWith("bag")) return 2;
-                return 3;
+        }
+        
+        // Sort each category by level number
+        java.util.Comparator<Product> levelComparator = new java.util.Comparator<Product>() {
+            public int compare(Product a, Product b) {
+                return extractLevel(a.getId()) - extractLevel(b.getId());
             }
             
             private int extractLevel(String id) {
-                // Extract trailing digits from the id
                 int end = id.length();
                 int start = end;
                 while (start > 0 && Character.isDigit(id.charAt(start - 1))) {
@@ -171,12 +174,49 @@ public class BuyManager {
                     return 0;
                 }
             }
-        });
+        };
         
-        for (Product product : sortedProducts) {
-            if (slotIndex >= buyLayout.getProductSlots().size()) {
-                break;
-            }
+        Collections.sort(categorizedProducts.get("vip"), levelComparator);
+        Collections.sort(categorizedProducts.get("mcd"), levelComparator);
+        Collections.sort(categorizedProducts.get("bag"), levelComparator);
+        Collections.sort(categorizedProducts.get("other"), levelComparator);
+        
+        // Place each category on its own row (9 slots per row)
+        // Row 0 (slots 0-8): VIP
+        // Row 1 (slots 9-17): MCD
+        // Row 2 (slots 18-26): BAG
+        // Row 3 (slots 27-35): Other
+        placeProductsInRow(inv, categorizedProducts.get("vip"), 0, player);
+        placeProductsInRow(inv, categorizedProducts.get("mcd"), 9, player);
+        placeProductsInRow(inv, categorizedProducts.get("bag"), 18, player);
+        placeProductsInRow(inv, categorizedProducts.get("other"), 27, player);
+        
+        // Add category labels on the right side of each row (slot 8 of each row)
+        addCategoryLabel(inv, 8, org.bukkit.Material.GOLD_BLOCK, messages.format(player, "menu.buy.category.vip"));
+        addCategoryLabel(inv, 17, org.bukkit.Material.PAPER, messages.format(player, "menu.buy.category.mcd"));
+        addCategoryLabel(inv, 26, org.bukkit.Material.CHEST, messages.format(player, "menu.buy.category.bag"));
+        
+        // Close button at bottom right
+        int closeSlot = inventorySize - 1;
+        ItemStack close = new ItemStack(org.bukkit.Material.BARRIER);
+        ItemMeta closeMeta = close.getItemMeta();
+        if (closeMeta != null) {
+            closeMeta.setDisplayName(messages.format(player, "menu.close"));
+            close.setItemMeta(closeMeta);
+        }
+        inv.setItem(closeSlot, close);
+        
+        player.openInventory(inv);
+    }
+    
+    private void placeProductsInRow(Inventory inv, List<Product> productList, int startSlot, Player player) {
+        int maxPerRow = 7; // Leave last 2 slots for category label and spacing
+        int slotIndex = 0;
+        for (Product product : productList) {
+            if (slotIndex >= maxPerRow) break;
+            int slot = startSlot + slotIndex;
+            if (slot >= inv.getSize()) break;
+            
             ItemStack stack = new ItemStack(product.getMaterial());
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
@@ -197,30 +237,21 @@ public class BuyManager {
                 meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 stack.setItemMeta(meta);
             }
-            int slot = buyLayout.getProductSlots().get(slotIndex++);
-            if (slot >= 0 && slot < inv.getSize()) {
-                inv.setItem(slot, stack);
-            }
+            inv.setItem(slot, stack);
+            slotIndex++;
         }
-        if (buyLayout.getCloseSlot() >= 0 && buyLayout.getCloseSlot() < inv.getSize()) {
-            ItemStack close = new ItemStack(org.bukkit.Material.BARRIER);
-            ItemMeta meta = close.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName(messages.format(player, "menu.close"));
-                close.setItemMeta(meta);
-            }
-            inv.setItem(buyLayout.getCloseSlot(), close);
-        } else {
-            int fallback = inv.getSize() - 1;
-            ItemStack close = new ItemStack(org.bukkit.Material.BARRIER);
-            ItemMeta meta = close.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName(messages.format(player, "menu.close"));
-                close.setItemMeta(meta);
-            }
-            inv.setItem(fallback, close);
+    }
+    
+    private void addCategoryLabel(Inventory inv, int slot, org.bukkit.Material material, String name) {
+        if (slot >= inv.getSize()) return;
+        ItemStack label = new ItemStack(material);
+        ItemMeta meta = label.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(name);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            label.setItemMeta(meta);
         }
-        player.openInventory(inv);
+        inv.setItem(slot, label);
     }
 
     boolean handleMenuClick(Player player, ItemStack clicked) {

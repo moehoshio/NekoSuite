@@ -6,11 +6,11 @@ storage:
 
 game:
   # 起始金幣
-  starting_gold: 20
+  starting_gold: 30
   # 起始生命值
-  starting_health: 50
+  starting_health: 100
   # 完成遊戲所需的最大階段數
-  max_stages: 12
+  max_stages: 15
   # 起始戰鬥屬性
   starting_attack: 10
   starting_defense: 5
@@ -268,6 +268,81 @@ events:
         gold_change: 0
         health_change: 0
 
+  # 固定階段事件 - 第一關必定出現的新手引導商店
+  starter_shop:
+    name: "sgame.config.events.starter_shop.name"
+    type: shop
+    weight: 10
+    fixed_stage: 1
+    description:
+      - "sgame.config.events.starter_shop.desc1"
+      - "sgame.config.events.starter_shop.desc2"
+    choices:
+      - text: "sgame.config.events.starter_shop.choice1.text"
+        result: "sgame.config.events.starter_shop.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  # 固定階段事件 - 中期休息站 (第5關)
+  rest_station:
+    name: "sgame.config.events.rest_station.name"
+    type: story
+    weight: 10
+    fixed_stage: 6
+    description:
+      - "sgame.config.events.rest_station.desc1"
+      - "sgame.config.events.rest_station.desc2"
+    choices:
+      - text: "sgame.config.events.rest_station.choice1.text"
+        result: "sgame.config.events.rest_station.choice1.result"
+        gold_change: -15
+        health_change: 40
+      - text: "sgame.config.events.rest_station.choice2.text"
+        result: "sgame.config.events.rest_station.choice2.result"
+        gold_change: 0
+        health_change: 20
+      - text: "sgame.config.events.rest_station.choice3.text"
+        result: "sgame.config.events.rest_station.choice3.result"
+        gold_change: 0
+        health_change: 0
+
+  # 固定階段事件 - 最終決戰預告 (第13關)
+  final_warning:
+    name: "sgame.config.events.final_warning.name"
+    type: story
+    weight: 10
+    fixed_stage: 13
+    description:
+      - "sgame.config.events.final_warning.desc1"
+      - "sgame.config.events.final_warning.desc2"
+      - "sgame.config.events.final_warning.desc3"
+    choices:
+      - text: "sgame.config.events.final_warning.choice1.text"
+        result: "sgame.config.events.final_warning.choice1.result"
+        gold_change: 0
+        health_change: 30
+      - text: "sgame.config.events.final_warning.choice2.text"
+        result: "sgame.config.events.final_warning.choice2.result"
+        gold_change: 0
+        health_change: 0
+
+  # 最終 Boss 戰 - 第14關 (最後一關，exclusive確保只有這個事件)
+  final_boss:
+    name: "sgame.config.events.final_boss.name"
+    type: battle
+    weight: 100
+    fixed_stage: 14
+    exclusive: true
+    description:
+      - "sgame.config.events.final_boss.desc1"
+      - "sgame.config.events.final_boss.desc2"
+      - "sgame.config.events.final_boss.desc3"
+    choices:
+      - text: "sgame.config.events.final_boss.choice1.text"
+        result: "sgame.config.events.final_boss.choice1.result"
+        gold_change: 0
+        health_change: 0
+
 # 商店物品配置
 shop:
   items:
@@ -368,6 +443,17 @@ equipment:
 
 # 戰鬥敵人配置
 # 新增: attack, defense, magic 屬性用於戰鬥計算
+# 新增: crit_chance (暴擊率%), crit_multiplier (暴擊傷害倍率), dodge_chance (閃避率%)
+# 新增: skills 敵人特殊技能列表
+#   - id: 技能ID
+#   - name: 技能名稱 (i18n key)
+#   - description: 技能描述 (i18n key)
+#   - type: damage/heal/buff/debuff/status
+#   - power: 技能傷害/治療量
+#   - chance: 使用機率 (%)
+#   - status_effect: 狀態效果 (poison/burn/freeze/stun)
+#   - status_duration: 狀態持續回合數
+#   - status_power: 每回合狀態傷害
 battles:
   enemies:
     - id: slime
@@ -376,77 +462,250 @@ battles:
       power: 20
       damage: 8
       health: 30
-      attack: 5
+      attack: 6
       defense: 2
       magic: 0
       gold_reward: 15
       min_stage: 0
+      crit_chance: 5
+      crit_multiplier: 1.3
+      dodge_chance: 5
+      
     - id: skeleton
       name: "sgame.config.enemies.skeleton.name"
       description: "sgame.config.enemies.skeleton.desc"
       power: 35
       damage: 12
-      health: 40
+      health: 45
       attack: 10
-      defense: 3
+      defense: 4
       magic: 0
       gold_reward: 25
       min_stage: 2
+      crit_chance: 10
+      crit_multiplier: 1.5
+      dodge_chance: 10
+      skills:
+        - id: bone_throw
+          name: "sgame.config.enemies.skeleton.skill1.name"
+          description: "sgame.config.enemies.skeleton.skill1.desc"
+          type: damage
+          power: 12
+          chance: 20
+          
     - id: zombie
       name: "sgame.config.enemies.zombie.name"
       description: "sgame.config.enemies.zombie.desc"
       power: 40
       damage: 15
-      health: 60
+      health: 70
       attack: 12
-      defense: 8
+      defense: 10
       magic: 0
       gold_reward: 30
       min_stage: 3
+      crit_chance: 8
+      crit_multiplier: 1.4
+      dodge_chance: 3
+      skills:
+        - id: infectious_bite
+          name: "sgame.config.enemies.zombie.skill1.name"
+          description: "sgame.config.enemies.zombie.skill1.desc"
+          type: status
+          power: 8
+          chance: 25
+          status_effect: poison
+          status_duration: 3
+          status_power: 4
+          
     - id: spider
       name: "sgame.config.enemies.spider.name"
       description: "sgame.config.enemies.spider.desc"
       power: 45
       damage: 18
-      health: 45
-      attack: 15
+      health: 50
+      attack: 14
       defense: 5
       magic: 0
       gold_reward: 35
       min_stage: 4
+      crit_chance: 15
+      crit_multiplier: 1.6
+      dodge_chance: 20
+      skills:
+        - id: web_trap
+          name: "sgame.config.enemies.spider.skill1.name"
+          description: "sgame.config.enemies.spider.skill1.desc"
+          type: status
+          power: 5
+          chance: 30
+          status_effect: stun
+          status_duration: 1
+          status_power: 0
+        - id: venomous_bite
+          name: "sgame.config.enemies.spider.skill2.name"
+          description: "sgame.config.enemies.spider.skill2.desc"
+          type: status
+          power: 10
+          chance: 20
+          status_effect: poison
+          status_duration: 2
+          status_power: 5
+          
     - id: witch
       name: "sgame.config.enemies.witch.name"
       description: "sgame.config.enemies.witch.desc"
       power: 55
       damage: 22
-      health: 35
+      health: 40
       attack: 8
-      defense: 3
-      magic: 20
+      defense: 5
+      magic: 25
       gold_reward: 45
       min_stage: 5
+      crit_chance: 12
+      crit_multiplier: 1.8
+      dodge_chance: 15
+      skills:
+        - id: fireball
+          name: "sgame.config.enemies.witch.skill1.name"
+          description: "sgame.config.enemies.witch.skill1.desc"
+          type: status
+          power: 18
+          chance: 35
+          status_effect: burn
+          status_duration: 3
+          status_power: 6
+        - id: frost_curse
+          name: "sgame.config.enemies.witch.skill2.name"
+          description: "sgame.config.enemies.witch.skill2.desc"
+          type: status
+          power: 12
+          chance: 25
+          status_effect: freeze
+          status_duration: 1
+          status_power: 0
+          
     - id: dark_knight
       name: "sgame.config.enemies.dark_knight.name"
       description: "sgame.config.enemies.dark_knight.desc"
       power: 70
       damage: 28
-      health: 80
-      attack: 20
-      defense: 15
-      magic: 5
+      health: 90
+      attack: 22
+      defense: 18
+      magic: 8
       gold_reward: 60
       min_stage: 7
+      crit_chance: 18
+      crit_multiplier: 1.7
+      dodge_chance: 12
+      skills:
+        - id: dark_slash
+          name: "sgame.config.enemies.dark_knight.skill1.name"
+          description: "sgame.config.enemies.dark_knight.skill1.desc"
+          type: damage
+          power: 25
+          chance: 30
+        - id: shield_bash
+          name: "sgame.config.enemies.dark_knight.skill2.name"
+          description: "sgame.config.enemies.dark_knight.skill2.desc"
+          type: status
+          power: 15
+          chance: 20
+          status_effect: stun
+          status_duration: 1
+          status_power: 0
+          
     - id: dragon
       name: "sgame.config.enemies.dragon.name"
       description: "sgame.config.enemies.dragon.desc"
       power: 90
       damage: 35
-      health: 120
+      health: 130
       attack: 30
-      defense: 20
-      magic: 25
+      defense: 25
+      magic: 30
       gold_reward: 100
       min_stage: 9
+      crit_chance: 20
+      crit_multiplier: 2.0
+      dodge_chance: 10
+      skills:
+        - id: dragon_breath
+          name: "sgame.config.enemies.dragon.skill1.name"
+          description: "sgame.config.enemies.dragon.skill1.desc"
+          type: status
+          power: 30
+          chance: 40
+          status_effect: burn
+          status_duration: 4
+          status_power: 8
+        - id: tail_sweep
+          name: "sgame.config.enemies.dragon.skill2.name"
+          description: "sgame.config.enemies.dragon.skill2.desc"
+          type: damage
+          power: 35
+          chance: 25
+        - id: terrifying_roar
+          name: "sgame.config.enemies.dragon.skill3.name"
+          description: "sgame.config.enemies.dragon.skill3.desc"
+          type: status
+          power: 0
+          chance: 15
+          status_effect: stun
+          status_duration: 1
+          status_power: 0
+
+    # 最終 Boss - 黑暗領主
+    - id: dark_lord
+      name: "sgame.config.enemies.dark_lord.name"
+      description: "sgame.config.enemies.dark_lord.desc"
+      power: 120
+      damage: 45
+      health: 200
+      attack: 40
+      defense: 35
+      magic: 45
+      gold_reward: 200
+      min_stage: 11
+      crit_chance: 25
+      crit_multiplier: 2.5
+      dodge_chance: 15
+      skills:
+        - id: shadow_blast
+          name: "sgame.config.enemies.dark_lord.skill1.name"
+          description: "sgame.config.enemies.dark_lord.skill1.desc"
+          type: status
+          power: 40
+          chance: 35
+          status_effect: burn
+          status_duration: 3
+          status_power: 10
+        - id: soul_drain
+          name: "sgame.config.enemies.dark_lord.skill2.name"
+          description: "sgame.config.enemies.dark_lord.skill2.desc"
+          type: damage
+          power: 50
+          chance: 25
+        - id: dark_binding
+          name: "sgame.config.enemies.dark_lord.skill3.name"
+          description: "sgame.config.enemies.dark_lord.skill3.desc"
+          type: status
+          power: 20
+          chance: 30
+          status_effect: stun
+          status_duration: 2
+          status_power: 0
+        - id: apocalypse
+          name: "sgame.config.enemies.dark_lord.skill4.name"
+          description: "sgame.config.enemies.dark_lord.skill4.desc"
+          type: status
+          power: 60
+          chance: 15
+          status_effect: poison
+          status_duration: 5
+          status_power: 12
 
 # 結束獎勵配置 (根據分數發放真實獎勵)
 end_rewards:

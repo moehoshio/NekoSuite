@@ -4,82 +4,46 @@ version: 0.1.0
 softdepend: [Vault]
 commands:
   wish:
-    description: Execute wish draws
-    usage: /wish <pool> [count] or /wish query <pool> or /wish menu
+    description: 祈願系統
+    usage: /wish <池名稱> [次數] 或 /wish menu
     permission: nekosuite.wish
-  wishquery:
-    description: Query wish status
-    usage: /wishquery <pool>
-    permission: nekosuite.wish.query
-  wishmenu:
-    description: Open wish GUI
-    usage: /wishmenu
-    permission: nekosuite.wish.menu
-  eventcheck:
-    description: Check available events
-    usage: /eventcheck
-    permission: nekosuite.event.check
-  eventparticipate:
-    description: Participate in an event
-    usage: /eventparticipate <eventId>
-    permission: nekosuite.event.participate
   event:
-    description: Event operations
-    usage: /event <check|participate|menu> [eventId]
+    description: 活動系統
+    usage: /event [活動ID] 或 /event menu
     permission: nekosuite.event
-  eventmenu:
-    description: Open event GUI
-    usage: /eventmenu
-    permission: nekosuite.event.menu
   exp:
-    description: Experience account operations
-    usage: /exp <balance|save|withdraw|pay|menu|exchange>
+    description: 經驗銀行
+    usage: /exp [menu|deposit|withdraw|pay|exchange]
     permission: nekosuite.exp
-  expmenu:
-    description: Open experience GUI
-    usage: /expmenu
-    permission: nekosuite.exp.menu
   cdk:
-    description: Redeem CDK code
-    usage: /cdk <code>
+    description: 兌換CDK
+    usage: /cdk <兌換碼>
     permission: nekosuite.cdk
   buy:
-    description: Purchase privileges
-    usage: /buy <productId> or /buy menu
+    description: 特權商店
+    usage: /buy <類型> <等級> 或 /buy menu
     permission: nekosuite.buy
-  buymenu:
-    description: Open privilege purchase menu
-    usage: /buymenu
-    permission: nekosuite.buy.menu
   mail:
-    description: Mail operations
-    usage: /mail <menu|list|claim|delete>
+    description: 郵件系統
+    usage: /mail [menu|claim|delete] [郵件ID]
     permission: nekosuite.mail
-  mailmenu:
-    description: Open mail GUI
-    usage: /mailmenu
-    permission: nekosuite.mail.menu
   mailsend:
-    description: Send mail to a player
-    usage: /mailsend <player> <subject> [message]
+    description: 發送郵件
+    usage: /mailsend <玩家> <主題> [內容]
     permission: nekosuite.mail.send
   mailadmin:
-    description: Admin mail commands
-    usage: /mailadmin <send|template> <player> <subject|templateId> [content] [commands...]
+    description: 郵件管理
+    usage: /mailadmin <send|template> <參數...>
     permission: nekosuite.mail.admin
   language:
-    description: Set preferred language
-    usage: /language <code|list|reset>
+    description: 語言設置
+    usage: /language <語言代碼|list|reset>
     permission: nekosuite.language
   nekoreload:
-    description: Reload NekoSuite configs
+    description: 重載配置
     usage: /nekoreload
     permission: nekosuite.reload
   sgame:
-    description: Strategy game commands
-    usage: /sgame <start|continue|status|end|abandon|menu>
+    description: 策略遊戲
+    usage: /sgame [menu|status|abandon]
     permission: nekosuite.sgame
-  sgamemenu:
-    description: Open strategy game menu
-    usage: /sgamemenu
-    permission: nekosuite.sgame.menu

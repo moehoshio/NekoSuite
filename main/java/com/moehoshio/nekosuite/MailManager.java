@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -36,11 +37,13 @@ public class MailManager {
     private final int mailExpiryDays;
     private final boolean allowPlayerSending;
     private final List<String> blockedItems;
+    private final File configFile;
 
     public MailManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout layout) {
         this.plugin = plugin;
         this.messages = messages;
         this.layout = layout == null ? new MenuLayout(plugin) : layout;
+        this.configFile = configFile;
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         String dataDir = config.getString("storage.data_dir", "userdata");
         storageDir = new File(plugin.getDataFolder(), dataDir);
@@ -51,6 +54,18 @@ public class MailManager {
         mailExpiryDays = config.getInt("settings.mail_expiry_days", 30);
         allowPlayerSending = config.getBoolean("settings.allow_player_sending", true);
         blockedItems = config.getStringList("settings.blocked_items");
+    }
+
+    /**
+     * Get all template IDs from config.
+     */
+    public Set<String> getTemplateIds() {
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        ConfigurationSection templatesSection = config.getConfigurationSection("templates");
+        if (templatesSection == null) {
+            return java.util.Collections.emptySet();
+        }
+        return templatesSection.getKeys(false);
     }
 
     /**

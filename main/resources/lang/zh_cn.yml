@@ -535,6 +535,46 @@ sgame:
         choice1:
           text: "&a浏览装备"
           result: "&7欢迎来到我的铁匠铺！"
+      # 固定阶段事件
+      starter_shop:
+        name: "&a新手补给站"
+        desc1: "&7欢迎来到冒险的起点！"
+        desc2: "&7这里有一些基本的补给品可以购买。"
+        choice1:
+          text: "&a查看商品"
+          result: "&7祝你冒险顺利！"
+      rest_station:
+        name: "&b旅途休息站"
+        desc1: "&7你来到一个宁静的休息站。"
+        desc2: "&7这里可以恢复体力，准备后续挑战。"
+        choice1:
+          text: "&a付费休息 (消耗15金币)"
+          result: "&7你得到了充分的休息，恢复了大量体力！"
+        choice2:
+          text: "&e简单休息"
+          result: "&7你稍作休息，恢复了一些体力。"
+        choice3:
+          text: "&c继续前进"
+          result: "&7你决定不浪费时间，继续前进。"
+      final_warning:
+        name: "&c⚠ 最终决战在即"
+        desc1: "&7你感受到前方传来强大的黑暗力量..."
+        desc2: "&7这是进入最终战场前的最后准备机会。"
+        desc3: "&c&l警告: 下一关将面对最终 Boss！"
+        choice1:
+          text: "&a祈祷祝福 (恢复生命)"
+          result: "&7神圣的力量护佑着你，你感到充满力量！"
+        choice2:
+          text: "&c直接前进"
+          result: "&7你深吸一口气，准备迎接最终挑战。"
+      final_boss:
+        name: "&4&l⚔ 黑暗领主降临"
+        desc1: "&c天空变得漆黑，大地开始颤抖..."
+        desc2: "&4黑暗领主从虚空中现身，散发着恐怖气息！"
+        desc3: "&c这是拯救喵科利亚王国的最后一战！"
+        choice1:
+          text: "&c&l迎接最终挑战"
+          result: "&4黑暗领主: 「愚蠢的冒险者...让我来终结你的旅程！」"
     # Shop items
     shop:
       small_potion:
@@ -589,6 +629,10 @@ sgame:
       dragon:
         name: "&4暗影龙"
         desc: "最终的挑战，传说中的龙"
+      # 最终 Boss
+      dark_lord:
+        name: "&4&l黑暗领主"
+        desc: "喵科利亚王国的终极威胁，掌控黑暗力量的恐怖存在"
     # End rewards
     rewards:
       novice:

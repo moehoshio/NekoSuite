@@ -188,31 +188,53 @@ i18n:
   default: "&7默認語言: &6{language}"
 
 tab:
+  menu:
+    open: "<打開菜單>"
   wish:
-    pool: "<祈願池名稱>"
-    query_pool: "<查詢的祈願池>"
+    select_pool: "<選擇祈願池>"
     count: "<祈願次數>"
+    do_wish: "<進行祈願>"
   event:
-    id: "<參與的活動ID>"
+    select: "<選擇活動>"
+    participate: "<參加此活動>"
   exp:
-    action: "<操作類型>"
-    exchange_id: "<兌換項目ID>"
-    deposit_amount: "<存入的經驗數量>"
-    withdraw_amount: "<取出的經驗數量>"
-    pay_target: "<轉帳對象玩家名>"
-    pay_amount: "<轉帳經驗數量>"
+    select_action: "<選擇操作>"
+    select_exchange: "<選擇兌換項目>"
+    deposit_amount: "<存入數量>"
+    do_deposit: "<執行存入>"
+    withdraw_amount: "<取出數量>"
+    do_withdraw: "<執行取出>"
+    pay_target: "<轉帳對象>"
+    pay_amount: "<轉帳數量>"
+    do_pay: "<執行轉帳>"
+    do_exchange: "<執行兌換>"
   cdk:
-    code: "<輸入CDK兌換碼>"
+    redeem: "<兌換CDK>"
   buy:
-    type: "<購買的類型>"
-    level: "<開通的等級>"
+    select_type: "<選擇類型>"
+    select_level: "<選擇等級>"
+    purchase: "<購買此產品>"
   language:
-    code: "<語言代碼>"
+    select: "<選擇語言>"
+    list: "<顯示可用語言>"
+    reset: "<重設為預設語言>"
+    set: "<設置此語言>"
   mail:
-    player: "<玩家名稱>"
+    select_action: "<選擇操作>"
+    select_player: "<選擇玩家>"
+    select_claim: "<選擇郵件領取>"
+    select_delete: "<選擇郵件刪除>"
+    do_claim: "<領取此郵件獎勵>"
+    do_delete: "<刪除此郵件>"
+    do_send: "<發送此郵件>"
+    admin_select: "<選擇管理操作>"
+    select_template: "<選擇模板>"
+    template_send: "<發送模板郵件>"
     subject: "<郵件主題>"
-    content: "<郵件內容>"
-    action: "<操作類型>"
+    content: "<郵件內容...>"
+  sgame:
+    status: "<查看遊戲狀態>"
+    abandon: "<放棄當前遊戲>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [郵件ID]"
@@ -280,7 +302,7 @@ sgame:
   equipped: "&a✔ &7已裝備: &6{item}"
   unequipped: "&a✔ &7已卸下: &6{item}"
   not_enough_magic: "&c✖ &7你沒有足夠的魔法值！"
-  battle_round_result: "&7第{round}回合: 你使用 {player_action}，敵人使用 {enemy_action}。{result} &7(&a你造成{player_damage}傷害&7, &c受到{enemy_damage}傷害&7)"
+  battle_round_result: "&7第{round}回合: 你使用 {player_action}，敵人使用 {enemy_action}。{result} &7(&a造成{player_damage}&7, &c受到{enemy_damage}&7) {crit_info}"
   battle_victory_multiround: "&a✔ &7經過{rounds}回合激戰，你擊敗了 &c{enemy}&7！獲得 &6{gold} &7金幣！"
   round_attack_beats_skill: "&a攻擊打斷了敵人的技能！"
   round_skill_beats_defense: "&d技能穿透了敵人的防禦！"
@@ -289,6 +311,21 @@ sgame:
   round_enemy_skill_beats_defense: "&c敵人的技能穿透了防禦！"
   round_enemy_defense_beats_attack: "&c敵人防禦了你的攻擊！"
   round_tie: "&7雙方僵持！"
+  # Critical and dodge messages
+  player_crit: "&6✦ 暴擊！"
+  enemy_crit: "&c✦ 敵人暴擊！"
+  player_dodged: "&a✦ 閃避成功！"
+  enemy_dodged: "&e✦ 敵人閃避！"
+  # Status effect messages
+  status_damage: "&c你受到了 {damage} 點狀態傷害！"
+  status_skip_turn_stun: "&e你被暈眩了，無法行動！"
+  status_skip_turn_freeze: "&b你被冰凍了，無法行動！"
+  enemy_free_attack: "&c敵人趁機攻擊！造成 {damage} 點傷害！"
+  status_applied: "&c你被施加了 {effect} 效果！持續 {duration} 回合。"
+  status_poison: "&2中毒"
+  status_burn: "&c燃燒"
+  status_freeze: "&b冰凍"
+  status_stun: "&e暈眩"
   # Config texts - Events
   config:
     events:
@@ -406,6 +443,46 @@ sgame:
         choice1:
           text: "&a瀏覽裝備"
           result: "&7歡迎來到我的鐵匠鋪！"
+      # 固定階段事件
+      starter_shop:
+        name: "&a新手補給站"
+        desc1: "&7歡迎來到冒險的起點！"
+        desc2: "&7這裡有一些基本的補給品可以購買。"
+        choice1:
+          text: "&a查看商品"
+          result: "&7祝你冒險順利！"
+      rest_station:
+        name: "&b旅途休息站"
+        desc1: "&7你來到了一個寧靜的休息站。"
+        desc2: "&7這裡可以恢復體力，準備後續的挑戰。"
+        choice1:
+          text: "&a付費休息 (消耗15金幣)"
+          result: "&7你得到了充分的休息，恢復了大量體力！"
+        choice2:
+          text: "&e簡單休息"
+          result: "&7你稍作休息，恢復了一些體力。"
+        choice3:
+          text: "&c繼續前進"
+          result: "&7你決定不浪費時間，繼續前進。"
+      final_warning:
+        name: "&c⚠ 最終決戰在即"
+        desc1: "&7你感受到前方傳來強大的黑暗力量..."
+        desc2: "&7這是進入最終戰場前的最後準備機會。"
+        desc3: "&c&l警告: 下一關將面對最終 Boss！"
+        choice1:
+          text: "&a祈禱祝福 (恢復生命)"
+          result: "&7神聖的力量護佑著你，你感到充滿力量！"
+        choice2:
+          text: "&c直接前進"
+          result: "&7你深吸一口氣，準備迎接最終挑戰。"
+      final_boss:
+        name: "&4&l⚔ 黑暗領主降臨"
+        desc1: "&c天空變得漆黑，大地開始顫抖..."
+        desc2: "&4黑暗領主從虛空中現身，散發著恐怖的氣息！"
+        desc3: "&c這是拯救喵科利亞王國的最後一戰！"
+        choice1:
+          text: "&c&l迎接最終挑戰"
+          result: "&4黑暗領主: 「愚蠢的冒險者...讓我來終結你的旅程！」"
     # Shop items
     shop:
       small_potion:
@@ -445,21 +522,67 @@ sgame:
       skeleton:
         name: "&f骷髏弓箭手"
         desc: "一個拿著弓的骷髏"
+        skill1:
+          name: "&e投擲骨頭"
+          desc: "投擲骨頭造成額外傷害"
       zombie:
         name: "&2殭屍"
         desc: "一個緩慢但強壯的不死生物"
+        skill1:
+          name: "&2感染咬傷"
+          desc: "咬傷敵人並施加中毒效果"
       spider:
         name: "&8巨型蜘蛛"
         desc: "一隻可怕的巨型蜘蛛"
+        skill1:
+          name: "&f蛛網陷阱"
+          desc: "用蛛網纏住敵人，使其無法行動"
+        skill2:
+          name: "&2毒牙"
+          desc: "注入毒液造成持續傷害"
       witch:
         name: "&5女巫"
         desc: "一個邪惡的魔法使用者"
+        skill1:
+          name: "&c火球術"
+          desc: "投擲火球造成燃燒效果"
+        skill2:
+          name: "&b冰霜詛咒"
+          desc: "施放冰霜魔法使敵人冰凍"
       dark_knight:
         name: "&8黑暗騎士"
         desc: "一個強大的黑暗戰士"
+        skill1:
+          name: "&8暗影斬"
+          desc: "釋放暗影能量造成巨大傷害"
+        skill2:
+          name: "&e盾擊"
+          desc: "用盾牌猛擊敵人，使其暈眩"
       dragon:
         name: "&4暗影龍"
         desc: "最終的挑戰，傳說中的龍"
+        skill1:
+          name: "&c龍息"
+          desc: "噴射灼熱火焰造成持續燃燒"
+        skill2:
+          name: "&7尾掃"
+          desc: "用巨尾橫掃造成巨大傷害"
+        skill3:
+          name: "&e恐怖咆哮"
+          desc: "發出震懾咆哮使敵人暈眩"
+      # 最終 Boss
+      dark_lord:
+        name: "&4&l黑暗領主"
+        desc: "喵科利亞王國的終極威脅，掌控黑暗力量的恐怖存在"
+        skill1:
+          name: "&4&l黑暗波動"
+          desc: "釋放毀滅性的黑暗能量，造成巨大傷害"
+        skill2:
+          name: "&c&l靈魂吸取"
+          desc: "吸取敵人的生命力來治療自己"
+        skill3:
+          name: "&8&l暗影領域"
+          desc: "召喚黑暗領域，造成持續的暗影傷害"
     # End rewards
     rewards:
       novice:
@@ -484,6 +607,10 @@ menu:
     balance_lore: "&7查看您的經驗賬戶"
   buy:
     title: "&#ff9933✦ 特權購買"
+    category:
+      vip: "&#ff66cc✦ VIP 特權"
+      mcd: "&#5cc3ff✦ 月卡福利"
+      bag: "&#80ff8a✦ 背包擴展"
   mail:
     title: "&#7dd3fc✦ 郵件系統"
     unread_title: "&a✉ &f{subject}"
@@ -503,6 +630,17 @@ menu:
   sgame:
     title: "&#ffcc00✦ 貓咪王國冒險"
     victory_title: "&#ffcc00✦ 冒險成功！"
+    start_game_title: "&#ffcc00✦ 開始冒險"
+    story_title: "&6✦ 貓咪王國傳說"
+    story_desc1: "&7在神秘的貓咪王國「喵科利亞」中..."
+    story_desc2: "&7一股古老的黑暗力量正在威脅這片土地。"
+    story_desc3: "&7作為冒險者，你的使命是拯救王國！"
+    start_button: "&a✦ 開始新冒險"
+    start_button_lore1: "&7起始金幣: &6{starting_gold}"
+    start_button_lore2: "&7起始生命: &c{starting_health}"
+    start_button_lore3: "&7冒險關卡: &a{max_stages}"
+    click_to_start: "&e點擊開始新遊戲"
+    close: "&c✖ 關閉"
     status_title: "&7冒險狀態"
     gold_lore: "&6金幣: &f{gold}"
     health_lore: "&c生命: &f{health}/{max_health}"
@@ -520,6 +658,7 @@ menu:
     end_game_lore: "&7完成冒險並領取獎勵"
     back: "&7返回"
     event_selection_title: "&#60a5fa✦ 選擇事件"
+    event_confirm_title: "&#f59e42✦ 確認事件"
     event_title: "&#60a5fa✦ 事件"
     battle_menu_title: "&#ff6666✦ 戰鬥"
     shop_menu_title: "&#ffcc00✦ 商店"
@@ -542,6 +681,14 @@ menu:
     equip_slot_accessory: "&f飾品槽"
     equip_empty: "&7空"
     equip_click_to_change: "&e點擊更換裝備"
+    # Event confirmation menu i18n
+    confirm_choices_preview: "&7可選擇的選項:"
+    confirm_enter_event: "&a✔ 確認進入"
+    confirm_enter_lore: "&7確認選擇此事件並開始"
+    back_to_selection: "&c✖ 返回選擇"
+    back_to_selection_lore: "&7返回事件選擇列表"
+    confirm_warning: "&e⚠ 注意"
+    confirm_warning_lore: "&7一旦確認進入，必須完成事件"
     # Event selection i18n
     event_type_lore: "&7類型: {type}"
     type_story: "&a劇情"
