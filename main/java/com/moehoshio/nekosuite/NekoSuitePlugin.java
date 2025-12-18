@@ -1150,7 +1150,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             try {
                 material = org.bukkit.Material.valueOf(display.getMaterial().toUpperCase());
             } catch (IllegalArgumentException e) {
-                // Fallback to NETHER_STAR if material is invalid
+                getLogger().warning("Invalid material for pool " + pool.getId() + ": " + display.getMaterial() + ", using NETHER_STAR");
             }
             
             ItemStack stack = new ItemStack(material);
@@ -1422,7 +1422,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 int wishCount = 1;
                 try {
                     wishCount = Integer.parseInt(countStr);
-                } catch (NumberFormatException ignored) {
+                } catch (NumberFormatException e) {
+                    getLogger().warning("Invalid wish count in action: " + action + ", defaulting to 1");
                 }
                 WishPoolDetailMenuHolder detailHolder = (WishPoolDetailMenuHolder) holder;
                 String poolId = detailHolder.getPoolId();
@@ -2216,20 +2217,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         String getDisplayName() {
             if (actions == null || actions.isEmpty()) {
-                return "unknown";
+                return RewardAction.DEFAULT_NAME;
             }
             return actions.get(0).getName();
         }
     }
 
     private static class RewardAction {
+        private static final String DEFAULT_NAME = "no_reward";
         private final String name;
         private final int minAmount;
         private final int maxAmount;
         private final List<String> commands;
 
         RewardAction(String name, int minAmount, int maxAmount, List<String> commands) {
-            this.name = name == null ? "no_reward" : name;
+            this.name = name == null ? DEFAULT_NAME : name;
             this.minAmount = minAmount <= 0 ? 1 : minAmount;
             this.maxAmount = maxAmount < this.minAmount ? this.minAmount : maxAmount;
             this.commands = commands == null ? new ArrayList<String>() : commands;
@@ -2275,7 +2277,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         static RewardResult empty() {
             List<RewardAction> list = new ArrayList<RewardAction>();
-            list.add(new RewardAction("no_reward", 1, 1, null));
+            list.add(new RewardAction(RewardAction.DEFAULT_NAME, 1, 1, null));
             return new RewardResult(list);
         }
 
