@@ -1257,6 +1257,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     rewardPlaceholders.put("percent", percentStr);
                     rewardLore.add(messages.format(player, "menu.wish.pool_detail.reward_lore", rewardPlaceholders));
                     rewardMeta.setLore(rewardLore);
+                    // Apply custom model data for the reward preview
+                    if (entry.getDisplayModel() > 0) {
+                        rewardMeta.setCustomModelData(entry.getDisplayModel());
+                    }
                     rewardItem.setItemMeta(rewardMeta);
                 }
                 inv.setItem(rewardSlot++, rewardItem);
@@ -1268,8 +1272,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         int cost1 = costs.getOrDefault(1, 0);
         int cost5 = costs.getOrDefault(5, cost1 * 5);
 
+        // Get button configs
+        ButtonConfig btn1x = wishManager.getWish1xButton();
+        ButtonConfig btn5x = wishManager.getWish5xButton();
+
         // Wish 1x button at slot 39
-        ItemStack wish1Item = new ItemStack(org.bukkit.Material.PAPER);
+        org.bukkit.Material wish1Material = org.bukkit.Material.PAPER;
+        try {
+            wish1Material = org.bukkit.Material.valueOf(btn1x.getMaterial().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            getLogger().warning("Invalid material for wish 1x button: " + btn1x.getMaterial());
+        }
+        ItemStack wish1Item = new ItemStack(wish1Material);
         ItemMeta wish1Meta = wish1Item.getItemMeta();
         if (wish1Meta != null) {
             wish1Meta.setDisplayName(messages.format(player, "menu.wish.pool_detail.wish_once"));
@@ -1285,12 +1299,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             wish1Lore.add("");
             wish1Lore.add(ChatColor.GRAY + "ACTION:WISH:1");
             wish1Meta.setLore(wish1Lore);
+            if (btn1x.getCustomModelData() > 0) {
+                wish1Meta.setCustomModelData(btn1x.getCustomModelData());
+            }
             wish1Item.setItemMeta(wish1Meta);
         }
         inv.setItem(39, wish1Item);
 
         // Wish 5x button at slot 41
-        ItemStack wish5Item = new ItemStack(org.bukkit.Material.PAPER);
+        org.bukkit.Material wish5Material = org.bukkit.Material.PAPER;
+        try {
+            wish5Material = org.bukkit.Material.valueOf(btn5x.getMaterial().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            getLogger().warning("Invalid material for wish 5x button: " + btn5x.getMaterial());
+        }
+        ItemStack wish5Item = new ItemStack(wish5Material);
         ItemMeta wish5Meta = wish5Item.getItemMeta();
         if (wish5Meta != null) {
             wish5Meta.setDisplayName(messages.format(player, "menu.wish.pool_detail.wish_five"));
@@ -1306,6 +1329,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             wish5Lore.add("");
             wish5Lore.add(ChatColor.GRAY + "ACTION:WISH:5");
             wish5Meta.setLore(wish5Lore);
+            if (btn5x.getCustomModelData() > 0) {
+                wish5Meta.setCustomModelData(btn5x.getCustomModelData());
+            }
             wish5Item.setItemMeta(wish5Meta);
         }
         inv.setItem(41, wish5Item);
@@ -1585,6 +1611,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private final Map<String, WishPool> pools = new HashMap<String, WishPool>();
         private final List<TicketRule> tickets = new ArrayList<TicketRule>();
         private final Economy economy;
+        private ButtonConfig wish1xButton;
+        private ButtonConfig wish5xButton;
 
         WishManager(JavaPlugin plugin, Messages messages, File configFile, Economy economy) {
             this.plugin = plugin;
@@ -1602,6 +1630,17 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         private void loadConfig(YamlConfiguration config) {
             pools.clear();
+            
+            // Load menu button configs
+            ConfigurationSection buttonsSection = config.getConfigurationSection("menu_buttons");
+            if (buttonsSection != null) {
+                wish1xButton = ButtonConfig.fromSection(buttonsSection.getConfigurationSection("wish_1x"));
+                wish5xButton = ButtonConfig.fromSection(buttonsSection.getConfigurationSection("wish_5x"));
+            } else {
+                wish1xButton = new ButtonConfig("PAPER", 1101);
+                wish5xButton = new ButtonConfig("PAPER", 1100);
+            }
+            
             ConfigurationSection poolSection = config.getConfigurationSection("pools");
             if (poolSection != null) {
                 Set<String> keys = poolSection.getKeys(false);
@@ -1785,6 +1824,41 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         Map<String, WishPool> getPools() {
             return pools;
+        }
+
+        ButtonConfig getWish1xButton() {
+            return wish1xButton;
+        }
+
+        ButtonConfig getWish5xButton() {
+            return wish5xButton;
+        }
+    }
+
+    private static class ButtonConfig {
+        private final String material;
+        private final int customModelData;
+
+        ButtonConfig(String material, int customModelData) {
+            this.material = material;
+            this.customModelData = customModelData;
+        }
+
+        static ButtonConfig fromSection(ConfigurationSection section) {
+            if (section == null) {
+                return new ButtonConfig("PAPER", 0);
+            }
+            String material = section.getString("material", "PAPER");
+            int customModelData = section.getInt("custom_model_data", 0);
+            return new ButtonConfig(material, customModelData);
+        }
+
+        String getMaterial() {
+            return material;
+        }
+
+        int getCustomModelData() {
+            return customModelData;
         }
     }
 
@@ -2088,20 +2162,24 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private final double weight;
         private final WeightedList subList;
         private final List<RewardAction> actions;
+        private final int displayModel;  // custom_model_data for display in menu
 
-        RewardEntry(double weight, WeightedList subList, List<RewardAction> actions) {
+        RewardEntry(double weight, WeightedList subList, List<RewardAction> actions, int displayModel) {
             this.weight = weight;
             this.subList = subList;
             this.actions = actions;
+            this.displayModel = displayModel;
         }
 
         static RewardEntry fromConfig(String key, Object rawValue, ConfigurationSection sectionValue) {
             double probability = 0.0;
             WeightedList sub = null;
             List<RewardAction> actions = new ArrayList<RewardAction>();
+            int displayModel = 0;
 
             if (sectionValue != null) {
                 probability = sectionValue.getDouble("probability", 0.0);
+                displayModel = sectionValue.getInt("display_model", 0);
                 sub = WeightedList.fromSection(sectionValue.getConfigurationSection("subList"));
                 List<Map<?, ?>> items = sectionValue.getMapList("items");
                 if (items != null && !items.isEmpty()) {
@@ -2131,7 +2209,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (actions.isEmpty()) {
                 actions.add(new RewardAction(key, 1, 1, null));
             }
-            return new RewardEntry(probability, sub, actions);
+            return new RewardEntry(probability, sub, actions, displayModel);
         }
 
         private static List<String> parseCommands(Object commandsObj, String singleCommand) {
@@ -2225,6 +2303,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return RewardAction.DEFAULT_NAME;
             }
             return actions.get(0).getName();
+        }
+
+        int getDisplayModel() {
+            return displayModel;
         }
     }
 
