@@ -1731,11 +1731,11 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         WishStatus status = wishManager.queryStatus(player.getName(), poolId);
 
-        // Slot 0: Player info with pool status
+        // Slot 0: Player info with pool status - initially with a placeholder, then async update with player head
         ItemStack infoItem = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
-        ItemMeta infoMeta = infoItem.getItemMeta();
-        if (infoMeta != null) {
-            infoMeta.setDisplayName(messages.colorize(display.getName()));
+        org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) infoItem.getItemMeta();
+        if (skullMeta != null) {
+            skullMeta.setDisplayName(messages.colorize(display.getName()));
             List<String> infoLore = new ArrayList<String>();
             Map<String, String> placeholders = new HashMap<String, String>();
             placeholders.put("count", String.valueOf(status.getCount()));
@@ -1747,10 +1747,36 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             for (String line : display.getDescription()) {
                 infoLore.add(messages.colorize(line));
             }
-            infoMeta.setLore(infoLore);
-            infoItem.setItemMeta(infoMeta);
+            skullMeta.setLore(infoLore);
+            infoItem.setItemMeta(skullMeta);
         }
         inv.setItem(0, infoItem);
+        
+        // Async fetch player head to avoid blocking main thread
+        final Inventory finalInv = inv;
+        final ItemStack finalInfoItem = infoItem.clone();
+        final InventoryHolder inventoryHolder = inv.getHolder();
+        Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+            @Override
+            public void run() {
+                // Get the skull with player texture in async thread
+                org.bukkit.inventory.meta.SkullMeta asyncMeta = (org.bukkit.inventory.meta.SkullMeta) finalInfoItem.getItemMeta();
+                if (asyncMeta != null) {
+                    asyncMeta.setOwningPlayer(player);
+                    finalInfoItem.setItemMeta(asyncMeta);
+                }
+                // Update inventory on main thread
+                Bukkit.getScheduler().runTask(NekoSuitePlugin.this, new Runnable() {
+                    @Override
+                    public void run() {
+                        // Only update if player still has the same inventory open (check by holder)
+                        if (player.isOnline() && player.getOpenInventory().getTopInventory().getHolder() == inventoryHolder) {
+                            finalInv.setItem(0, finalInfoItem);
+                        }
+                    }
+                });
+            }
+        });
 
         // Slots 9-26: Reward previews
         WeightedList items = pool.getItems();
@@ -2151,6 +2177,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null) {
                 return;
+            }
+            // Check for navigation action first
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null && ChatColor.stripColor(line).startsWith("ACTION:OPEN_NAV")) {
+                        openNavigationMenu(player);
+                        return;
+                    }
+                }
             }
             StrategyGameManager.StrategyGameMenuHolder sgHolder = (StrategyGameManager.StrategyGameMenuHolder) holder;
             strategyGameManager.handleMenuClick(player, clicked, sgHolder);

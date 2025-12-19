@@ -56,6 +56,9 @@ public class StrategyGameManager {
     private static final int DISCOUNT_CHANCE = 30; // Percentage chance for discount
     private static final int MIN_DISCOUNT = 10;
     private static final int MAX_DISCOUNT = 50;
+    
+    // Menu layout constants
+    private static final int DEFAULT_NAV_SLOT = 17; // Default slot for navigation button if close slot is 0
 
     // Game configuration
     private int startingGold = DEFAULT_STARTING_GOLD;
@@ -346,6 +349,16 @@ public class StrategyGameManager {
                 "ID:start_new_game"
             });
         safeSet(inv, 13, startItem);
+
+        // Navigation button (back to main menu) - slot before close button
+        int navSlot = layout.getCloseSlot() > 0 ? layout.getCloseSlot() - 1 : DEFAULT_NAV_SLOT;
+        ItemStack navItem = createItem(Material.COMPASS,
+            messages.format(player, "help.back_button"),
+            new String[]{
+                messages.format(player, "help.back_lore"),
+                ChatColor.DARK_GRAY + "ACTION:OPEN_NAV"
+            });
+        safeSet(inv, navSlot, navItem);
 
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
