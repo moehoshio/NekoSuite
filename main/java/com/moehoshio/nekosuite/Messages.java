@@ -193,27 +193,22 @@ public class Messages {
     }
 
     /**
-     * Get translated item name. Looks up in items.<itemId> key.
-     * Falls back to the original itemId if no translation exists.
+     * Get translated item name. Looks up in items section using quoted key format.
+     * Falls back to the original itemId with cosmetic formatting if no translation exists.
      */
     public String getItemName(CommandSender target, String itemId) {
         if (itemId == null || itemId.isEmpty()) {
             return "Unknown";
         }
+        // YAML files use quoted keys like: "minecraft:iron_ingot": "Iron Ingot"
+        // The YamlConfiguration getPath internally handles quoted keys
         String key = "items.\"" + itemId + "\"";
-        String translated = getRawForLanguage(resolveLanguage(target), key);
+        String language = resolveLanguage(target);
+        String translated = getRawForLanguage(language, key);
         if (translated == null) {
             translated = getRawForLanguage(defaultLanguage, key);
         }
-        if (translated == null) {
-            // Try without quotes for compatibility
-            String simpleKey = "items." + itemId.replace(":", "\\:");
-            translated = getRawForLanguage(resolveLanguage(target), simpleKey);
-            if (translated == null) {
-                translated = getRawForLanguage(defaultLanguage, simpleKey);
-            }
-        }
-        // If still not found, use the itemId as-is but clean it up
+        // If still not found, use the itemId as-is but clean it up for display
         if (translated == null) {
             // Remove minecraft: prefix if present and capitalize
             String cleanName = itemId;
