@@ -72,6 +72,31 @@ menu:
     title: "&#c084fc✦ Wish Menu"
     pool:
       click_to_view: "&7Click to view details"
+      # Pool-specific translations - use pool id as key
+      StarPath:
+        name: "&eStar Path"
+        description:
+          - "&7[ &oFirst heart unchanged, every step is light &7]"
+          - ""
+          - "&bStarlight always shines in the sky, guiding those on their journey"
+      StarryMirage:
+        name: "&bStarry Mirage"
+        description:
+          - "&7[ &oStarlight reflected in dreams, woven into illusions &7]"
+          - ""
+          - "&7Starlight dreams will fade before 2025-&509-01"
+      OathOfTheRedRose:
+        name: "&dOath of the Red Rose"
+        description:
+          - "&7[ &oValentine's Day Limited Event &7]"
+          - ""
+          - "&dLimited Time Wish Pool"
+      GlimmeringPrayer:
+        name: "&6Glimmering Prayer"
+        description:
+          - "&7[ &oA ray of light through the starry night, whispered prayers carry wishes &7]"
+          - ""
+          - "&7Daily blessing grants you &eone wish"
     pool_detail:
       title: "&#c084fc✦ {pool}"
       fate_mark: "&7Fate Mark: &6{count}&7/&e{max_count}"

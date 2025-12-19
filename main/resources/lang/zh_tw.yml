@@ -747,6 +747,31 @@ menu:
     title: "&#c084fc✦ 祈願選單"
     pool:
       click_to_view: "&7點擊查看詳情"
+      # 祈願池翻譯 - 使用池ID作為鍵
+      StarPath:
+        name: "&e星途"
+        description:
+          - "&7[ &o初心未改，步步皆光 &7]"
+          - ""
+          - "&b星光始終於空中閃耀，指引踏上旅途的人"
+      StarryMirage:
+        name: "&b星光如夢"
+        description:
+          - "&7[ &o星河倒映夢中影，浮光織就幻世形 &7]"
+          - ""
+          - "&7星光幻夢將於 2025-&509-01&7 前消退"
+      OathOfTheRedRose:
+        name: "&d紅玫的誓約"
+        description:
+          - "&7[ &o情人節限定活動 &7]"
+          - ""
+          - "&d限時祈願池"
+      GlimmeringPrayer:
+        name: "&6微光之願"
+        description:
+          - "&7[ &o一縷微光穿星夜，輕聲禱語寄心願 &7]"
+          - ""
+          - "&7每日曦光贈送恩賜，&e可進行一次祈願"
     pool_detail:
       title: "&#c084fc✦ {pool}"
       fate_mark: "&7命運刻痕: &6{count}&7/&e{max_count}"
