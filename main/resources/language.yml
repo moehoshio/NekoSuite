@@ -1,5 +1,5 @@
 language:
-  default: "zh_tn"
+  default: "zh_tw"
   translations_dir: "lang"
   storage:
     data_dir: "userdata"

@@ -83,6 +83,10 @@ menu:
     balance_lore: "&7View your experience account"
   buy:
     title: "&#ff9933✦ Perk Purchase"
+    category:
+      vip: "&#ff66cc✦ VIP Privileges"
+      mcd: "&#5cc3ff✦ Monthly Card"
+      bag: "&#80ff8a✦ Backpack Expansion"
   mail:
     title: "&#7dd3fc✦ Mail System"
     unread_title: "&a✉ &f{subject}"
@@ -102,6 +106,17 @@ menu:
   sgame:
     title: "&#ffcc00✦ Cat Kingdom Adventure"
     victory_title: "&#ffcc00✦ Adventure Complete!"
+    start_game_title: "&#ffcc00✦ Start Adventure"
+    story_title: "&6✦ Cat Kingdom Legend"
+    story_desc1: "&7In the mysterious cat kingdom of Meoceria..."
+    story_desc2: "&7An ancient darkness threatens the land."
+    story_desc3: "&7As an adventurer, your mission is to save the kingdom!"
+    start_button: "&a✦ Start New Adventure"
+    start_button_lore1: "&7Starting gold: &6{starting_gold}"
+    start_button_lore2: "&7Starting health: &c{starting_health}"
+    start_button_lore3: "&7Adventure stages: &a{max_stages}"
+    click_to_start: "&eClick to start new game"
+    close: "&c✖ Close"
     status_title: "&7Adventure Status"
     gold_lore: "&6Gold: &f{gold}"
     health_lore: "&cHealth: &f{health}/{max_health}"
@@ -119,6 +134,7 @@ menu:
     end_game_lore: "&7Finish and claim rewards"
     back: "&7Back"
     event_selection_title: "&#60a5fa✦ Choose Event"
+    event_confirm_title: "&#f59e42✦ Confirm Event"
     event_title: "&#60a5fa✦ Event"
     battle_menu_title: "&#ff6666✦ Battle"
     shop_menu_title: "&#ffcc00✦ Shop"
