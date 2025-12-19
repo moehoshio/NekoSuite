@@ -59,6 +59,13 @@ exp:
     limit_total: "&c✖ Total exchange limit reached."
     insufficient: "&c✖ Not enough experience, need &6{diff} &cmore xp. &7(requires &6{cost}&7, have &6{stored}&7)"
     cost_lore: "&7Cost: &c{cost} &7xp"
+    item:
+      CloudspringAzureBlade:
+        name: "&bCloudspring Azure Blade"
+      bal100:
+        name: "&6100 Gold"
+      enchantedGoldenApple3:
+        name: "&6Enchanted Golden Apple x3"
 
 menu:
   wish:
@@ -231,6 +238,7 @@ buy:
   usage: "&7Usage: &f/buy &6<type> <level> &7or &f/buy menu"
   not_found: "&c✖ Product not found"
   already_active: "&c✖ You already own this perk and it is not expired"
+  bag_downgrade_blocked: "&c✖ You already own a higher level backpack. Only the highest level is effective."
   success: "&a✔ &7Purchased: &6{product}"
   expired: "&e⚠ &7Removed expired perk: &c{product}"
   insufficient_balance: "&c✖ Insufficient balance, need &6{cost}&c, you have &6{balance}&c."
@@ -921,10 +929,20 @@ navigation:
   buy_lore: "&7Purchase VIP and monthly cards"
   mail_button: "&f✦ Mail"
   mail_lore: "&7View your mail"
-  sgame_button: "&6✦ Strategy Game"
-  sgame_lore: "&7Cat Kingdom Adventure"
+  games_button: "&6✦ Games"
+  games_lore: "&7Play mini-games"
   help_button: "&7? Help"
   help_lore: "&7View help information"
+
+# Games page
+games:
+  title: "&#ffcc00✦ Mini Games"
+  sgame:
+    title: "&6✦ Cat Kingdom Adventure"
+    lore:
+      - "&7A strategy adventure game"
+      - "&7Explore, battle, and trade!"
+      - "&eClick to play"
 
 # Help page
 help:

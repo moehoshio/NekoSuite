@@ -1518,6 +1518,54 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         public Inventory getInventory() { return null; }
     }
 
+    private static class GamesMenuHolder implements InventoryHolder {
+        public Inventory getInventory() { return null; }
+    }
+
+    private void openGamesMenu(Player player) {
+        MenuLayout.GamesLayout layout = menuLayout.getGamesLayout();
+        Inventory inv = Bukkit.createInventory(new GamesMenuHolder(), layout.getSize(), messages.format(player, layout.getTitleKey()));
+        
+        // Render items from config
+        for (MenuLayout.MenuItem item : layout.getItems().values()) {
+            org.bukkit.Material material = org.bukkit.Material.STONE;
+            try {
+                material = org.bukkit.Material.valueOf(item.getMaterial().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+            ItemStack stack = new ItemStack(material);
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(messages.format(player, item.getNameKey()));
+                List<String> lore = new ArrayList<String>();
+                // Check if lore_key is a list or single string
+                List<String> loreLines = messages.getList(player, item.getLoreKey());
+                if (loreLines != null && !loreLines.isEmpty()) {
+                    lore.addAll(messages.colorize(loreLines));
+                } else {
+                    String singleLore = messages.format(player, item.getLoreKey());
+                    if (!singleLore.equals(item.getLoreKey())) {
+                        lore.add(singleLore);
+                    }
+                }
+                if (item.hasAction()) {
+                    lore.add(ChatColor.DARK_GRAY + "ACTION:" + item.getAction());
+                }
+                if (item.hasCommand()) {
+                    lore.add(ChatColor.DARK_GRAY + "COMMAND:" + item.getCommand());
+                }
+                meta.setLore(lore);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(item.getSlot(), stack);
+        }
+        
+        // Close button
+        inv.setItem(layout.getCloseSlot(), createCloseItem(player));
+        
+        player.openInventory(inv);
+    }
+
     private boolean handleLanguage(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(messages.format(sender, "common.only_player"));
@@ -1658,6 +1706,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return true;
                 case "OPEN_SGAME":
                     strategyGameManager.continueGame(player);
+                    return true;
+                case "OPEN_GAMES":
+                    openGamesMenu(player);
                     return true;
                 case "OPEN_HELP":
                     openHelpMenu(player);
@@ -2309,6 +2360,25 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return;
         }
         if (holder instanceof HelpMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            String action = extractActionFromMeta(meta);
+            String command = extractCommandFromMeta(meta);
+            handleMenuAction(player, action, command);
+            return;
+        }
+        if (holder instanceof GamesMenuHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getView().getTopInventory()) {
                 return;

@@ -59,6 +59,13 @@ exp:
     limit_total: "&c✖ 已达总兑换上限。"
     insufficient: "&c✖ 经验不足，还需 &6{diff} &c经验。&7(需 &6{cost}&7，当前 &6{stored}&7)"
     cost_lore: "&7消耗: &c{cost} &7xp"
+    item:
+      CloudspringAzureBlade:
+        name: "&b碧波云泉剑"
+      bal100:
+        name: "&6100 金币"
+      enchantedGoldenApple3:
+        name: "&6附魔金苹果 x3"
 
 menu:
   wish:
@@ -231,6 +238,7 @@ buy:
   usage: "&7用法: &f/buy &6<类型> <等级> &7或 &f/buy menu"
   not_found: "&c✖ 未找到该商品"
   already_active: "&c✖ 你已拥有该特权且未过期"
+  bag_downgrade_blocked: "&c✖ 你已拥有更高等级的背包，只有最高等级生效。"
   success: "&a✔ &7购买成功: &6{product}"
   expired: "&e⚠ &7已移除过期特权: &c{product}"
   insufficient_balance: "&c✖ 余额不足，需 &6{cost}&c，当前 &6{balance}&c。"
@@ -921,10 +929,20 @@ navigation:
   buy_lore: "&7购买VIP和月卡"
   mail_button: "&f✦ 邮件"
   mail_lore: "&7查看邮件"
-  sgame_button: "&6✦ 策略游戏"
-  sgame_lore: "&7猫咪王国冒险"
+  games_button: "&6✦ 游戏"
+  games_lore: "&7游玩小游戏"
   help_button: "&7? 帮助"
   help_lore: "&7查看帮助信息"
+
+# 游戏页
+games:
+  title: "&#ffcc00✦ 小游戏"
+  sgame:
+    title: "&6✦ 猫咪王国冒险"
+    lore:
+      - "&7策略冒险游戏"
+      - "&7探索、战斗、交易！"
+      - "&e点击开始游玩"
 
 # 帮助页
 help:
