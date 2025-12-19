@@ -196,6 +196,10 @@ public class BuyManager {
         addCategoryLabel(inv, 17, org.bukkit.Material.PAPER, messages.format(player, "menu.buy.category.mcd"));
         addCategoryLabel(inv, 26, org.bukkit.Material.CHEST, messages.format(player, "menu.buy.category.bag"));
         
+        // Nav button at second to last slot
+        int navSlot = inventorySize - 2;
+        inv.setItem(navSlot, createNavItem(player));
+        
         // Close button at bottom right
         int closeSlot = inventorySize - 1;
         ItemStack close = new ItemStack(org.bukkit.Material.BARRIER);
@@ -207,6 +211,20 @@ public class BuyManager {
         inv.setItem(closeSlot, close);
         
         player.openInventory(inv);
+    }
+
+    private ItemStack createNavItem(Player player) {
+        ItemStack item = new ItemStack(org.bukkit.Material.COMPASS);
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(messages.format(player, "menu.nav.back_to_nav"));
+            List<String> lore = new ArrayList<String>();
+            lore.add(messages.format(player, "menu.nav.back_to_nav_lore"));
+            lore.add(ChatColor.DARK_GRAY + "CMD:nekonav");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
     
     private void placeProductsInRow(Inventory inv, List<Product> productList, int startSlot, Player player) {
@@ -261,6 +279,22 @@ public class BuyManager {
         if (clicked.getType() == org.bukkit.Material.BARRIER) {
             player.closeInventory();
             return true;
+        }
+        // Check for nav button command
+        if (clicked.getType() == org.bukkit.Material.COMPASS) {
+            if (clicked.hasItemMeta() && clicked.getItemMeta().getLore() != null) {
+                for (String line : clicked.getItemMeta().getLore()) {
+                    if (line != null && line.contains("CMD:")) {
+                        String cleaned = ChatColor.stripColor(line);
+                        String cmd = cleaned.substring(cleaned.indexOf("CMD:") + 4).trim();
+                        if (!cmd.isEmpty()) {
+                            player.closeInventory();
+                            player.performCommand(cmd);
+                            return true;
+                        }
+                    }
+                }
+            }
         }
         String closeLabel = ChatColor.stripColor(messages.format(player, "menu.close"));
         String display = clicked.hasItemMeta() && clicked.getItemMeta().hasDisplayName()

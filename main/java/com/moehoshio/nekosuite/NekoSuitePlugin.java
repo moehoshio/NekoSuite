@@ -1116,10 +1116,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         return true;
     }
 
+    private int safeParseInt(Object value, int defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     private void openNavigationMenu(Player player) {
         ConfigurationSection navSection = uiConfig.getConfigurationSection("navigation");
         if (navSection == null) {
-            player.sendMessage(messages.format(player, "common.reload_success"));
+            getLogger().warning("Navigation configuration not found in ui_config.yml");
             return;
         }
         int size = navSection.getInt("size", 27);
@@ -1128,7 +1139,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         
         List<Map<?, ?>> items = navSection.getMapList("items");
         for (Map<?, ?> item : items) {
-            int slot = item.get("slot") != null ? Integer.parseInt(item.get("slot").toString()) : 0;
+            int slot = safeParseInt(item.get("slot"), 0);
             String materialName = item.get("material") != null ? item.get("material").toString() : "STONE";
             String name = item.get("name") != null ? item.get("name").toString() : "Item";
             List<?> loreList = (List<?>) item.get("lore");
@@ -1178,7 +1189,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private void openHelpMenu(Player player) {
         ConfigurationSection helpSection = uiConfig.getConfigurationSection("help");
         if (helpSection == null) {
-            player.sendMessage(messages.format(player, "common.reload_success"));
+            getLogger().warning("Help configuration not found in ui_config.yml");
             return;
         }
         int size = helpSection.getInt("size", 27);
@@ -1187,7 +1198,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         
         List<Map<?, ?>> items = helpSection.getMapList("items");
         for (Map<?, ?> item : items) {
-            int slot = item.get("slot") != null ? Integer.parseInt(item.get("slot").toString()) : 0;
+            int slot = safeParseInt(item.get("slot"), 0);
             String materialName = item.get("material") != null ? item.get("material").toString() : "STONE";
             String name = item.get("name") != null ? item.get("name").toString() : "Item";
             List<?> loreList = (List<?>) item.get("lore");
