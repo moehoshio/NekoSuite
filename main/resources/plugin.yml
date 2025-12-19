@@ -57,12 +57,12 @@ commands:
     permission: nekosuite.announce
   nekomenu:
     description: 主選單/導航頁
-    usage: /neko [menu]
+    usage: /neko [menu|help]
     permission: nekosuite.menu
     aliases:
       - neko
   nekohelp:
-    description: 幫助頁
+    description: 幫助頁 (已棄用，請使用 /neko help)
     usage: /neko help
     permission: nekosuite.help
   ntp:
