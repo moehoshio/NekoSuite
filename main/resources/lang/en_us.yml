@@ -33,6 +33,7 @@ event:
     not_found: "Event not found"
     closed: "Event is not open"
     limit: "Participation limit reached"
+    wrong_day: "This event is not available today"
 
 exp:
   usage: "&7Usage: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"

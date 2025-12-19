@@ -203,11 +203,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             sender.sendMessage(messages.format(sender, "common.only_player"));
             return true;
         }
+        Player player = (Player) sender;
         if (args.length == 0) {
-            sender.sendMessage(messages.format(sender, "wish.usage"));
+            // No args: open menu directly
+            openWishMenu(player);
             return true;
         }
-        Player player = (Player) sender;
         if ("menu".equalsIgnoreCase(args[0])) {
             openWishMenu(player);
             return true;
@@ -422,11 +423,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             sender.sendMessage(messages.format(sender, "common.only_player"));
             return true;
         }
+        Player player = (Player) sender;
         if (args.length < 1) {
-            sender.sendMessage(messages.format(sender, "buy.usage"));
+            // No args: open menu directly
+            buyManager.openMenu(player);
             return true;
         }
-        Player player = (Player) sender;
         if ("menu".equalsIgnoreCase(args[0])) {
             buyManager.openMenu(player);
             return true;
@@ -1155,9 +1157,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 map.put("player", target.getName());
                 map.put("item", displayName);
                 sender.sendMessage(messages.format(sender, "artifact.admin_success", map));
-                // 發送帶懸浮信息的訊息給目標玩家
+                // 發送帶懸浮信息的訊息給目標玩家 (使用原始訊息模板，讓 sendItemMessage 處理 {item} 替換)
                 artifactRewardsManager.sendItemMessage(target, itemId, 
-                    messages.format(target, "artifact.receive", map));
+                    messages.getRaw(target, "artifact.receive"));
             } catch (ArtifactRewardsManager.ArtifactException e) {
                 Map<String, String> map = new HashMap<String, String>();
                 map.put("item", itemId);
@@ -2787,6 +2789,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (!def.isEnabled() || !def.isActive(now)) {
                 throw new EventException(messages.format(player, "event.error.closed"));
             }
+            
+            // 檢查是否是允許的星期幾
+            EventLimit limit = def.getLimit();
+            if (limit != null && !limit.isScheduledDay()) {
+                throw new EventException(messages.format(player, "event.error.wrong_day"));
+            }
+            
             YamlConfiguration data = loadUserData(player.getName());
             if (!canParticipate(def, data, now)) {
                 throw new EventException(messages.format(player, "event.error.limit"));
@@ -2827,6 +2836,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (limit == null || limit.getCount() <= 0 || limit.getWindowMillis() <= 0) {
                 return true;
             }
+            
+            // 檢查是否是允許的星期幾
+            if (!limit.isScheduledDay()) {
+                return false;
+            }
+            
             String base = "event.limits." + def.getId();
             long windowStart = data.getLong(base + ".windowStart", 0L);
             int used = data.getInt(base + ".count", 0);
@@ -2964,10 +2979,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private static class EventLimit {
         private final int count;
         private final long windowMillis;
+        private final int scheduleDayOfWeek; // 1=Monday, 7=Sunday, 0=any day
+        private final String refreshAtTime;  // HH:mm format, e.g., "00:00"
 
-        EventLimit(int count, long windowMillis) {
+        EventLimit(int count, long windowMillis, int scheduleDayOfWeek, String refreshAtTime) {
             this.count = count;
             this.windowMillis = windowMillis;
+            this.scheduleDayOfWeek = scheduleDayOfWeek;
+            this.refreshAtTime = refreshAtTime;
         }
 
         static EventLimit fromSection(ConfigurationSection section, java.util.logging.Logger logger) {
@@ -2976,10 +2995,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             int count = section.getInt("count", 0);
             long windowMillis = parseDurationMillis(section.getString("time"), logger);
+            int scheduleDayOfWeek = section.getInt("refresh_at_week", 0); // 0 = any day
+            String refreshAtTime = section.getString("refresh_at_time", "00:00");
             if (count <= 0 || windowMillis <= 0) {
                 return null;
             }
-            return new EventLimit(count, windowMillis);
+            return new EventLimit(count, windowMillis, scheduleDayOfWeek, refreshAtTime);
         }
 
         int getCount() {
@@ -2988,6 +3009,27 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         long getWindowMillis() {
             return windowMillis;
+        }
+
+        int getScheduleDayOfWeek() {
+            return scheduleDayOfWeek;
+        }
+
+        String getRefreshAtTime() {
+            return refreshAtTime;
+        }
+
+        /**
+         * 檢查當前是否是允許參與的日期
+         * @return true 如果今天是允許的星期幾（或沒有限制）
+         */
+        boolean isScheduledDay() {
+            if (scheduleDayOfWeek <= 0 || scheduleDayOfWeek > 7) {
+                return true; // 沒有星期限制
+            }
+            // Java DayOfWeek: MONDAY=1, SUNDAY=7
+            int today = java.time.LocalDate.now().getDayOfWeek().getValue();
+            return today == scheduleDayOfWeek;
         }
 
         private static long parseDurationMillis(String raw, java.util.logging.Logger logger) {

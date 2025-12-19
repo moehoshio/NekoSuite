@@ -33,6 +33,7 @@ event:
     not_found: "活動不存在"
     closed: "活動未開啟"
     limit: "已達到參與限制"
+    wrong_day: "今天不是此活動的開放日"
 
 exp:
   usage: "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
