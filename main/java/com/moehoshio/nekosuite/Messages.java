@@ -1,5 +1,10 @@
 package com.moehoshio.nekosuite;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -434,6 +439,107 @@ public class Messages {
         }
         text = translateHexColors(text);
         return ChatColor.translateAlternateColorCodes('&', text);
+    }
+
+    /**
+     * Create a TextComponent with hover text that shows when the player hovers over the message.
+     * 
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @return TextComponent with hover functionality
+     */
+    public TextComponent createHoverText(String text, String hoverText) {
+        TextComponent component = new TextComponent(colorize(text));
+        if (hoverText != null && !hoverText.isEmpty()) {
+            component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new Text(colorize(hoverText))));
+        }
+        return component;
+    }
+
+    /**
+     * Create a TextComponent with hover text and a click command.
+     * 
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @param command The command to run when clicked (without the leading /)
+     * @return TextComponent with hover and click functionality
+     */
+    public TextComponent createHoverClickText(String text, String hoverText, String command) {
+        TextComponent component = createHoverText(text, hoverText);
+        if (command != null && !command.isEmpty()) {
+            String cmd = command.startsWith("/") ? command : "/" + command;
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd));
+        }
+        return component;
+    }
+
+    /**
+     * Create a TextComponent with hover text that suggests a command when clicked.
+     * 
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @param command The command to suggest when clicked
+     * @return TextComponent with hover and suggest functionality
+     */
+    public TextComponent createHoverSuggestText(String text, String hoverText, String command) {
+        TextComponent component = createHoverText(text, hoverText);
+        if (command != null && !command.isEmpty()) {
+            String cmd = command.startsWith("/") ? command : "/" + command;
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, cmd));
+        }
+        return component;
+    }
+
+    /**
+     * Send a message with hover text to a player.
+     * 
+     * @param player The player to send the message to
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     */
+    public void sendHoverMessage(Player player, String text, String hoverText) {
+        TextComponent component = createHoverText(text, hoverText);
+        player.spigot().sendMessage(component);
+    }
+
+    /**
+     * Send a message with hover text and click action to a player.
+     * 
+     * @param player The player to send the message to
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @param command The command to run when clicked
+     */
+    public void sendHoverClickMessage(Player player, String text, String hoverText, String command) {
+        TextComponent component = createHoverClickText(text, hoverText, command);
+        player.spigot().sendMessage(component);
+    }
+
+    /**
+     * Build a composite message with multiple components.
+     * Each component can have its own hover and click actions.
+     * 
+     * @param components Array of TextComponents to combine
+     * @return Combined TextComponent
+     */
+    public TextComponent buildMessage(TextComponent... components) {
+        TextComponent result = new TextComponent();
+        for (TextComponent comp : components) {
+            result.addExtra(comp);
+        }
+        return result;
+    }
+
+    /**
+     * Send a composite message to a player.
+     * 
+     * @param player The player to send the message to
+     * @param components Array of TextComponents to combine and send
+     */
+    public void sendMessage(Player player, TextComponent... components) {
+        TextComponent message = buildMessage(components);
+        player.spigot().sendMessage(message);
     }
 
 }

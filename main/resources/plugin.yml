@@ -63,3 +63,7 @@ commands:
     description: 幫助頁
     usage: /nekohelp
     permission: nekosuite.help
+  ntp:
+    description: 傳送系統
+    usage: /ntp <玩家>|accept|deny|toggle|cancel
+    permission: nekosuite.tp

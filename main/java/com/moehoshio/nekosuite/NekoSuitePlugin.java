@@ -54,6 +54,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private MenuLayout menuLayout;
     private StrategyGameManager strategyGameManager;
     private ArtifactRewardsManager artifactRewardsManager;
+    private TeleportManager teleportManager;
 
     @Override
     public void onEnable() {
@@ -63,6 +64,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("lang/zh_cn.yml", false);
         saveResource("wish_config.yml", false);
         saveResource("event_config.yml", false);
+        saveResource("tp_config.yml", false);
         saveResource("exp_config.yml", false);
         saveResource("cdk_config.yml", false);
         saveResource("buy_config.yml", false);
@@ -173,6 +175,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("nekohelp").setExecutor(this);
             getCommand("nekohelp").setTabCompleter(this);
         }
+        if (getCommand("ntp") != null) {
+            getCommand("ntp").setExecutor(this);
+            getCommand("ntp").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -211,6 +217,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleNekoMenu(sender);
             case "nekohelp":
                 return handleNekoHelp(sender);
+            case "ntp":
+                return handleTeleport(sender, args);
             default:
                 return false;
         }
@@ -1006,6 +1014,23 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
                 break;
+            case "ntp":
+                if (args.length == 1) {
+                    List<String> options = new ArrayList<String>();
+                    options.add("accept");
+                    options.add("deny");
+                    options.add("toggle");
+                    options.add("cancel");
+                    options.add("status");
+                    // Add online player names
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (!p.getName().equals(sender.getName())) {
+                            options.add(p.getName());
+                        }
+                    }
+                    return filter(options, args[0]);
+                }
+                break;
             default:
                 break;
         }
@@ -1067,6 +1092,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         mailManager = new MailManager(this, messages, new File(getDataFolder(), "mail_config.yml"), menuLayout);
         strategyGameManager = new StrategyGameManager(this, messages, new File(getDataFolder(), "strategy_game_config.yml"), menuLayout);
         artifactRewardsManager = new ArtifactRewardsManager(this, messages, new File(getDataFolder(), "artifact_rewards_config.yml"));
+        teleportManager = new TeleportManager(this, messages, new File(getDataFolder(), "tp_config.yml"), economy);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1245,6 +1271,73 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         Player player = (Player) sender;
         openHelpMenu(player);
         return true;
+    }
+
+    private boolean handleTeleport(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+
+        if (args.length == 0) {
+            sender.sendMessage(messages.format(sender, "tp.usage"));
+            // Show current TP status
+            if (teleportManager.isTpEnabled(player.getName())) {
+                sender.sendMessage(messages.format(sender, "tp.status_on"));
+            } else {
+                sender.sendMessage(messages.format(sender, "tp.status_off"));
+            }
+            return true;
+        }
+
+        String subCommand = args[0].toLowerCase();
+
+        switch (subCommand) {
+            case "accept":
+            case "yes":
+            case "y":
+                teleportManager.acceptTpRequest(player);
+                return true;
+            case "deny":
+            case "no":
+            case "n":
+                teleportManager.denyTpRequest(player);
+                return true;
+            case "toggle":
+                boolean newStatus = teleportManager.toggleTpStatus(player);
+                if (newStatus) {
+                    player.sendMessage(messages.format(player, "tp.toggle_on"));
+                } else {
+                    player.sendMessage(messages.format(player, "tp.toggle_off"));
+                }
+                return true;
+            case "cancel":
+                teleportManager.cancelTpRequest(player);
+                return true;
+            case "status":
+                if (teleportManager.isTpEnabled(player.getName())) {
+                    player.sendMessage(messages.format(player, "tp.status_on"));
+                } else {
+                    player.sendMessage(messages.format(player, "tp.status_off"));
+                }
+                return true;
+            default:
+                // Assume it's a player name - send TP request
+                Player target = Bukkit.getPlayer(args[0]);
+                if (target == null || !target.isOnline()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("player", args[0]);
+                    player.sendMessage(messages.format(player, "tp.player_not_found", map));
+                    return true;
+                }
+                if (target.equals(player)) {
+                    player.sendMessage(messages.format(player, "tp.cannot_tp_self"));
+                    return true;
+                }
+                teleportManager.sendTpRequest(player, target);
+                return true;
+        }
     }
 
     private void openNavigationMenu(Player player) {
