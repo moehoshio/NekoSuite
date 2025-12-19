@@ -713,6 +713,19 @@ sgame:
         choice3:
           text: "&cKeep moving"
           result: "&7You decide not to waste time and move on."
+      late_rest_station:
+        name: "&dAdventurer's Inn"
+        desc1: "&7You arrive at an inn made for adventurers."
+        desc2: "&7Prepare for the powerful enemies ahead."
+        choice1:
+          text: "&aPaid rest (costs 20 gold)"
+          result: "&7You got a full rest and recovered body and mind!"
+        choice2:
+          text: "&eQuick rest"
+          result: "&7You took a short break and recovered some health."
+        choice3:
+          text: "&cKeep moving"
+          result: "&7You decide to save time and continue adventuring."
       final_warning:
         name: "&c⚠ Final Battle Approaches"
         desc1: "&7You sense a powerful darkness ahead..."

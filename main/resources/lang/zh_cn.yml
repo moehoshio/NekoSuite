@@ -713,6 +713,19 @@ sgame:
         choice3:
           text: "&c继续前进"
           result: "&7你决定不浪费时间，继续前进。"
+      late_rest_station:
+        name: "&d勇者驿站"
+        desc1: "&7你来到了一个专为冒险者设立的驿站。"
+        desc2: "&7这里可以为即将到来的强敌做好准备。"
+        choice1:
+          text: "&a付费休息 (消耗20金币)"
+          result: "&7你得到了完整的休息，身心得到恢复！"
+        choice2:
+          text: "&e简单休息"
+          result: "&7你稍作休息，恢复了一些体力。"
+        choice3:
+          text: "&c继续前进"
+          result: "&7你决定争分夺秒，继续冒险。"
       final_warning:
         name: "&c⚠ 最终决战在即"
         desc1: "&7你感受到前方传来强大的黑暗力量..."

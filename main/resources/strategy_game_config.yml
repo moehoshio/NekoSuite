@@ -5,8 +5,8 @@ storage:
   data_dir: userdata
 
 game:
-  # 起始金幣
-  starting_gold: 30
+  # 起始金幣 (增加到50以便玩家能購買初始裝備)
+  starting_gold: 50
   # 起始生命值
   starting_health: 100
   # 完成遊戲所需的最大階段數
@@ -14,7 +14,7 @@ game:
   # 起始戰鬥屬性
   starting_attack: 10
   starting_defense: 5
-  starting_magic: 20
+  starting_magic: 25
 
 # 遊戲事件配置
 # type: story (普通劇情), shop (商店), battle (戰鬥)
@@ -453,7 +453,7 @@ events:
         gold_change: 0
         health_change: 0
 
-  # 固定階段事件 - 中期休息站 (第5關)
+  # 固定階段事件 - 中期休息站 (第6關)
   rest_station:
     name: "sgame.config.events.rest_station.name"
     type: story
@@ -473,6 +473,29 @@ events:
         health_change: 20
       - text: "sgame.config.events.rest_station.choice3.text"
         result: "sgame.config.events.rest_station.choice3.result"
+        gold_change: 0
+        health_change: 0
+
+  # 固定階段事件 - 後期休息站 (第10關，迎戰強敵前的準備)
+  late_rest_station:
+    name: "sgame.config.events.late_rest_station.name"
+    type: story
+    weight: 10
+    fixed_stage: 10
+    description:
+      - "sgame.config.events.late_rest_station.desc1"
+      - "sgame.config.events.late_rest_station.desc2"
+    choices:
+      - text: "sgame.config.events.late_rest_station.choice1.text"
+        result: "sgame.config.events.late_rest_station.choice1.result"
+        gold_change: -20
+        health_change: 50
+      - text: "sgame.config.events.late_rest_station.choice2.text"
+        result: "sgame.config.events.late_rest_station.choice2.result"
+        gold_change: 0
+        health_change: 25
+      - text: "sgame.config.events.late_rest_station.choice3.text"
+        result: "sgame.config.events.late_rest_station.choice3.result"
         gold_change: 0
         health_change: 0
 
@@ -518,35 +541,35 @@ shop:
   items:
     - id: small_potion
       name: "sgame.config.shop.small_potion.name"
-      price: 20
+      price: 15
       material: POTION
       effect_type: heal
       effect_value: 25
       effect_description: "sgame.config.shop.small_potion.effect"
     - id: large_potion
       name: "sgame.config.shop.large_potion.name"
-      price: 45
+      price: 35
       material: SPLASH_POTION
       effect_type: heal
       effect_value: 50
       effect_description: "sgame.config.shop.large_potion.effect"
     - id: health_upgrade
       name: "sgame.config.shop.health_upgrade.name"
-      price: 80
+      price: 70
       material: GOLDEN_APPLE
       effect_type: max_health
       effect_value: 20
       effect_description: "sgame.config.shop.health_upgrade.effect"
     - id: lucky_coin
       name: "sgame.config.shop.lucky_coin.name"
-      price: 30
+      price: 25
       material: GOLD_NUGGET
       effect_type: heal
       effect_value: 10
       effect_description: "sgame.config.shop.lucky_coin.effect"
     - id: healing_potion
       name: "sgame.config.shop.healing_potion.name"
-      price: 25
+      price: 20
       material: LINGERING_POTION
       effect_type: item
       effect_value: 1
@@ -559,7 +582,7 @@ equipment:
     - id: iron_sword
       name: "sgame.config.equipment.iron_sword.name"
       slot: weapon
-      price: 50
+      price: 40
       material: IRON_SWORD
       attack_bonus: 5
       defense_bonus: 0
@@ -568,7 +591,7 @@ equipment:
     - id: steel_sword
       name: "sgame.config.equipment.steel_sword.name"
       slot: weapon
-      price: 100
+      price: 85
       material: DIAMOND_SWORD
       attack_bonus: 12
       defense_bonus: 0
@@ -577,7 +600,7 @@ equipment:
     - id: leather_armor
       name: "sgame.config.equipment.leather_armor.name"
       slot: armor
-      price: 40
+      price: 35
       material: LEATHER_CHESTPLATE
       attack_bonus: 0
       defense_bonus: 3
@@ -586,7 +609,7 @@ equipment:
     - id: iron_armor
       name: "sgame.config.equipment.iron_armor.name"
       slot: armor
-      price: 80
+      price: 70
       material: IRON_CHESTPLATE
       attack_bonus: 0
       defense_bonus: 8
@@ -595,7 +618,7 @@ equipment:
     - id: magic_ring
       name: "sgame.config.equipment.magic_ring.name"
       slot: accessory
-      price: 60
+      price: 50
       material: GOLD_INGOT
       attack_bonus: 2
       defense_bonus: 2
@@ -604,7 +627,7 @@ equipment:
     - id: amulet_of_protection
       name: "sgame.config.equipment.amulet_of_protection.name"
       slot: accessory
-      price: 75
+      price: 65
       material: EMERALD
       attack_bonus: 0
       defense_bonus: 5
