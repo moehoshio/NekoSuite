@@ -83,6 +83,10 @@ menu:
     balance_lore: "&7查看您的经验账户"
   buy:
     title: "&#ff9933✦ 特权购买"
+    category:
+      vip: "&#ff66cc✦ VIP 特权"
+      mcd: "&#5cc3ff✦ 月卡福利"
+      bag: "&#80ff8a✦ 背包扩展"
   mail:
     title: "&#7dd3fc✦ 邮件系统"
     unread_title: "&a✉ &f{subject}"
@@ -102,6 +106,17 @@ menu:
   sgame:
     title: "&#ffcc00✦ 猫咪王国冒险"
     victory_title: "&#ffcc00✦ 冒险成功！"
+    start_game_title: "&#ffcc00✦ 开始冒险"
+    story_title: "&6✦ 猫咪王国传说"
+    story_desc1: "&7在神秘的猫咪王国「喵科利亚」中..."
+    story_desc2: "&7一股古老的黑暗力量正在威胁这片土地。"
+    story_desc3: "&7作为冒险者，你的使命是拯救王国！"
+    start_button: "&a✦ 开始新冒险"
+    start_button_lore1: "&7起始金币: &6{starting_gold}"
+    start_button_lore2: "&7起始生命: &c{starting_health}"
+    start_button_lore3: "&7冒险关卡: &a{max_stages}"
+    click_to_start: "&e点击开始新游戏"
+    close: "&c✖ 关闭"
     status_title: "&7冒险状态"
     gold_lore: "&6金币: &f{gold}"
     health_lore: "&c生命: &f{health}/{max_health}"
@@ -119,6 +134,7 @@ menu:
     end_game_lore: "&7完成冒险并领取奖励"
     back: "&7返回"
     event_selection_title: "&#60a5fa✦ 选择事件"
+    event_confirm_title: "&#f59e42✦ 确认事件"
     event_title: "&#60a5fa✦ 事件"
     battle_menu_title: "&#ff6666✦ 战斗"
     shop_menu_title: "&#ffcc00✦ 商店"
@@ -697,6 +713,19 @@ sgame:
         choice3:
           text: "&c继续前进"
           result: "&7你决定不浪费时间，继续前进。"
+      late_rest_station:
+        name: "&d勇者驿站"
+        desc1: "&7你来到了一个专为冒险者设立的驿站。"
+        desc2: "&7这里可以为即将到来的强敌做好准备。"
+        choice1:
+          text: "&a付费休息 (消耗20金币)"
+          result: "&7你得到了完整的休息，身心得到恢复！"
+        choice2:
+          text: "&e简单休息"
+          result: "&7你稍作休息，恢复了一些体力。"
+        choice3:
+          text: "&c继续前进"
+          result: "&7你决定争分夺秒，继续冒险。"
       final_warning:
         name: "&c⚠ 最终决战在即"
         desc1: "&7你感受到前方传来强大的黑暗力量..."
