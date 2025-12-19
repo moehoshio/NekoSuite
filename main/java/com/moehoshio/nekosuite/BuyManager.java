@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class BuyManager {
 
+    private static final long MS_PER_DAY = 24L * 60L * 60L * 1000L;
+    
     private final JavaPlugin plugin;
     private final Messages messages;
     private final File storageDir;
@@ -111,11 +113,14 @@ public class BuyManager {
                 long oldExpiry = data.getLong(oldKey + ".expiry", 0L);
                 long remainingMs = oldExpiry - now;
                 if (remainingMs > 0) {
-                    long remainingDays = remainingMs / (24L * 60L * 60L * 1000L);
-                    // Calculate daily value: price / duration
+                    long remainingDays = remainingMs / MS_PER_DAY;
+                    // Time conversion calculation:
+                    // 1. Calculate daily value of each tier: price / duration_days
+                    // 2. Calculate remaining value of old subscription: remaining_days * old_daily_value
+                    // 3. Convert remaining value to new tier's days: remaining_value / new_daily_value
+                    // This ensures fair conversion when upgrading (fewer new days) or downgrading (more new days)
                     double oldDailyValue = (double) oldProduct.getPrice() / oldProduct.getDurationDays();
                     double newDailyValue = (double) product.getPrice() / product.getDurationDays();
-                    // Convert old value to new duration: (remaining_days * old_daily_value) / new_daily_value
                     if (newDailyValue > 0) {
                         convertedDays = (long) ((remainingDays * oldDailyValue) / newDailyValue);
                     }
