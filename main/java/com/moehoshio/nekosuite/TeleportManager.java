@@ -10,7 +10,9 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -18,7 +20,8 @@ import java.util.UUID;
  * 
  * Features:
  * - Teleport to other players with configurable cost
- * - Toggle TP status (allow/disallow being teleported to)
+ * - Toggle TP status (allow/disallow being teleported to) - player controlled
+ * - Admin lock system (completely prohibit TP and being TP'd to) - server controlled
  * - Pending request system with timeout
  * - Request accept/deny functionality
  */
@@ -36,6 +39,10 @@ public class TeleportManager {
 
     // Pending TP requests: target UUID -> requester UUID
     private final Map<UUID, TpRequest> pendingRequests = new HashMap<UUID, TpRequest>();
+    
+    // Admin-controlled locked players (cannot TP or be TP'd to)
+    // This is for dungeons, minigames, etc. - server controlled, not player controlled
+    private final Set<UUID> lockedPlayers = new HashSet<UUID>();
 
     public TeleportManager(JavaPlugin plugin, Messages messages, File configFile, Economy economy) {
         this.plugin = plugin;
@@ -57,7 +64,105 @@ public class TeleportManager {
     }
 
     /**
-     * Check if a player allows teleportation to them.
+     * Check if a player is locked from teleporting (admin-controlled).
+     * Locked players cannot initiate TP requests or be teleported to.
+     * This is typically used for dungeons, minigames, etc.
+     * 
+     * @param player The player to check
+     * @return true if the player is locked from teleporting
+     */
+    public boolean isLocked(Player player) {
+        return lockedPlayers.contains(player.getUniqueId());
+    }
+
+    /**
+     * Check if a player is locked from teleporting by UUID.
+     * 
+     * @param playerId The player's UUID
+     * @return true if the player is locked
+     */
+    public boolean isLocked(UUID playerId) {
+        return lockedPlayers.contains(playerId);
+    }
+
+    /**
+     * Lock a player from teleporting (admin-controlled).
+     * Locked players cannot TP or be TP'd to.
+     * Use this for dungeons, minigames, etc.
+     * 
+     * @param player The player to lock
+     */
+    public void lockPlayer(Player player) {
+        lockedPlayers.add(player.getUniqueId());
+        // Cancel any pending requests involving this player
+        cancelAllRequestsForPlayer(player.getUniqueId());
+    }
+
+    /**
+     * Lock a player from teleporting by UUID.
+     * 
+     * @param playerId The player's UUID to lock
+     */
+    public void lockPlayer(UUID playerId) {
+        lockedPlayers.add(playerId);
+        cancelAllRequestsForPlayer(playerId);
+    }
+
+    /**
+     * Unlock a player from teleporting (admin-controlled).
+     * 
+     * @param player The player to unlock
+     */
+    public void unlockPlayer(Player player) {
+        lockedPlayers.remove(player.getUniqueId());
+    }
+
+    /**
+     * Unlock a player from teleporting by UUID.
+     * 
+     * @param playerId The player's UUID to unlock
+     */
+    public void unlockPlayer(UUID playerId) {
+        lockedPlayers.remove(playerId);
+    }
+
+    /**
+     * Set a player's lock status.
+     * 
+     * @param player The player
+     * @param locked true to lock, false to unlock
+     */
+    public void setLocked(Player player, boolean locked) {
+        if (locked) {
+            lockPlayer(player);
+        } else {
+            unlockPlayer(player);
+        }
+    }
+
+    /**
+     * Cancel all pending TP requests involving a player (as requester or target).
+     * 
+     * @param playerId The player's UUID
+     */
+    private void cancelAllRequestsForPlayer(UUID playerId) {
+        // Remove as target
+        pendingRequests.remove(playerId);
+        
+        // Remove as requester
+        Set<UUID> toRemove = new HashSet<UUID>();
+        for (Map.Entry<UUID, TpRequest> entry : pendingRequests.entrySet()) {
+            if (entry.getValue().getRequesterId().equals(playerId)) {
+                toRemove.add(entry.getKey());
+            }
+        }
+        for (UUID targetId : toRemove) {
+            pendingRequests.remove(targetId);
+        }
+    }
+
+    /**
+     * Check if a player allows teleportation to them (player-controlled toggle).
      */
     public boolean isTpEnabled(String playerName) {
         YamlConfiguration data = loadUserData(playerName);
@@ -90,7 +195,21 @@ public class TeleportManager {
      * Returns true if request was sent successfully.
      */
     public boolean sendTpRequest(Player requester, Player target) {
-        // Check if target allows TP
+        // Check if requester is locked (admin-controlled)
+        if (isLocked(requester)) {
+            requester.sendMessage(messages.format(requester, "tp.locked_self"));
+            return false;
+        }
+
+        // Check if target is locked (admin-controlled)
+        if (isLocked(target)) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("target", target.getName());
+            requester.sendMessage(messages.format(requester, "tp.target_locked", map));
+            return false;
+        }
+
+        // Check if target allows TP (player-controlled)
         if (!isTpEnabled(target.getName())) {
             Map<String, String> map = new HashMap<String, String>();
             map.put("target", target.getName());
@@ -204,6 +323,16 @@ public class TeleportManager {
         Player requester = Bukkit.getPlayer(request.getRequesterId());
         if (requester == null || !requester.isOnline()) {
             target.sendMessage(messages.format(target, "tp.requester_offline"));
+            return false;
+        }
+
+        // Check if either player is now locked
+        if (isLocked(requester)) {
+            target.sendMessage(messages.format(target, "tp.requester_locked"));
+            return false;
+        }
+        if (isLocked(target)) {
+            requester.sendMessage(messages.format(requester, "tp.target_locked_now"));
             return false;
         }
 

@@ -812,6 +812,7 @@ artifact:
 # Teleport system
 tp:
   usage: "&7Usage: &f/ntp &6<player>&7 send request &8| &f/ntp accept&7 accept &8| &f/ntp deny&7 deny &8| &f/ntp toggle&7 toggle"
+  admin_usage: "&7Usage: &f/ntpadmin &6<lock|unlock|status> <player>"
   request_sent: "&a✔ &7Sent teleport request to &6{target}&7, waiting for response... &8(expires in {timeout}s)"
   request_received: "&e⚡ &6{requester} &7wants to teleport to you! &f/ntp accept &7to accept &8| &f/ntp deny &7to deny"
   request_received_interactive: "&e⚡ &6{requester} &7wants to teleport to you! "
@@ -839,3 +840,13 @@ tp:
   status_off: "&7Teleport status: &cDisabled"
   player_not_found: "&c✖ &7Player not found: &6{player}"
   cannot_tp_self: "&c✖ &7You cannot teleport to yourself."
+  # Admin-controlled lock messages (for dungeons, minigames, etc.)
+  locked_self: "&c✖ &7You are currently blocked from using teleport."
+  target_locked: "&c✖ &6{target} &7is currently blocked from using teleport."
+  requester_locked: "&c✖ &7The requester is currently blocked from using teleport."
+  target_locked_now: "&c✖ &7Target player is now blocked from teleporting."
+  locked_by_admin: "&e⚠ &7You have been blocked from teleporting &8(dungeon/minigame)"
+  unlocked_by_admin: "&a✔ &7Your teleport ability has been restored."
+  admin_lock_success: "&a✔ &7Blocked &6{player} &7from using teleport."
+  admin_unlock_success: "&a✔ &7Restored teleport ability for &6{player}&7."
+  admin_status: "&7Player &6{player}&7: locked={locked}, enabled={enabled}"

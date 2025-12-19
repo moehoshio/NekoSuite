@@ -179,6 +179,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("ntp").setExecutor(this);
             getCommand("ntp").setTabCompleter(this);
         }
+        if (getCommand("ntpadmin") != null) {
+            getCommand("ntpadmin").setExecutor(this);
+            getCommand("ntpadmin").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -219,6 +223,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleNekoHelp(sender);
             case "ntp":
                 return handleTeleport(sender, args);
+            case "ntpadmin":
+                return handleTeleportAdmin(sender, args);
             default:
                 return false;
         }
@@ -1031,6 +1037,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return filter(options, args[0]);
                 }
                 break;
+            case "ntpadmin":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("lock", "unlock", "status"), args[0]);
+                }
+                if (args.length == 2) {
+                    List<String> playerNames = new ArrayList<String>();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        playerNames.add(p.getName());
+                    }
+                    return filter(playerNames, args[1]);
+                }
+                break;
             default:
                 break;
         }
@@ -1280,6 +1298,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         Player player = (Player) sender;
 
+        // Check if player is locked from TP
+        if (teleportManager.isLocked(player)) {
+            player.sendMessage(messages.format(player, "tp.locked_self"));
+            return true;
+        }
+
         if (args.length == 0) {
             sender.sendMessage(messages.format(sender, "tp.usage"));
             // Show current TP status
@@ -1338,6 +1362,63 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 teleportManager.sendTpRequest(player, target);
                 return true;
         }
+    }
+
+    private boolean handleTeleportAdmin(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("nekosuite.tp.admin")) {
+            sender.sendMessage(messages.format(sender, "common.no_permission"));
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(messages.format(sender, "tp.admin_usage"));
+            return true;
+        }
+
+        String action = args[0].toLowerCase();
+        String targetName = args[1];
+        Player target = Bukkit.getPlayer(targetName);
+
+        if (target == null || !target.isOnline()) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", targetName);
+            sender.sendMessage(messages.format(sender, "tp.player_not_found", map));
+            return true;
+        }
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("player", target.getName());
+
+        switch (action) {
+            case "lock":
+                teleportManager.lockPlayer(target);
+                sender.sendMessage(messages.format(sender, "tp.admin_lock_success", map));
+                target.sendMessage(messages.format(target, "tp.locked_by_admin"));
+                return true;
+            case "unlock":
+                teleportManager.unlockPlayer(target);
+                sender.sendMessage(messages.format(sender, "tp.admin_unlock_success", map));
+                target.sendMessage(messages.format(target, "tp.unlocked_by_admin"));
+                return true;
+            case "status":
+                boolean isLocked = teleportManager.isLocked(target);
+                boolean tpEnabled = teleportManager.isTpEnabled(target.getName());
+                map.put("locked", isLocked ? "true" : "false");
+                map.put("enabled", tpEnabled ? "true" : "false");
+                sender.sendMessage(messages.format(sender, "tp.admin_status", map));
+                return true;
+            default:
+                sender.sendMessage(messages.format(sender, "tp.admin_usage"));
+                return true;
+        }
+    }
+
+    /**
+     * Get the TeleportManager instance for API access.
+     * Other plugins/features can use this to lock/unlock players.
+     */
+    public TeleportManager getTeleportManager() {
+        return teleportManager;
     }
 
     private void openNavigationMenu(Player player) {

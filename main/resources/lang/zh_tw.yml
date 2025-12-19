@@ -891,6 +891,7 @@ artifact:
 # 傳送系統
 tp:
   usage: "&7用法: &f/ntp &6<玩家>&7 發送傳送請求 &8| &f/ntp accept&7 接受 &8| &f/ntp deny&7 拒絕 &8| &f/ntp toggle&7 開關"
+  admin_usage: "&7用法: &f/ntpadmin &6<lock|unlock|status> <玩家>"
   request_sent: "&a✔ &7已向 &6{target} &7發送傳送請求，等待回應... &8({timeout}秒後過期)"
   request_received: "&e⚡ &6{requester} &7請求傳送到您身邊！&f/ntp accept &7接受 &8| &f/ntp deny &7拒絕"
   request_received_interactive: "&e⚡ &6{requester} &7請求傳送到您身邊！ "
@@ -918,3 +919,13 @@ tp:
   status_off: "&7傳送狀態: &c關閉"
   player_not_found: "&c✖ &7找不到玩家: &6{player}"
   cannot_tp_self: "&c✖ &7不能傳送到自己身邊。"
+  # Admin-controlled lock messages (for dungeons, minigames, etc.)
+  locked_self: "&c✖ &7您目前被禁止使用傳送功能。"
+  target_locked: "&c✖ &6{target} &7目前被禁止使用傳送功能。"
+  requester_locked: "&c✖ &7請求者目前被禁止使用傳送功能。"
+  target_locked_now: "&c✖ &7目標玩家已被禁止傳送。"
+  locked_by_admin: "&e⚠ &7您已被禁止使用傳送功能 &8(副本/小遊戲等)"
+  unlocked_by_admin: "&a✔ &7您的傳送功能已恢復。"
+  admin_lock_success: "&a✔ &7已禁止 &6{player} &7使用傳送功能。"
+  admin_unlock_success: "&a✔ &7已恢復 &6{player} &7的傳送功能。"
+  admin_status: "&7玩家 &6{player}&7: 鎖定={locked}, 開關={enabled}"

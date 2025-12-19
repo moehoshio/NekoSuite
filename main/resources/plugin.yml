@@ -67,3 +67,7 @@ commands:
     description: 傳送系統
     usage: /ntp <玩家>|accept|deny|toggle|cancel
     permission: nekosuite.tp
+  ntpadmin:
+    description: 傳送系統管理 (鎖定/解鎖玩家)
+    usage: /ntpadmin <lock|unlock|status> <玩家>
+    permission: nekosuite.tp.admin
