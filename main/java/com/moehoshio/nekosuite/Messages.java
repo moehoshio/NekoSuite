@@ -214,6 +214,34 @@ public class Messages {
         return color(text);
     }
 
+    /**
+     * Get the translated display name for a wish item.
+     * Looks up "wish.items.<itemId>" in the language files.
+     * If not found, returns the itemId as-is.
+     */
+    public String getWishItemName(CommandSender target, String itemId) {
+        if (itemId == null || itemId.trim().isEmpty()) {
+            return itemId;
+        }
+        String key = "wish.items." + itemId.replace(":", "_").replace(".", "_");
+        String translated = getRaw(target, key);
+        // If the translation key returns the key itself, it means no translation exists
+        if (translated != null && !translated.equals(key)) {
+            return color(translated);
+        }
+        // Fallback: try without namespace prefix (e.g., "minecraft:")
+        if (itemId.contains(":")) {
+            String simpleId = itemId.substring(itemId.indexOf(':') + 1);
+            String simpleKey = "wish.items." + simpleId;
+            translated = getRaw(target, simpleKey);
+            if (translated != null && !translated.equals(simpleKey)) {
+                return color(translated);
+            }
+        }
+        // Return original itemId if no translation found
+        return itemId;
+    }
+
     public java.util.List<String> getList(CommandSender target, String key) {
         String language = resolveLanguage(target);
         java.util.List<String> lines = getRawListForLanguage(language, key);

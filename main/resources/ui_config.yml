@@ -1,0 +1,106 @@
+# UI Configuration for Navigation and Help pages
+# 導航頁和幫助頁配置
+
+navigation:
+  title: "&#c084fc✦ 導航頁"
+  size: 27
+  items:
+    - slot: 10
+      material: "NETHER_STAR"
+      name: "&e祈願系統"
+      lore:
+        - "&7點擊打開祈願菜單"
+      command: "wish menu"
+    - slot: 11
+      material: "CLOCK"
+      name: "&b活動系統"
+      lore:
+        - "&7點擊查看可用活動"
+      command: "event menu"
+    - slot: 12
+      material: "EXPERIENCE_BOTTLE"
+      name: "&a經驗銀行"
+      lore:
+        - "&7點擊打開經驗銀行"
+      command: "exp menu"
+    - slot: 13
+      material: "EMERALD"
+      name: "&6特權商店"
+      lore:
+        - "&7點擊打開特權商店"
+      command: "buy menu"
+    - slot: 14
+      material: "PAPER"
+      name: "&d郵件系統"
+      lore:
+        - "&7點擊打開郵件"
+      command: "mail menu"
+    - slot: 15
+      material: "GOLDEN_SWORD"
+      name: "&c策略遊戲"
+      lore:
+        - "&7點擊開始冒險"
+      command: "sgame menu"
+    - slot: 16
+      material: "BOOK"
+      name: "&f幫助"
+      lore:
+        - "&7點擊查看幫助"
+      command: "nekohelp"
+
+help:
+  title: "&#60a5fa✦ 幫助頁面"
+  size: 27
+  items:
+    - slot: 10
+      material: "NETHER_STAR"
+      name: "&e祈願系統幫助"
+      lore:
+        - "&7使用 &f/wish menu &7打開祈願菜單"
+        - "&7使用 &f/wish <池名> [次數] &7直接祈願"
+        - ""
+        - "&7祈願可獲得各種稀有物品"
+    - slot: 11
+      material: "CLOCK"
+      name: "&b活動系統幫助"
+      lore:
+        - "&7使用 &f/event menu &7查看活動"
+        - "&7參與活動可獲得獎勵"
+    - slot: 12
+      material: "EXPERIENCE_BOTTLE"
+      name: "&a經驗銀行幫助"
+      lore:
+        - "&7使用 &f/exp menu &7打開經驗銀行"
+        - "&7可存入、取出、轉帳經驗"
+        - "&7也可兌換特殊物品"
+    - slot: 13
+      material: "EMERALD"
+      name: "&6特權商店幫助"
+      lore:
+        - "&7使用 &f/buy menu &7打開商店"
+        - "&7購買VIP、月卡、背包等特權"
+    - slot: 14
+      material: "PAPER"
+      name: "&d郵件系統幫助"
+      lore:
+        - "&7使用 &f/mail menu &7打開郵件"
+        - "&7查看、領取、刪除郵件"
+    - slot: 15
+      material: "GOLDEN_SWORD"
+      name: "&c策略遊戲幫助"
+      lore:
+        - "&7使用 &f/sgame menu &7開始遊戲"
+        - "&7探索、戰鬥、購物"
+        - "&7完成冒險獲得獎勵"
+    - slot: 22
+      material: "ARROW"
+      name: "&a返回導航頁"
+      lore:
+        - "&7點擊返回主導航"
+      command: "nekonav"
+
+broadcast:
+  # 公告前綴，支持顏色代碼
+  prefix: "&8[&6公告&8] &r"
+  # 公告後綴
+  suffix: ""

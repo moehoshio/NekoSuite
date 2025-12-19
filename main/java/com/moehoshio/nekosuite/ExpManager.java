@@ -277,8 +277,27 @@ public class ExpManager {
                 messages.format(player, "exp.balance", balanceMap),
                 new String[0]);
         safeSet(inv, expLayout.getBalanceSlot(), balance);
+        // Add nav button before close button
+        int navSlot = expLayout.getCloseSlot() - 1;
+        if (navSlot >= 0 && navSlot < expLayout.getSize()) {
+            safeSet(inv, navSlot, createNavItem(player));
+        }
         safeSet(inv, expLayout.getCloseSlot(), createItem(Material.BARRIER, messages.format(player, "menu.close"), new String[0]));
         player.openInventory(inv);
+    }
+
+    private ItemStack createNavItem(Player player) {
+        ItemStack item = new ItemStack(Material.COMPASS);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', messages.format(player, "menu.nav.back_to_nav")));
+            List<String> lore = new ArrayList<String>();
+            lore.add(ChatColor.translateAlternateColorCodes('&', messages.format(player, "menu.nav.back_to_nav_lore")));
+            lore.add(ChatColor.DARK_GRAY + "CMD:nekonav");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     private void safeSet(Inventory inv, int slot, ItemStack item) {
@@ -312,6 +331,23 @@ public class ExpManager {
             player.closeInventory();
             return true;
         }
+        // Check for nav button command
+        if (clicked.getType() == Material.COMPASS) {
+            List<String> navLore = clicked.getItemMeta() != null ? clicked.getItemMeta().getLore() : null;
+            if (navLore != null) {
+                for (String line : navLore) {
+                    if (line != null && line.contains("CMD:")) {
+                        String cleaned = ChatColor.stripColor(line);
+                        String cmd = cleaned.substring(cleaned.indexOf("CMD:") + 4).trim();
+                        if (!cmd.isEmpty()) {
+                            player.closeInventory();
+                            player.performCommand(cmd);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
         List<String> lore = clicked.getItemMeta() != null ? clicked.getItemMeta().getLore() : null;
         if (lore != null) {
             for (String line : lore) {
@@ -322,6 +358,8 @@ public class ExpManager {
                         long amount = parseNumber(id.substring(8));
                         if (amount > 0) {
                             deposit(player, amount);
+                            // Refresh menu to show updated balance
+                            openMenu(player);
                         }
                         return true;
                     }
@@ -329,12 +367,16 @@ public class ExpManager {
                         long amount = parseNumber(id.substring(9));
                         if (amount > 0) {
                             withdraw(player, amount);
+                            // Refresh menu to show updated balance
+                            openMenu(player);
                         }
                         return true;
                     }
                     if (id.startsWith("exchange_")) {
                         String exchangeId = id.substring(9);
                         exchange(player, exchangeId);
+                        // Refresh menu to show updated balance
+                        openMenu(player);
                         return true;
                     }
                 }

@@ -47,3 +47,15 @@ commands:
     description: 策略遊戲
     usage: /sgame [menu|status|abandon]
     permission: nekosuite.sgame
+  nekonav:
+    description: 導航頁面
+    usage: /nekonav
+    permission: nekosuite.nav
+  nekohelp:
+    description: 幫助頁面
+    usage: /nekohelp
+    permission: nekosuite.help
+  nekobroadcast:
+    description: 公告系統
+    usage: /nekobroadcast <訊息>
+    permission: nekosuite.broadcast
