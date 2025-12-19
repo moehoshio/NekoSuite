@@ -912,6 +912,14 @@ help:
       - "&f/language &7- Language settings"
   back_button: "&a◀ Back to Main"
   back_lore: "&7Return to navigation page"
+  back_to_help: "&7Return to help page"
+  language:
+    title: "&e🌐 Language Settings"
+    lore: "&7Click to change display language"
+    menu_title: "&#7dd3fc✦ Language Selection"
+    current_marker: "&a(Current)"
+    default_marker: "&7(Default)"
+    click_to_select: "&7Click to select this language"
 
 artifact:
   usage: "&7Usage: &f/artifact list &7or &f/artifact give &6<player> <itemId>"

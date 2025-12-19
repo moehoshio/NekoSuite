@@ -991,6 +991,14 @@ help:
       - "&f/language &7- 語言設置"
   back_button: "&a◀ 返回主頁"
   back_lore: "&7返回導航頁"
+  back_to_help: "&7返回幫助頁"
+  language:
+    title: "&e🌐 語言設置"
+    lore: "&7點擊切換顯示語言"
+    menu_title: "&#7dd3fc✦ 語言選擇"
+    current_marker: "&a(當前)"
+    default_marker: "&7(默認)"
+    click_to_select: "&7點擊選擇此語言"
 
 artifact:
   usage: "&7用法: &f/artifact list &7或 &f/artifact give &6<玩家> <物品ID>"

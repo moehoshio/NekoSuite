@@ -40,3 +40,76 @@ strategy_game:
   shop_slot: 15
   end_game_slot: 22
   close_slot: 26
+
+# Navigation menu (main menu) configuration
+navigation:
+  size: 27
+  title_key: "navigation.title"
+  close_slot: 26
+  items:
+    wish:
+      slot: 10
+      material: NETHER_STAR
+      name_key: "navigation.wish_button"
+      lore_key: "navigation.wish_lore"
+      action: "OPEN_WISH"
+    event:
+      slot: 11
+      material: FIREWORK_ROCKET
+      name_key: "navigation.event_button"
+      lore_key: "navigation.event_lore"
+      action: "OPEN_EVENT"
+    exp:
+      slot: 12
+      material: EXPERIENCE_BOTTLE
+      name_key: "navigation.exp_button"
+      lore_key: "navigation.exp_lore"
+      action: "OPEN_EXP"
+    buy:
+      slot: 13
+      material: GOLD_INGOT
+      name_key: "navigation.buy_button"
+      lore_key: "navigation.buy_lore"
+      action: "OPEN_BUY"
+    mail:
+      slot: 14
+      material: WRITABLE_BOOK
+      name_key: "navigation.mail_button"
+      lore_key: "navigation.mail_lore"
+      action: "OPEN_MAIL"
+    sgame:
+      slot: 15
+      material: COMPASS
+      name_key: "navigation.sgame_button"
+      lore_key: "navigation.sgame_lore"
+      action: "OPEN_SGAME"
+    help:
+      slot: 16
+      material: BOOK
+      name_key: "navigation.help_button"
+      lore_key: "navigation.help_lore"
+      action: "OPEN_HELP"
+
+# Help menu configuration
+help:
+  size: 27
+  title_key: "help.title"
+  close_slot: 26
+  items:
+    general:
+      slot: 4
+      material: BOOK
+      name_key: "help.general.title"
+      lore_key: "help.general.content"
+    back:
+      slot: 18
+      material: ARROW
+      name_key: "help.back_button"
+      lore_key: "help.back_lore"
+      action: "OPEN_NAV"
+    language:
+      slot: 22
+      material: NAME_TAG
+      name_key: "help.language.title"
+      lore_key: "help.language.lore"
+      action: "OPEN_LANGUAGE"

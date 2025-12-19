@@ -7,7 +7,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Loads configurable chest GUI layouts for menus to allow easy reordering/spacing.
@@ -22,6 +24,8 @@ public class MenuLayout {
     private final BuyLayout buyLayout;
     private final MailLayout mailLayout;
     private final StrategyGameLayout strategyGameLayout;
+    private final NavigationLayout navigationLayout;
+    private final HelpLayout helpLayout;
 
     public MenuLayout(JavaPlugin plugin) {
         File file = new File(plugin.getDataFolder(), "menu_layout.yml");
@@ -35,6 +39,8 @@ public class MenuLayout {
         this.buyLayout = new BuyLayout(config.getConfigurationSection("buy"));
         this.mailLayout = new MailLayout(config.getConfigurationSection("mail"));
         this.strategyGameLayout = new StrategyGameLayout(config.getConfigurationSection("strategy_game"));
+        this.navigationLayout = new NavigationLayout(config.getConfigurationSection("navigation"));
+        this.helpLayout = new HelpLayout(config.getConfigurationSection("help"));
     }
 
     public WishLayout getWishLayout() {
@@ -59,6 +65,14 @@ public class MenuLayout {
 
     public StrategyGameLayout getStrategyGameLayout() {
         return strategyGameLayout;
+    }
+
+    public NavigationLayout getNavigationLayout() {
+        return navigationLayout;
+    }
+
+    public HelpLayout getHelpLayout() {
+        return helpLayout;
     }
 
     public static class WishLayout {
@@ -214,6 +228,153 @@ public class MenuLayout {
 
         public int getCloseSlot() {
             return closeSlot;
+        }
+    }
+
+    /**
+     * Represents a configurable menu item with material, slot, translation keys, and action.
+     */
+    public static class MenuItem {
+        private final String id;
+        private final int slot;
+        private final String material;
+        private final String nameKey;
+        private final String loreKey;
+        private final String action;
+        private final String command;
+
+        MenuItem(String id, ConfigurationSection section) {
+            this.id = id;
+            this.slot = section != null ? section.getInt("slot", 0) : 0;
+            this.material = section != null ? section.getString("material", "STONE") : "STONE";
+            this.nameKey = section != null ? section.getString("name_key", "") : "";
+            this.loreKey = section != null ? section.getString("lore_key", "") : "";
+            this.action = section != null ? section.getString("action", "") : "";
+            this.command = section != null ? section.getString("command", "") : "";
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public int getSlot() {
+            return slot;
+        }
+
+        public String getMaterial() {
+            return material;
+        }
+
+        public String getNameKey() {
+            return nameKey;
+        }
+
+        public String getLoreKey() {
+            return loreKey;
+        }
+
+        public String getAction() {
+            return action;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public boolean hasAction() {
+            return action != null && !action.isEmpty();
+        }
+
+        public boolean hasCommand() {
+            return command != null && !command.isEmpty();
+        }
+    }
+
+    /**
+     * Navigation menu layout configuration.
+     */
+    public static class NavigationLayout {
+        private final int size;
+        private final String titleKey;
+        private final int closeSlot;
+        private final Map<String, MenuItem> items;
+
+        NavigationLayout(ConfigurationSection section) {
+            this.size = section != null ? section.getInt("size", 27) : 27;
+            this.titleKey = section != null ? section.getString("title_key", "navigation.title") : "navigation.title";
+            this.closeSlot = section != null ? section.getInt("close_slot", 26) : 26;
+            this.items = new HashMap<String, MenuItem>();
+            if (section != null) {
+                ConfigurationSection itemsSection = section.getConfigurationSection("items");
+                if (itemsSection != null) {
+                    for (String key : itemsSection.getKeys(false)) {
+                        ConfigurationSection itemSection = itemsSection.getConfigurationSection(key);
+                        if (itemSection != null) {
+                            items.put(key, new MenuItem(key, itemSection));
+                        }
+                    }
+                }
+            }
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public String getTitleKey() {
+            return titleKey;
+        }
+
+        public int getCloseSlot() {
+            return closeSlot;
+        }
+
+        public Map<String, MenuItem> getItems() {
+            return Collections.unmodifiableMap(items);
+        }
+    }
+
+    /**
+     * Help menu layout configuration.
+     */
+    public static class HelpLayout {
+        private final int size;
+        private final String titleKey;
+        private final int closeSlot;
+        private final Map<String, MenuItem> items;
+
+        HelpLayout(ConfigurationSection section) {
+            this.size = section != null ? section.getInt("size", 27) : 27;
+            this.titleKey = section != null ? section.getString("title_key", "help.title") : "help.title";
+            this.closeSlot = section != null ? section.getInt("close_slot", 26) : 26;
+            this.items = new HashMap<String, MenuItem>();
+            if (section != null) {
+                ConfigurationSection itemsSection = section.getConfigurationSection("items");
+                if (itemsSection != null) {
+                    for (String key : itemsSection.getKeys(false)) {
+                        ConfigurationSection itemSection = itemsSection.getConfigurationSection(key);
+                        if (itemSection != null) {
+                            items.put(key, new MenuItem(key, itemSection));
+                        }
+                    }
+                }
+            }
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public String getTitleKey() {
+            return titleKey;
+        }
+
+        public int getCloseSlot() {
+            return closeSlot;
+        }
+
+        public Map<String, MenuItem> getItems() {
+            return Collections.unmodifiableMap(items);
         }
     }
 

@@ -1422,134 +1422,89 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     }
 
     private void openNavigationMenu(Player player) {
-        Inventory inv = Bukkit.createInventory(new NavigationMenuHolder(), 27, messages.format(player, "navigation.title"));
+        MenuLayout.NavigationLayout layout = menuLayout.getNavigationLayout();
+        Inventory inv = Bukkit.createInventory(new NavigationMenuHolder(), layout.getSize(), messages.format(player, layout.getTitleKey()));
         
-        // Wish button - slot 10
-        ItemStack wishItem = new ItemStack(org.bukkit.Material.NETHER_STAR);
-        ItemMeta wishMeta = wishItem.getItemMeta();
-        if (wishMeta != null) {
-            wishMeta.setDisplayName(messages.format(player, "navigation.wish_button"));
-            List<String> wishLore = new ArrayList<String>();
-            wishLore.add(messages.format(player, "navigation.wish_lore"));
-            wishLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_WISH");
-            wishMeta.setLore(wishLore);
-            wishItem.setItemMeta(wishMeta);
+        // Render items from config
+        for (MenuLayout.MenuItem item : layout.getItems().values()) {
+            org.bukkit.Material material = org.bukkit.Material.STONE;
+            try {
+                material = org.bukkit.Material.valueOf(item.getMaterial().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+            ItemStack stack = new ItemStack(material);
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(messages.format(player, item.getNameKey()));
+                List<String> lore = new ArrayList<String>();
+                // Check if lore_key is a list or single string
+                List<String> loreLines = messages.getList(player, item.getLoreKey());
+                if (loreLines != null && !loreLines.isEmpty()) {
+                    lore.addAll(messages.colorize(loreLines));
+                } else {
+                    String singleLore = messages.format(player, item.getLoreKey());
+                    if (!singleLore.equals(item.getLoreKey())) {
+                        lore.add(singleLore);
+                    }
+                }
+                if (item.hasAction()) {
+                    lore.add(ChatColor.DARK_GRAY + "ACTION:" + item.getAction());
+                }
+                if (item.hasCommand()) {
+                    lore.add(ChatColor.DARK_GRAY + "COMMAND:" + item.getCommand());
+                }
+                meta.setLore(lore);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(item.getSlot(), stack);
         }
-        inv.setItem(10, wishItem);
         
-        // Event button - slot 11
-        ItemStack eventItem = new ItemStack(org.bukkit.Material.FIREWORK_ROCKET);
-        ItemMeta eventMeta = eventItem.getItemMeta();
-        if (eventMeta != null) {
-            eventMeta.setDisplayName(messages.format(player, "navigation.event_button"));
-            List<String> eventLore = new ArrayList<String>();
-            eventLore.add(messages.format(player, "navigation.event_lore"));
-            eventLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_EVENT");
-            eventMeta.setLore(eventLore);
-            eventItem.setItemMeta(eventMeta);
-        }
-        inv.setItem(11, eventItem);
-        
-        // Exp button - slot 12
-        ItemStack expItem = new ItemStack(org.bukkit.Material.EXPERIENCE_BOTTLE);
-        ItemMeta expMeta = expItem.getItemMeta();
-        if (expMeta != null) {
-            expMeta.setDisplayName(messages.format(player, "navigation.exp_button"));
-            List<String> expLore = new ArrayList<String>();
-            expLore.add(messages.format(player, "navigation.exp_lore"));
-            expLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_EXP");
-            expMeta.setLore(expLore);
-            expItem.setItemMeta(expMeta);
-        }
-        inv.setItem(12, expItem);
-        
-        // Buy button - slot 13
-        ItemStack buyItem = new ItemStack(org.bukkit.Material.GOLD_INGOT);
-        ItemMeta buyMeta = buyItem.getItemMeta();
-        if (buyMeta != null) {
-            buyMeta.setDisplayName(messages.format(player, "navigation.buy_button"));
-            List<String> buyLore = new ArrayList<String>();
-            buyLore.add(messages.format(player, "navigation.buy_lore"));
-            buyLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_BUY");
-            buyMeta.setLore(buyLore);
-            buyItem.setItemMeta(buyMeta);
-        }
-        inv.setItem(13, buyItem);
-        
-        // Mail button - slot 14
-        ItemStack mailItem = new ItemStack(org.bukkit.Material.WRITABLE_BOOK);
-        ItemMeta mailMeta = mailItem.getItemMeta();
-        if (mailMeta != null) {
-            mailMeta.setDisplayName(messages.format(player, "navigation.mail_button"));
-            List<String> mailLore = new ArrayList<String>();
-            mailLore.add(messages.format(player, "navigation.mail_lore"));
-            mailLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_MAIL");
-            mailMeta.setLore(mailLore);
-            mailItem.setItemMeta(mailMeta);
-        }
-        inv.setItem(14, mailItem);
-        
-        // Strategy game button - slot 15
-        ItemStack sgameItem = new ItemStack(org.bukkit.Material.COMPASS);
-        ItemMeta sgameMeta = sgameItem.getItemMeta();
-        if (sgameMeta != null) {
-            sgameMeta.setDisplayName(messages.format(player, "navigation.sgame_button"));
-            List<String> sgameLore = new ArrayList<String>();
-            sgameLore.add(messages.format(player, "navigation.sgame_lore"));
-            sgameLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_SGAME");
-            sgameMeta.setLore(sgameLore);
-            sgameItem.setItemMeta(sgameMeta);
-        }
-        inv.setItem(15, sgameItem);
-        
-        // Help button - slot 16
-        ItemStack helpItem = new ItemStack(org.bukkit.Material.BOOK);
-        ItemMeta helpMeta = helpItem.getItemMeta();
-        if (helpMeta != null) {
-            helpMeta.setDisplayName(messages.format(player, "navigation.help_button"));
-            List<String> helpLore = new ArrayList<String>();
-            helpLore.add(messages.format(player, "navigation.help_lore"));
-            helpLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_HELP");
-            helpMeta.setLore(helpLore);
-            helpItem.setItemMeta(helpMeta);
-        }
-        inv.setItem(16, helpItem);
-        
-        // Close button - slot 26
-        inv.setItem(26, createCloseItem(player));
+        // Close button
+        inv.setItem(layout.getCloseSlot(), createCloseItem(player));
         
         player.openInventory(inv);
     }
 
     private void openHelpMenu(Player player) {
-        Inventory inv = Bukkit.createInventory(new HelpMenuHolder(), 27, messages.format(player, "help.title"));
+        MenuLayout.HelpLayout layout = menuLayout.getHelpLayout();
+        Inventory inv = Bukkit.createInventory(new HelpMenuHolder(), layout.getSize(), messages.format(player, layout.getTitleKey()));
         
-        // General commands help - slot 4
-        ItemStack generalItem = new ItemStack(org.bukkit.Material.BOOK);
-        ItemMeta generalMeta = generalItem.getItemMeta();
-        if (generalMeta != null) {
-            generalMeta.setDisplayName(messages.format(player, "help.general.title"));
-            List<String> generalLore = messages.getList(player, "help.general.content");
-            generalMeta.setLore(messages.colorize(generalLore));
-            generalItem.setItemMeta(generalMeta);
+        // Render items from config
+        for (MenuLayout.MenuItem item : layout.getItems().values()) {
+            org.bukkit.Material material = org.bukkit.Material.STONE;
+            try {
+                material = org.bukkit.Material.valueOf(item.getMaterial().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+            ItemStack stack = new ItemStack(material);
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(messages.format(player, item.getNameKey()));
+                List<String> lore = new ArrayList<String>();
+                // Check if lore_key is a list or single string
+                List<String> loreLines = messages.getList(player, item.getLoreKey());
+                if (loreLines != null && !loreLines.isEmpty()) {
+                    lore.addAll(messages.colorize(loreLines));
+                } else {
+                    String singleLore = messages.format(player, item.getLoreKey());
+                    if (!singleLore.equals(item.getLoreKey())) {
+                        lore.add(singleLore);
+                    }
+                }
+                if (item.hasAction()) {
+                    lore.add(ChatColor.DARK_GRAY + "ACTION:" + item.getAction());
+                }
+                if (item.hasCommand()) {
+                    lore.add(ChatColor.DARK_GRAY + "COMMAND:" + item.getCommand());
+                }
+                meta.setLore(lore);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(item.getSlot(), stack);
         }
-        inv.setItem(4, generalItem);
         
-        // Back to main menu button - slot 18
-        ItemStack backItem = new ItemStack(org.bukkit.Material.ARROW);
-        ItemMeta backMeta = backItem.getItemMeta();
-        if (backMeta != null) {
-            backMeta.setDisplayName(messages.format(player, "help.back_button"));
-            List<String> backLore = new ArrayList<String>();
-            backLore.add(messages.format(player, "help.back_lore"));
-            backLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
-            backMeta.setLore(backLore);
-            backItem.setItemMeta(backMeta);
-        }
-        inv.setItem(18, backItem);
-        
-        // Close button - slot 26
-        inv.setItem(26, createCloseItem(player));
+        // Close button
+        inv.setItem(layout.getCloseSlot(), createCloseItem(player));
         
         player.openInventory(inv);
     }
@@ -1643,6 +1598,149 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
         }
         return null;
+    }
+
+    private String extractCommandFromMeta(ItemMeta meta) {
+        if (meta == null || meta.getLore() == null) {
+            return null;
+        }
+        List<String> lore = meta.getLore();
+        for (String line : lore) {
+            if (line == null) {
+                continue;
+            }
+            String cleaned = ChatColor.stripColor(line);
+            if (cleaned.startsWith("COMMAND:")) {
+                return cleaned.substring(8).trim();
+            }
+        }
+        return null;
+    }
+
+    private String extractLangFromMeta(ItemMeta meta) {
+        if (meta == null || meta.getLore() == null) {
+            return null;
+        }
+        List<String> lore = meta.getLore();
+        for (String line : lore) {
+            if (line == null) {
+                continue;
+            }
+            String cleaned = ChatColor.stripColor(line);
+            if (cleaned.startsWith("LANG:")) {
+                return cleaned.substring(5).trim();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Handle a menu item click by processing its action and/or command.
+     * Returns true if the action was handled.
+     */
+    private boolean handleMenuAction(Player player, String action, String command) {
+        if (action != null && !action.isEmpty()) {
+            switch (action) {
+                case "OPEN_WISH":
+                    openWishMenu(player);
+                    return true;
+                case "OPEN_EVENT":
+                    openEventMenu(player);
+                    return true;
+                case "OPEN_EXP":
+                    expManager.openMenu(player);
+                    return true;
+                case "OPEN_BUY":
+                    buyManager.openMenu(player);
+                    return true;
+                case "OPEN_MAIL":
+                    mailManager.openMenu(player);
+                    return true;
+                case "OPEN_SGAME":
+                    strategyGameManager.continueGame(player);
+                    return true;
+                case "OPEN_HELP":
+                    openHelpMenu(player);
+                    return true;
+                case "OPEN_NAV":
+                    openNavigationMenu(player);
+                    return true;
+                case "OPEN_LANGUAGE":
+                    openLanguageMenu(player);
+                    return true;
+                default:
+                    break;
+            }
+        }
+        // Execute command if present
+        if (command != null && !command.isEmpty()) {
+            String cmd = command.replace("{player}", player.getName());
+            if (cmd.startsWith("/")) {
+                cmd = cmd.substring(1);
+            }
+            player.performCommand(cmd);
+            return true;
+        }
+        return false;
+    }
+
+    private void openLanguageMenu(Player player) {
+        Set<String> languages = messages.getSupportedLanguages();
+        int size = Math.max(9, ((languages.size() + 8) / 9) * 9); // Round up to nearest 9
+        if (size > 54) size = 54;
+        Inventory inv = Bukkit.createInventory(new LanguageMenuHolder(), size, messages.format(player, "help.language.menu_title"));
+        
+        String currentLang = messages.getPlayerLanguage(player.getName());
+        if (currentLang == null || currentLang.isEmpty()) {
+            currentLang = messages.getDefaultLanguage();
+        }
+        String defaultLang = messages.getDefaultLanguage();
+        
+        int slot = 0;
+        for (String lang : languages) {
+            if (slot >= size - 1) break;
+            
+            org.bukkit.Material material = lang.equals(currentLang) ? org.bukkit.Material.LIME_DYE : org.bukkit.Material.GRAY_DYE;
+            ItemStack item = new ItemStack(material);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                String displayName = lang.toUpperCase();
+                if (lang.equals(currentLang)) {
+                    displayName = ChatColor.GREEN + "✓ " + displayName + " " + messages.format(player, "help.language.current_marker");
+                } else {
+                    displayName = ChatColor.GRAY + displayName;
+                }
+                if (lang.equals(defaultLang)) {
+                    displayName += " " + messages.format(player, "help.language.default_marker");
+                }
+                meta.setDisplayName(displayName);
+                List<String> lore = new ArrayList<String>();
+                lore.add(messages.format(player, "help.language.click_to_select"));
+                lore.add(ChatColor.DARK_GRAY + "LANG:" + lang);
+                meta.setLore(lore);
+                item.setItemMeta(meta);
+            }
+            inv.setItem(slot++, item);
+        }
+        
+        // Back button at last slot
+        ItemStack backItem = new ItemStack(org.bukkit.Material.ARROW);
+        ItemMeta backMeta = backItem.getItemMeta();
+        if (backMeta != null) {
+            backMeta.setDisplayName(messages.format(player, "help.back_button"));
+            List<String> backLore = new ArrayList<String>();
+            backLore.add(messages.format(player, "help.back_to_help"));
+            backLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_HELP");
+            backMeta.setLore(backLore);
+            backItem.setItemMeta(backMeta);
+        }
+        inv.setItem(size - 1, backItem);
+        
+        player.openInventory(inv);
+    }
+
+    private static class LanguageMenuHolder implements InventoryHolder {
+        public Inventory getInventory() { return null; }
     }
 
     private void openWishMenu(Player player) {
@@ -2206,33 +2304,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             ItemMeta meta = clicked.getItemMeta();
             String action = extractActionFromMeta(meta);
-            if (action != null) {
-                switch (action) {
-                    case "OPEN_WISH":
-                        openWishMenu(player);
-                        break;
-                    case "OPEN_EVENT":
-                        openEventMenu(player);
-                        break;
-                    case "OPEN_EXP":
-                        expManager.openMenu(player);
-                        break;
-                    case "OPEN_BUY":
-                        buyManager.openMenu(player);
-                        break;
-                    case "OPEN_MAIL":
-                        mailManager.openMenu(player);
-                        break;
-                    case "OPEN_SGAME":
-                        strategyGameManager.continueGame(player);
-                        break;
-                    case "OPEN_HELP":
-                        openHelpMenu(player);
-                        break;
-                    default:
-                        break;
-                }
-            }
+            String command = extractCommandFromMeta(meta);
+            handleMenuAction(player, action, command);
             return;
         }
         if (holder instanceof HelpMenuHolder) {
@@ -2250,8 +2323,36 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             ItemMeta meta = clicked.getItemMeta();
             String action = extractActionFromMeta(meta);
-            if (action != null && action.equals("OPEN_NAV")) {
-                openNavigationMenu(player);
+            String command = extractCommandFromMeta(meta);
+            handleMenuAction(player, action, command);
+            return;
+        }
+        if (holder instanceof LanguageMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            // Check for back action
+            String action = extractActionFromMeta(meta);
+            if (action != null) {
+                handleMenuAction(player, action, null);
+                return;
+            }
+            // Check for language selection
+            String lang = extractLangFromMeta(meta);
+            if (lang != null) {
+                if (messages.setPlayerLanguage(player.getName(), lang)) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("language", lang);
+                    player.sendMessage(messages.format(player, "i18n.updated", map));
+                    // Refresh the language menu to show updated selection
+                    openLanguageMenu(player);
+                }
             }
             return;
         }
