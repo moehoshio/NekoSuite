@@ -196,8 +196,13 @@ public class BuyManager {
         addCategoryLabel(inv, 17, org.bukkit.Material.PAPER, messages.format(player, "menu.buy.category.mcd"));
         addCategoryLabel(inv, 26, org.bukkit.Material.CHEST, messages.format(player, "menu.buy.category.bag"));
         
-        // Close button at bottom right
+        // Navigation button (back to main menu)
         int closeSlot = inventorySize - 1;
+        if (closeSlot > 0 && closeSlot - 1 >= 0 && closeSlot - 1 < inventorySize) {
+            inv.setItem(closeSlot - 1, createHomeButton(player));
+        }
+        
+        // Close button at bottom right
         ItemStack close = new ItemStack(org.bukkit.Material.BARRIER);
         ItemMeta closeMeta = close.getItemMeta();
         if (closeMeta != null) {
@@ -207,6 +212,20 @@ public class BuyManager {
         inv.setItem(closeSlot, close);
         
         player.openInventory(inv);
+    }
+
+    private ItemStack createHomeButton(Player player) {
+        ItemStack item = new ItemStack(org.bukkit.Material.COMPASS);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(messages.format(player, "help.back_button"));
+            List<String> lore = new ArrayList<String>();
+            lore.add(messages.format(player, "help.back_lore"));
+            lore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
     
     private void placeProductsInRow(Inventory inv, List<Product> productList, int startSlot, Player player) {

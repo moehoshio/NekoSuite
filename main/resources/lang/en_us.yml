@@ -579,6 +579,103 @@ sgame:
         choice1:
           text: "&aBrowse equipment"
           result: "&7Welcome to my blacksmith shop!"
+      # New battle events
+      goblin_camp:
+        name: "&2Goblin Camp"
+        desc1: "&7You discovered a goblin camp..."
+        desc2: "&cSeveral goblins noticed your presence!"
+        choice1:
+          text: "&cPrepare for battle"
+          result: "&7The goblins charge at you!"
+      dungeon_entrance:
+        name: "&8Dungeon Entrance"
+        desc1: "&7You found a mysterious dungeon entrance..."
+        desc2: "&cEerie sounds echo from within!"
+        choice1:
+          text: "&cEnter and explore"
+          result: "&7You gather courage and step into the darkness..."
+      haunted_graveyard:
+        name: "&5Haunted Graveyard"
+        desc1: "&7A sinister graveyard appears before you..."
+        desc2: "&cUndead creatures wander among the tombstones!"
+        choice1:
+          text: "&cFight the undead"
+          result: "&7Skeletons rise from their graves!"
+      dragon_lair_entrance:
+        name: "&4Dragon Lair Entrance"
+        desc1: "&cAhead lies the legendary dragon's lair..."
+        desc2: "&4The air is thick with danger!"
+        choice1:
+          text: "&cChallenge the dragon"
+          result: "&4The dragon's roar shakes the entire cavern!"
+      # New story events
+      wandering_minstrel:
+        name: "&dWandering Minstrel"
+        desc1: "&7A traveling minstrel plays by the roadside..."
+        desc2: "&7Their music is soothing and peaceful."
+        choice1:
+          text: "&aTip them (costs 10 gold)"
+          result: "&7The minstrel plays a healing melody for you!"
+        choice2:
+          text: "&cContinue on your way"
+          result: "&7You nod and continue your journey."
+        choice3:
+          text: "&eAsk for fortune telling"
+          result: "&7The minstrel warns you of dangers ahead, you gain intel!"
+      abandoned_mine:
+        name: "&8Abandoned Mine"
+        desc1: "&7You found an abandoned mine..."
+        desc2: "&7There might be unmined ore inside."
+        choice1:
+          text: "&aRisk mining"
+          result: "&7You found some ore, but also encountered some danger!"
+        choice2:
+          text: "&cLeave"
+          result: "&7You decide not to take the risk."
+        choice3:
+          text: "&eSearch the entrance carefully"
+          result: "&7You found supplies left by previous miners!"
+      mystic_fountain:
+        name: "&bMystic Fountain"
+        desc1: "&7A glowing fountain appears before you..."
+        desc2: "&7The water emanates mysterious power."
+        choice1:
+          text: "&aDrink from the fountain"
+          result: "&7Mysterious energy flows into your body!"
+        choice2:
+          text: "&dToss in a coin (costs 15 gold)"
+          result: "&7Healing power bursts from the fountain!"
+        choice3:
+          text: "&eCollect water to sell"
+          result: "&7You collected some water but the fountain's guardian noticed!"
+      bandit_toll:
+        name: "&cBandit Roadblock"
+        desc1: "&7A group of bandits block your path..."
+        desc2: "&7They demand a toll to pass."
+        choice1:
+          text: "&aPay the toll (costs 25 gold)"
+          result: "&7The bandits let you pass."
+        choice2:
+          text: "&cTry to break through"
+          result: "&7You get into a fight with the bandits!"
+        choice3:
+          text: "&eFight back and rob them"
+          result: "&7You defeat the bandits and take their loot!"
+      # New shop events
+      potion_shop:
+        name: "&dPotion Shop"
+        desc1: "&7A shop with strange smells wafting from it."
+        desc2: "&7The owner is an old wizard."
+        choice1:
+          text: "&aBrowse potions"
+          result: "&7Welcome to my potion shop!"
+      wandering_trader:
+        name: "&6Wandering Trader"
+        desc1: "&7A merchant carrying a large backpack."
+        desc2: "&7They claim to have rare items for sale."
+        choice1:
+          text: "&aView goods"
+          result: "&7Come see my fine wares!"
       # Fixed stage events
       starter_shop:
         name: "&aStarter Supply Station"
@@ -655,6 +752,24 @@ sgame:
       slime:
         name: "&aSlime"
         desc: "A green bouncing creature"
+      goblin:
+        name: "&2Goblin"
+        desc: "A cunning small creature that likes to steal"
+        skill1:
+          name: "&eSteal"
+          desc: "Attempts to steal your gold"
+      wolf:
+        name: "&7Dire Wolf"
+        desc: "A fierce wild wolf, swift and agile"
+        skill1:
+          name: "&7Wolf Howl"
+          desc: "Howls to boost attack power"
+      bandit:
+        name: "&8Bandit"
+        desc: "A dangerous outlaw"
+        skill1:
+          name: "&cSneak Attack"
+          desc: "Strikes from the shadows for extra damage"
       skeleton:
         name: "&fSkeleton Archer"
         desc: "A skeleton with a bow"
@@ -691,6 +806,113 @@ sgame:
         name: "&6&lKing's Reward"
 
 
+# Item translations
+items:
+  # Vanilla Minecraft items
+  "minecraft:iron_ingot": "Iron Ingot"
+  "minecraft:gold_ingot": "Gold Ingot"
+  "minecraft:diamond": "Diamond"
+  "minecraft:experience_bottle": "Bottle o' Enchanting"
+  "minecraft:netherite_scrap": "Netherite Scrap"
+  "minecraft:end_rod": "End Rod"
+  "minecraft:phantom_membrane": "Phantom Membrane"
+  "minecraft:nether_star": "Nether Star"
+  "minecraft:prismarine_crystals": "Prismarine Crystals"
+  "minecraft:quartz": "Quartz"
+  "minecraft:enchanted_golden_apple": "Enchanted Golden Apple"
+  "minecraft:quartz_block": "Quartz Block"
+  "minecraft:speed": "Speed Potion"
+  "minecraft:haste": "Haste Potion"
+  "minecraft:strength": "Strength Potion"
+  "minecraft:instant_health": "Instant Health Potion"
+  "minecraft:jump_boost": "Jump Boost Potion"
+  "minecraft:regeneration": "Regeneration Potion"
+  "minecraft:resistance": "Resistance Potion"
+  "minecraft:fire_resistance": "Fire Resistance Potion"
+  "minecraft:water_breathing": "Water Breathing Potion"
+  "minecraft:invisibility": "Invisibility Potion"
+  "minecraft:night_vision": "Night Vision Potion"
+  "minecraft:health_boost": "Health Boost Potion"
+  "minecraft:absorption": "Absorption Potion"
+  "minecraft:saturation": "Saturation Potion"
+  "minecraft:glowing": "Glowing Potion"
+  "minecraft:levitation": "Levitation Potion"
+  "minecraft:luck": "Luck Potion"
+  # Custom items
+  "purified_water_canteen": "Purified Water Canteen"
+  "p_point": "P Points"
+  "potion_power": "Power Potion"
+  "goety:recallfocus": "Recall Focus"
+  "KirinOverlordBlazingArmor": "Kirin Overlord Blazing Armor"
+  "mysteryCardPack": "Mystery Card Pack"
+  "focusBag": "Focus Bag"
+  "iceologyfocus": "Iceology Focus"
+  "launchfocus": "Launch Focus"
+  "star_amulet": "Star Amulet"
+  "CelestineBreezeHelm": "Celestine Breeze Helm"
+  "SkywhisperBoots": "Skywhisper Boots"
+  "CloudspringAzureBlade": "Cloudspring Azure Blade"
+  "flower_pie": "Flower Pie"
+  "pink_cherry_sapling": "Pink Cherry Sapling"
+  "amethyst_chimes": "Amethyst Chimes"
+  "potion_revive": "Revive Potion"
+  "UnrivaledCrimsonFeatherBow": "Unrivaled Crimson Feather Bow"
+  # Daily wish rewards
+  "bal5": "5 Gold"
+  "bal10": "10 Gold"
+  "bal30": "30 Gold"
+  "bal50": "50 Gold"
+  "bal100": "100 Gold"
+  "bal360": "360 Gold"
+  "bal1k": "1000 Gold"
+  "bal5k": "5000 Gold"
+  "bal10k": "10000 Gold"
+  "xp20": "20 XP"
+  "xp100": "100 XP"
+  "ppoint": "5 P Points"
+  "op_equip": "Legendary Equipment"
+  "potions": "Random Potion Effect"
+
+# Announcement system
+announce:
+  usage: "&7Usage: &f/announce &6<message>"
+  prefix: "&6[Announcement] &f"
+  success: "&a✔ &7Announcement sent."
+
+# Navigation page
+navigation:
+  title: "&#ff9933✦ Main Menu"
+  wish_button: "&e✦ Wish"
+  wish_lore: "&7Enter the wish system"
+  event_button: "&b✦ Events"
+  event_lore: "&7View available events"
+  exp_button: "&a✦ XP Bank"
+  exp_lore: "&7Manage experience points"
+  buy_button: "&d✦ Perk Shop"
+  buy_lore: "&7Purchase VIP and monthly cards"
+  mail_button: "&f✦ Mail"
+  mail_lore: "&7View your mail"
+  sgame_button: "&6✦ Strategy Game"
+  sgame_lore: "&7Cat Kingdom Adventure"
+  help_button: "&7? Help"
+  help_lore: "&7View help information"
+
+# Help page
+help:
+  title: "&#7dd3fc✦ Help"
+  general:
+    title: "&aCommon Commands"
+    content:
+      - "&f/wish &7- Wish system"
+      - "&f/event &7- Event system"
+      - "&f/exp &7- XP Bank"
+      - "&f/buy &7- Perk shop"
+      - "&f/mail &7- Mail system"
+      - "&f/sgame &7- Strategy game"
+      - "&f/language &7- Language settings"
+  back_button: "&a◀ Back to Main"
+  back_lore: "&7Return to navigation page"
+
 artifact:
   usage: "&7Usage: &f/artifact list &7or &f/artifact give &6<player> <itemId>"
   admin_usage: "&7Usage: &f/artifact give &6<player> <itemId>"
@@ -701,3 +923,45 @@ artifact:
   no_items: "&e⚠ &7No artifact items available."
   list_header: "&7Available artifact items:"
   list_entry: "&7- &6{id}&7: {name} &8- &7{description}"
+
+# Teleport system
+tp:
+  usage: "&7Usage: &f/ntp &6<player>&7 send request &8| &f/ntp accept&7 accept &8| &f/ntp deny&7 deny &8| &f/ntp toggle&7 toggle"
+  admin_usage: "&7Usage: &f/ntpadmin &6<lock|unlock|status> <player>"
+  request_sent: "&a✔ &7Sent teleport request to &6{target}&7, waiting for response... &8(expires in {timeout}s)"
+  request_received: "&e⚡ &6{requester} &7wants to teleport to you! &f/ntp accept &7to accept &8| &f/ntp deny &7to deny"
+  request_received_interactive: "&e⚡ &6{requester} &7wants to teleport to you! "
+  button_accept: "&a[Accept]"
+  button_accept_hover: "&aClick to accept teleport request"
+  button_deny: "&c[Deny]"
+  button_deny_hover: "&cClick to deny teleport request"
+  request_expired: "&c✖ &7Teleport request has expired."
+  no_pending_request: "&c✖ &7No pending teleport request."
+  no_outgoing_request: "&c✖ &7You have no outgoing teleport request."
+  requester_offline: "&c✖ &7The requester is offline."
+  target_disabled: "&c✖ &6{target} &7has disabled teleport."
+  insufficient_balance: "&c✖ &7Insufficient balance, need &6{cost}&c, you have &6{balance}&c."
+  requester_no_money: "&c✖ &7Requester has insufficient balance, teleport cancelled."
+  cost_failure: "&c✖ &7Payment failed, please try again."
+  success: "&a✔ &7Teleported to &6{target}&7!"
+  accepted: "&a✔ &6{requester} &7has teleported to you."
+  denied: "&c✖ &6{target} &7denied your teleport request."
+  deny_success: "&a✔ &7Teleport request denied."
+  cancel_success: "&a✔ &7Teleport request cancelled."
+  request_cancelled: "&e⚠ &6{requester} &7cancelled the teleport request."
+  toggle_on: "&a✔ &7Teleport is now &aenabled&7, other players can teleport to you."
+  toggle_off: "&a✔ &7Teleport is now &cdisabled&7, other players cannot teleport to you."
+  status_on: "&7Teleport status: &aEnabled"
+  status_off: "&7Teleport status: &cDisabled"
+  player_not_found: "&c✖ &7Player not found: &6{player}"
+  cannot_tp_self: "&c✖ &7You cannot teleport to yourself."
+  # Admin-controlled lock messages (for dungeons, minigames, etc.)
+  locked_self: "&c✖ &7You are currently blocked from using teleport."
+  target_locked: "&c✖ &6{target} &7is currently blocked from using teleport."
+  requester_locked: "&c✖ &7The requester is currently blocked from using teleport."
+  target_locked_now: "&c✖ &7Target player is now blocked from teleporting."
+  locked_by_admin: "&e⚠ &7You have been blocked from teleporting &8(dungeon/minigame)"
+  unlocked_by_admin: "&a✔ &7Your teleport ability has been restored."
+  admin_lock_success: "&a✔ &7Blocked &6{player} &7from using teleport."
+  admin_unlock_success: "&a✔ &7Restored teleport ability for &6{player}&7."
+  admin_status: "&7Player &6{player}&7: locked={locked}, enabled={enabled}"

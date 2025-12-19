@@ -1,0 +1,24 @@
+# NekoSuite Teleport Configuration
+# 傳送系統配置
+
+# Storage settings
+storage:
+  data_dir: userdata
+
+# Teleport settings
+tp:
+  # Cost to teleport (0 = free)
+  # 傳送費用 (0 = 免費)
+  cost: 0
+  
+  # Request timeout in seconds
+  # 請求超時時間 (秒)
+  request_timeout: 60
+  
+  # Default TP status for new players
+  # true = allow others to tp to them
+  # false = disallow others to tp to them
+  # 新玩家的默認TP狀態
+  # true = 允許他人傳送到自己
+  # false = 不允許他人傳送到自己
+  default_status: true

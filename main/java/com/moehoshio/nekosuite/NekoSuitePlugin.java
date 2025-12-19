@@ -54,6 +54,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private MenuLayout menuLayout;
     private StrategyGameManager strategyGameManager;
     private ArtifactRewardsManager artifactRewardsManager;
+    private TeleportManager teleportManager;
 
     @Override
     public void onEnable() {
@@ -63,6 +64,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("lang/zh_cn.yml", false);
         saveResource("wish_config.yml", false);
         saveResource("event_config.yml", false);
+        saveResource("tp_config.yml", false);
         saveResource("exp_config.yml", false);
         saveResource("cdk_config.yml", false);
         saveResource("buy_config.yml", false);
@@ -161,6 +163,26 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("artifact").setExecutor(this);
             getCommand("artifact").setTabCompleter(this);
         }
+        if (getCommand("announce") != null) {
+            getCommand("announce").setExecutor(this);
+            getCommand("announce").setTabCompleter(this);
+        }
+        if (getCommand("nekomenu") != null) {
+            getCommand("nekomenu").setExecutor(this);
+            getCommand("nekomenu").setTabCompleter(this);
+        }
+        if (getCommand("nekohelp") != null) {
+            getCommand("nekohelp").setExecutor(this);
+            getCommand("nekohelp").setTabCompleter(this);
+        }
+        if (getCommand("ntp") != null) {
+            getCommand("ntp").setExecutor(this);
+            getCommand("ntp").setTabCompleter(this);
+        }
+        if (getCommand("ntpadmin") != null) {
+            getCommand("ntpadmin").setExecutor(this);
+            getCommand("ntpadmin").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -193,6 +215,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleStrategyGame(sender, args);
             case "artifact":
                 return handleArtifact(sender, args);
+            case "announce":
+                return handleAnnounce(sender, args);
+            case "nekomenu":
+                return handleNekoMenu(sender);
+            case "nekohelp":
+                return handleNekoHelp(sender);
+            case "ntp":
+                return handleTeleport(sender, args);
+            case "ntpadmin":
+                return handleTeleportAdmin(sender, args);
             default:
                 return false;
         }
@@ -988,6 +1020,35 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
                 break;
+            case "ntp":
+                if (args.length == 1) {
+                    List<String> options = new ArrayList<String>();
+                    options.add("accept");
+                    options.add("deny");
+                    options.add("toggle");
+                    options.add("cancel");
+                    options.add("status");
+                    // Add online player names
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (!p.getName().equals(sender.getName())) {
+                            options.add(p.getName());
+                        }
+                    }
+                    return filter(options, args[0]);
+                }
+                break;
+            case "ntpadmin":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("lock", "unlock", "status"), args[0]);
+                }
+                if (args.length == 2) {
+                    List<String> playerNames = new ArrayList<String>();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        playerNames.add(p.getName());
+                    }
+                    return filter(playerNames, args[1]);
+                }
+                break;
             default:
                 break;
         }
@@ -1049,6 +1110,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         mailManager = new MailManager(this, messages, new File(getDataFolder(), "mail_config.yml"), menuLayout);
         strategyGameManager = new StrategyGameManager(this, messages, new File(getDataFolder(), "strategy_game_config.yml"), menuLayout);
         artifactRewardsManager = new ArtifactRewardsManager(this, messages, new File(getDataFolder(), "artifact_rewards_config.yml"));
+        teleportManager = new TeleportManager(this, messages, new File(getDataFolder(), "tp_config.yml"), economy);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1179,6 +1241,326 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
      */
     public ArtifactRewardsManager getArtifactRewardsManager() {
         return artifactRewardsManager;
+    }
+
+    private boolean handleAnnounce(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("nekosuite.announce")) {
+            sender.sendMessage(messages.format(sender, "common.no_permission"));
+            return true;
+        }
+        if (args.length < 1) {
+            sender.sendMessage(messages.format(sender, "announce.usage"));
+            return true;
+        }
+        // Build the announcement message from all arguments
+        StringBuilder messageBuilder = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (messageBuilder.length() > 0) {
+                messageBuilder.append(" ");
+            }
+            messageBuilder.append(args[i]);
+        }
+        String announcement = messageBuilder.toString();
+        
+        // Get the prefix from config and broadcast
+        String prefix = messages.getRaw(sender, "announce.prefix");
+        String fullMessage = messages.colorize(prefix + announcement);
+        Bukkit.broadcastMessage(fullMessage);
+        
+        sender.sendMessage(messages.format(sender, "announce.success"));
+        return true;
+    }
+
+    private boolean handleNekoMenu(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        openNavigationMenu(player);
+        return true;
+    }
+
+    private boolean handleNekoHelp(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        openHelpMenu(player);
+        return true;
+    }
+
+    private boolean handleTeleport(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+
+        // Check if player is locked from TP
+        if (teleportManager.isLocked(player)) {
+            player.sendMessage(messages.format(player, "tp.locked_self"));
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(messages.format(sender, "tp.usage"));
+            // Show current TP status
+            if (teleportManager.isTpEnabled(player.getName())) {
+                sender.sendMessage(messages.format(sender, "tp.status_on"));
+            } else {
+                sender.sendMessage(messages.format(sender, "tp.status_off"));
+            }
+            return true;
+        }
+
+        String subCommand = args[0].toLowerCase();
+
+        switch (subCommand) {
+            case "accept":
+            case "yes":
+            case "y":
+                teleportManager.acceptTpRequest(player);
+                return true;
+            case "deny":
+            case "no":
+            case "n":
+                teleportManager.denyTpRequest(player);
+                return true;
+            case "toggle":
+                boolean newStatus = teleportManager.toggleTpStatus(player);
+                if (newStatus) {
+                    player.sendMessage(messages.format(player, "tp.toggle_on"));
+                } else {
+                    player.sendMessage(messages.format(player, "tp.toggle_off"));
+                }
+                return true;
+            case "cancel":
+                teleportManager.cancelTpRequest(player);
+                return true;
+            case "status":
+                if (teleportManager.isTpEnabled(player.getName())) {
+                    player.sendMessage(messages.format(player, "tp.status_on"));
+                } else {
+                    player.sendMessage(messages.format(player, "tp.status_off"));
+                }
+                return true;
+            default:
+                // Assume it's a player name - send TP request
+                Player target = Bukkit.getPlayer(args[0]);
+                if (target == null || !target.isOnline()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("player", args[0]);
+                    player.sendMessage(messages.format(player, "tp.player_not_found", map));
+                    return true;
+                }
+                if (target.equals(player)) {
+                    player.sendMessage(messages.format(player, "tp.cannot_tp_self"));
+                    return true;
+                }
+                teleportManager.sendTpRequest(player, target);
+                return true;
+        }
+    }
+
+    private boolean handleTeleportAdmin(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("nekosuite.tp.admin")) {
+            sender.sendMessage(messages.format(sender, "common.no_permission"));
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(messages.format(sender, "tp.admin_usage"));
+            return true;
+        }
+
+        String action = args[0].toLowerCase();
+        String targetName = args[1];
+        Player target = Bukkit.getPlayer(targetName);
+
+        if (target == null || !target.isOnline()) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", targetName);
+            sender.sendMessage(messages.format(sender, "tp.player_not_found", map));
+            return true;
+        }
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("player", target.getName());
+
+        switch (action) {
+            case "lock":
+                teleportManager.lockPlayer(target);
+                sender.sendMessage(messages.format(sender, "tp.admin_lock_success", map));
+                target.sendMessage(messages.format(target, "tp.locked_by_admin"));
+                return true;
+            case "unlock":
+                teleportManager.unlockPlayer(target);
+                sender.sendMessage(messages.format(sender, "tp.admin_unlock_success", map));
+                target.sendMessage(messages.format(target, "tp.unlocked_by_admin"));
+                return true;
+            case "status":
+                boolean isLocked = teleportManager.isLocked(target);
+                boolean tpEnabled = teleportManager.isTpEnabled(target.getName());
+                map.put("locked", isLocked ? "true" : "false");
+                map.put("enabled", tpEnabled ? "true" : "false");
+                sender.sendMessage(messages.format(sender, "tp.admin_status", map));
+                return true;
+            default:
+                sender.sendMessage(messages.format(sender, "tp.admin_usage"));
+                return true;
+        }
+    }
+
+    /**
+     * Get the TeleportManager instance for API access.
+     * Other plugins/features can use this to lock/unlock players.
+     */
+    public TeleportManager getTeleportManager() {
+        return teleportManager;
+    }
+
+    private void openNavigationMenu(Player player) {
+        Inventory inv = Bukkit.createInventory(new NavigationMenuHolder(), 27, messages.format(player, "navigation.title"));
+        
+        // Wish button - slot 10
+        ItemStack wishItem = new ItemStack(org.bukkit.Material.NETHER_STAR);
+        ItemMeta wishMeta = wishItem.getItemMeta();
+        if (wishMeta != null) {
+            wishMeta.setDisplayName(messages.format(player, "navigation.wish_button"));
+            List<String> wishLore = new ArrayList<String>();
+            wishLore.add(messages.format(player, "navigation.wish_lore"));
+            wishLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_WISH");
+            wishMeta.setLore(wishLore);
+            wishItem.setItemMeta(wishMeta);
+        }
+        inv.setItem(10, wishItem);
+        
+        // Event button - slot 11
+        ItemStack eventItem = new ItemStack(org.bukkit.Material.FIREWORK_ROCKET);
+        ItemMeta eventMeta = eventItem.getItemMeta();
+        if (eventMeta != null) {
+            eventMeta.setDisplayName(messages.format(player, "navigation.event_button"));
+            List<String> eventLore = new ArrayList<String>();
+            eventLore.add(messages.format(player, "navigation.event_lore"));
+            eventLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_EVENT");
+            eventMeta.setLore(eventLore);
+            eventItem.setItemMeta(eventMeta);
+        }
+        inv.setItem(11, eventItem);
+        
+        // Exp button - slot 12
+        ItemStack expItem = new ItemStack(org.bukkit.Material.EXPERIENCE_BOTTLE);
+        ItemMeta expMeta = expItem.getItemMeta();
+        if (expMeta != null) {
+            expMeta.setDisplayName(messages.format(player, "navigation.exp_button"));
+            List<String> expLore = new ArrayList<String>();
+            expLore.add(messages.format(player, "navigation.exp_lore"));
+            expLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_EXP");
+            expMeta.setLore(expLore);
+            expItem.setItemMeta(expMeta);
+        }
+        inv.setItem(12, expItem);
+        
+        // Buy button - slot 13
+        ItemStack buyItem = new ItemStack(org.bukkit.Material.GOLD_INGOT);
+        ItemMeta buyMeta = buyItem.getItemMeta();
+        if (buyMeta != null) {
+            buyMeta.setDisplayName(messages.format(player, "navigation.buy_button"));
+            List<String> buyLore = new ArrayList<String>();
+            buyLore.add(messages.format(player, "navigation.buy_lore"));
+            buyLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_BUY");
+            buyMeta.setLore(buyLore);
+            buyItem.setItemMeta(buyMeta);
+        }
+        inv.setItem(13, buyItem);
+        
+        // Mail button - slot 14
+        ItemStack mailItem = new ItemStack(org.bukkit.Material.WRITABLE_BOOK);
+        ItemMeta mailMeta = mailItem.getItemMeta();
+        if (mailMeta != null) {
+            mailMeta.setDisplayName(messages.format(player, "navigation.mail_button"));
+            List<String> mailLore = new ArrayList<String>();
+            mailLore.add(messages.format(player, "navigation.mail_lore"));
+            mailLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_MAIL");
+            mailMeta.setLore(mailLore);
+            mailItem.setItemMeta(mailMeta);
+        }
+        inv.setItem(14, mailItem);
+        
+        // Strategy game button - slot 15
+        ItemStack sgameItem = new ItemStack(org.bukkit.Material.COMPASS);
+        ItemMeta sgameMeta = sgameItem.getItemMeta();
+        if (sgameMeta != null) {
+            sgameMeta.setDisplayName(messages.format(player, "navigation.sgame_button"));
+            List<String> sgameLore = new ArrayList<String>();
+            sgameLore.add(messages.format(player, "navigation.sgame_lore"));
+            sgameLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_SGAME");
+            sgameMeta.setLore(sgameLore);
+            sgameItem.setItemMeta(sgameMeta);
+        }
+        inv.setItem(15, sgameItem);
+        
+        // Help button - slot 16
+        ItemStack helpItem = new ItemStack(org.bukkit.Material.BOOK);
+        ItemMeta helpMeta = helpItem.getItemMeta();
+        if (helpMeta != null) {
+            helpMeta.setDisplayName(messages.format(player, "navigation.help_button"));
+            List<String> helpLore = new ArrayList<String>();
+            helpLore.add(messages.format(player, "navigation.help_lore"));
+            helpLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_HELP");
+            helpMeta.setLore(helpLore);
+            helpItem.setItemMeta(helpMeta);
+        }
+        inv.setItem(16, helpItem);
+        
+        // Close button - slot 26
+        inv.setItem(26, createCloseItem(player));
+        
+        player.openInventory(inv);
+    }
+
+    private void openHelpMenu(Player player) {
+        Inventory inv = Bukkit.createInventory(new HelpMenuHolder(), 27, messages.format(player, "help.title"));
+        
+        // General commands help - slot 4
+        ItemStack generalItem = new ItemStack(org.bukkit.Material.BOOK);
+        ItemMeta generalMeta = generalItem.getItemMeta();
+        if (generalMeta != null) {
+            generalMeta.setDisplayName(messages.format(player, "help.general.title"));
+            List<String> generalLore = messages.getList(player, "help.general.content");
+            generalMeta.setLore(messages.colorize(generalLore));
+            generalItem.setItemMeta(generalMeta);
+        }
+        inv.setItem(4, generalItem);
+        
+        // Back to main menu button - slot 18
+        ItemStack backItem = new ItemStack(org.bukkit.Material.ARROW);
+        ItemMeta backMeta = backItem.getItemMeta();
+        if (backMeta != null) {
+            backMeta.setDisplayName(messages.format(player, "help.back_button"));
+            List<String> backLore = new ArrayList<String>();
+            backLore.add(messages.format(player, "help.back_lore"));
+            backLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
+            backMeta.setLore(backLore);
+            backItem.setItemMeta(backMeta);
+        }
+        inv.setItem(18, backItem);
+        
+        // Close button - slot 26
+        inv.setItem(26, createCloseItem(player));
+        
+        player.openInventory(inv);
+    }
+
+    // Inventory holders for new menus
+    private static class NavigationMenuHolder implements InventoryHolder {
+        public Inventory getInventory() { return null; }
+    }
+
+    private static class HelpMenuHolder implements InventoryHolder {
+        public Inventory getInventory() { return null; }
     }
 
     private boolean handleLanguage(CommandSender sender, String[] args) {
@@ -1321,6 +1703,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 inv.setItem(slot, stack);
             }
         }
+        // Add navigation button (back to main menu)
+        if (layout.getCloseSlot() > 0 && layout.getCloseSlot() - 1 >= 0 && layout.getCloseSlot() - 1 < inv.getSize()) {
+            inv.setItem(layout.getCloseSlot() - 1, createHomeButton(player));
+        }
         if (layout.getCloseSlot() >= 0 && layout.getCloseSlot() < inv.getSize()) {
             inv.setItem(layout.getCloseSlot(), createCloseItem(player));
         }
@@ -1345,11 +1731,11 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         WishStatus status = wishManager.queryStatus(player.getName(), poolId);
 
-        // Slot 0: Player info with pool status
+        // Slot 0: Player info with pool status - initially with a placeholder, then async update with player head
         ItemStack infoItem = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
-        ItemMeta infoMeta = infoItem.getItemMeta();
-        if (infoMeta != null) {
-            infoMeta.setDisplayName(messages.colorize(display.getName()));
+        org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) infoItem.getItemMeta();
+        if (skullMeta != null) {
+            skullMeta.setDisplayName(messages.colorize(display.getName()));
             List<String> infoLore = new ArrayList<String>();
             Map<String, String> placeholders = new HashMap<String, String>();
             placeholders.put("count", String.valueOf(status.getCount()));
@@ -1361,10 +1747,36 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             for (String line : display.getDescription()) {
                 infoLore.add(messages.colorize(line));
             }
-            infoMeta.setLore(infoLore);
-            infoItem.setItemMeta(infoMeta);
+            skullMeta.setLore(infoLore);
+            infoItem.setItemMeta(skullMeta);
         }
         inv.setItem(0, infoItem);
+        
+        // Async fetch player head to avoid blocking main thread
+        final Inventory finalInv = inv;
+        final ItemStack finalInfoItem = infoItem.clone();
+        final InventoryHolder inventoryHolder = inv.getHolder();
+        Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+            @Override
+            public void run() {
+                // Get the skull with player texture in async thread
+                org.bukkit.inventory.meta.SkullMeta asyncMeta = (org.bukkit.inventory.meta.SkullMeta) finalInfoItem.getItemMeta();
+                if (asyncMeta != null) {
+                    asyncMeta.setOwningPlayer(player);
+                    finalInfoItem.setItemMeta(asyncMeta);
+                }
+                // Update inventory on main thread
+                Bukkit.getScheduler().runTask(NekoSuitePlugin.this, new Runnable() {
+                    @Override
+                    public void run() {
+                        // Only update if player still has the same inventory open (check by holder)
+                        if (player.isOnline() && player.getOpenInventory().getTopInventory().getHolder() == inventoryHolder) {
+                            finalInv.setItem(0, finalInfoItem);
+                        }
+                    }
+                });
+            }
+        });
 
         // Slots 9-26: Reward previews
         WeightedList items = pool.getItems();
@@ -1388,7 +1800,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 if (rewardMeta != null) {
                     double percent = (entry.getWeight() / totalWeight) * 100;
                     String percentStr = String.format("%.2f%%", percent);
-                    String displayName = entry.getDisplayName();
+                    // Use translated item name instead of raw ID
+                    String displayName = messages.getItemName(player, entry.getItemId());
                     rewardMeta.setDisplayName(ChatColor.GOLD + displayName + ChatColor.GRAY + " (" + percentStr + ")");
                     List<String> rewardLore = new ArrayList<String>();
                     Map<String, String> rewardPlaceholders = new HashMap<String, String>();
@@ -1533,6 +1946,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 inv.setItem(slot, stack);
             }
         }
+        // Add navigation button (back to main menu)
+        if (layout.getCloseSlot() > 0 && layout.getCloseSlot() - 1 >= 0 && layout.getCloseSlot() - 1 < inv.getSize()) {
+            inv.setItem(layout.getCloseSlot() - 1, createHomeButton(player));
+        }
         if (layout.getCloseSlot() >= 0 && layout.getCloseSlot() < inv.getSize()) {
             inv.setItem(layout.getCloseSlot(), createCloseItem(player));
         }
@@ -1544,6 +1961,20 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(messages.format(player, "menu.close"));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private ItemStack createHomeButton(Player player) {
+        ItemStack item = new ItemStack(org.bukkit.Material.COMPASS);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(messages.format(player, "help.back_button"));
+            List<String> lore = new ArrayList<String>();
+            lore.add(messages.format(player, "help.back_lore"));
+            lore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;
@@ -1572,7 +2003,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 player.closeInventory();
                 return;
             }
+            // Check for navigation action (home button)
             ItemMeta meta = clicked.getItemMeta();
+            String action = extractActionFromMeta(meta);
+            if (action != null && action.equals("OPEN_NAV")) {
+                openNavigationMenu(player);
+                return;
+            }
             String id = extractIdFromMeta(meta);
             if (id != null) {
                 // Open the pool detail menu instead of immediately performing a wish
@@ -1646,6 +2083,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return;
             }
             ItemMeta meta = clicked.getItemMeta();
+            // Check for navigation action (home button)
+            String action = extractActionFromMeta(meta);
+            if (action != null && action.equals("OPEN_NAV")) {
+                openNavigationMenu(player);
+                return;
+            }
             String id = extractIdFromMeta(meta);
             if (id != null) {
                 try {
@@ -1671,6 +2114,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (clicked == null) {
                 return;
             }
+            // Check for navigation action first
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null && ChatColor.stripColor(line).startsWith("ACTION:OPEN_NAV")) {
+                        openNavigationMenu(player);
+                        return;
+                    }
+                }
+            }
             expManager.handleMenuClick(player, clicked);
         }
         if (holder instanceof BuyManager.BuyMenuHolder) {
@@ -1682,6 +2135,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (clicked == null) {
                 return;
             }
+            // Check for navigation action first
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null && ChatColor.stripColor(line).startsWith("ACTION:OPEN_NAV")) {
+                        openNavigationMenu(player);
+                        return;
+                    }
+                }
+            }
             buyManager.handleMenuClick(player, clicked);
         }
         if (holder instanceof MailManager.MailMenuHolder) {
@@ -1692,6 +2155,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null) {
                 return;
+            }
+            // Check for navigation action first
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null && ChatColor.stripColor(line).startsWith("ACTION:OPEN_NAV")) {
+                        openNavigationMenu(player);
+                        return;
+                    }
+                }
             }
             MailManager.MailMenuHolder mailHolder = (MailManager.MailMenuHolder) holder;
             mailManager.handleMenuClick(player, clicked, event.isShiftClick(), mailHolder.getCurrentPage());
@@ -1705,8 +2178,82 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (clicked == null) {
                 return;
             }
+            // Check for navigation action first
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null && ChatColor.stripColor(line).startsWith("ACTION:OPEN_NAV")) {
+                        openNavigationMenu(player);
+                        return;
+                    }
+                }
+            }
             StrategyGameManager.StrategyGameMenuHolder sgHolder = (StrategyGameManager.StrategyGameMenuHolder) holder;
             strategyGameManager.handleMenuClick(player, clicked, sgHolder);
+        }
+        if (holder instanceof NavigationMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            String action = extractActionFromMeta(meta);
+            if (action != null) {
+                switch (action) {
+                    case "OPEN_WISH":
+                        openWishMenu(player);
+                        break;
+                    case "OPEN_EVENT":
+                        openEventMenu(player);
+                        break;
+                    case "OPEN_EXP":
+                        expManager.openMenu(player);
+                        break;
+                    case "OPEN_BUY":
+                        buyManager.openMenu(player);
+                        break;
+                    case "OPEN_MAIL":
+                        mailManager.openMenu(player);
+                        break;
+                    case "OPEN_SGAME":
+                        strategyGameManager.continueGame(player);
+                        break;
+                    case "OPEN_HELP":
+                        openHelpMenu(player);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return;
+        }
+        if (holder instanceof HelpMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            String action = extractActionFromMeta(meta);
+            if (action != null && action.equals("OPEN_NAV")) {
+                openNavigationMenu(player);
+            }
+            return;
         }
     }
 
@@ -1890,7 +2437,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 }
                 if (rewardResult != null) {
                     dispatchReward(player, rewardResult, plugin);
-                    rewards.add(rewardResult.getDisplay());
+                    // Use translated item names for display
+                    rewards.add(rewardResult.getTranslatedDisplay(messages, player));
                 }
             }
             data.set("wish.counts." + countsName, updatedCount);
@@ -2594,6 +3142,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             List<String> parts = new ArrayList<String>();
             for (RewardAction action : actions) {
                 parts.add(action.getName() + " x" + action.getAmount());
+            }
+            return String.join(", ", parts);
+        }
+
+        /**
+         * Get display string with translated item names
+         */
+        String getTranslatedDisplay(Messages messages, org.bukkit.command.CommandSender target) {
+            List<String> parts = new ArrayList<String>();
+            for (RewardAction action : actions) {
+                String translatedName = messages.getItemName(target, action.getName());
+                parts.add(translatedName + " x" + action.getAmount());
             }
             return String.join(", ", parts);
         }

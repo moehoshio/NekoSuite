@@ -56,6 +56,9 @@ public class StrategyGameManager {
     private static final int DISCOUNT_CHANCE = 30; // Percentage chance for discount
     private static final int MIN_DISCOUNT = 10;
     private static final int MAX_DISCOUNT = 50;
+    
+    // Menu layout constants
+    private static final int DEFAULT_NAV_SLOT = 17; // Default slot for navigation button if close slot is 0
 
     // Game configuration
     private int startingGold = DEFAULT_STARTING_GOLD;
@@ -346,6 +349,16 @@ public class StrategyGameManager {
                 "ID:start_new_game"
             });
         safeSet(inv, 13, startItem);
+
+        // Navigation button (back to main menu) - slot before close button
+        int navSlot = layout.getCloseSlot() > 0 ? layout.getCloseSlot() - 1 : DEFAULT_NAV_SLOT;
+        ItemStack navItem = createItem(Material.COMPASS,
+            messages.format(player, "help.back_button"),
+            new String[]{
+                messages.format(player, "help.back_lore"),
+                ChatColor.DARK_GRAY + "ACTION:OPEN_NAV"
+            });
+        safeSet(inv, navSlot, navItem);
 
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
@@ -1365,6 +1378,8 @@ public class StrategyGameManager {
             EventChoice choice = event.getChoices().get(choiceIndex);
             applyEventChoice(player, session, event, choice);
             session.setCurrentEventId(null);
+            // Record event type completion for avoidance algorithm
+            session.recordEventCompletion(event.getEventType());
             session.incrementStage();
             saveSession(session);
             
@@ -1435,6 +1450,8 @@ public class StrategyGameManager {
             // Clear shop offerings for next shop visit
             session.clearShopOfferings();
             session.setCurrentEventId(null);
+            // Record shop event completion for avoidance algorithm
+            session.recordEventCompletion("shop");
             session.incrementStage();
             saveSession(session);
             player.sendMessage(messages.format(player, "sgame.shop_left"));
@@ -1649,6 +1666,8 @@ public class StrategyGameManager {
             int goldReward = enemy.getGoldReward();
             session.addGold(goldReward);
             session.incrementBattleVictories();
+            // Record battle completion for avoidance algorithm
+            session.recordEventCompletion("battle");
             session.incrementStage();
             
             // Magic usage costs some magic points
@@ -1916,6 +1935,8 @@ public class StrategyGameManager {
             int goldReward = enemy.getGoldReward();
             session.addGold(goldReward);
             session.incrementBattleVictories();
+            // Record battle completion for avoidance algorithm
+            session.recordEventCompletion("battle");
             session.incrementStage();
             // Clear battle and event state - battle is complete
             session.setCurrentEnemyId(null);
@@ -2251,6 +2272,7 @@ public class StrategyGameManager {
      * Events are weighted based on:
      * - Base weight from config
      * - Boost if event is a followup to last completed event
+     * - Avoidance multiplier (higher weight for event types that have been avoided)
      * - Requirements check (excluded if prerequisites not met)
      * - Fixed stage events (must appear at specific stages)
      * - Exclusive events (only that event appears at the stage)
@@ -2274,6 +2296,9 @@ public class StrategyGameManager {
         
         String lastEventId = session.getLastEventId();
         GameEvent lastEvent = lastEventId != null ? findEvent(lastEventId) : null;
+        
+        // Ensure avoidance tracking is initialized
+        session.initAvoidanceTracking();
         
         for (GameEvent event : gameEvents) {
             // Skip events with fixed stages that don't match current stage
@@ -2302,8 +2327,10 @@ public class StrategyGameManager {
             
             available.add(event);
             
-            // Calculate weight
-            int weight = event.getWeight();
+            // Calculate weight with avoidance multiplier
+            int baseWeight = event.getWeight();
+            double avoidanceMultiplier = session.getAvoidanceMultiplier(event.getEventType());
+            int weight = (int) Math.ceil(baseWeight * avoidanceMultiplier);
             
             // Boost weight if this is a followup to the last event
             if (lastEvent != null && lastEvent.getFollowupEvents().contains(event.getId())) {
@@ -2665,6 +2692,9 @@ public class StrategyGameManager {
         
         // Status effects tracking (effect_name -> [duration, power])
         private final Map<String, int[]> statusEffects;
+        
+        // Avoidance tracking: tracks stages since last event of each type was completed
+        private final Map<String, Integer> avoidanceCount; // event_type -> stages_since_last
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -2680,12 +2710,16 @@ public class StrategyGameManager {
             this.currentStageEvents = new ArrayList<String>();
             this.stageEventsGenerated = false;
             this.statusEffects = new HashMap<String, int[]>();
+            this.avoidanceCount = new HashMap<String, Integer>();
             
             // Default combat stats
             this.attack = 10;
             this.defense = 5;
             this.magic = 20;
             this.maxMagic = 20;
+            
+            // Initialize avoidance tracking
+            initAvoidanceTracking();
         }
 
         String getPlayerName() { return playerName; }
@@ -2858,6 +2892,60 @@ public class StrategyGameManager {
         }
         boolean isFrozen() {
             return hasStatusEffect("freeze");
+        }
+        
+        void initAvoidanceTracking() {
+            if (avoidanceCount.isEmpty()) {
+                avoidanceCount.put("story", 0);
+                avoidanceCount.put("battle", 0);
+                avoidanceCount.put("shop", 0);
+            }
+        }
+        
+        /**
+         * Get how many stages since last event of this type was completed.
+         */
+        int getAvoidanceCount(String eventType) {
+            return avoidanceCount.getOrDefault(eventType, 0);
+        }
+        
+        /**
+         * Called when an event of a specific type is completed.
+         * Resets avoidance count for that type and increments others.
+         */
+        void recordEventCompletion(String eventType) {
+            // Increment avoidance count for all types
+            for (String type : avoidanceCount.keySet()) {
+                avoidanceCount.put(type, avoidanceCount.get(type) + 1);
+            }
+            // Reset the type that was just completed
+            avoidanceCount.put(eventType, 0);
+        }
+        
+        /**
+         * Calculate weight multiplier based on avoidance count.
+         * After 2 avoided stages: 1.5x weight
+         * After 3 avoided stages: 2x weight
+         * After 4 avoided stages: 3x weight
+         * After 5+ avoided stages: 5x weight (almost guaranteed)
+         */
+        double getAvoidanceMultiplier(String eventType) {
+            int count = getAvoidanceCount(eventType);
+            if (count <= 1) {
+                return 1.0;
+            } else if (count == 2) {
+                return 1.5;
+            } else if (count == 3) {
+                return 2.0;
+            } else if (count == 4) {
+                return 3.0;
+            } else {
+                return 5.0;  // After 5+ stages of avoiding, weight is very high
+            }
+        }
+        
+        Map<String, Integer> getAvoidanceCounts() {
+            return avoidanceCount;
         }
     }
 

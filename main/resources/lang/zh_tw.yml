@@ -453,6 +453,103 @@ sgame:
         choice1:
           text: "&a瀏覽裝備"
           result: "&7歡迎來到我的鐵匠鋪！"
+      # 新增戰鬥事件
+      goblin_camp:
+        name: "&2哥布林營地"
+        desc1: "&7你發現了一個哥布林的營地..."
+        desc2: "&c幾隻哥布林注意到了你的存在！"
+        choice1:
+          text: "&c準備戰鬥"
+          result: "&7哥布林們向你衝來！"
+      dungeon_entrance:
+        name: "&8地下城入口"
+        desc1: "&7你發現了一個神秘的地下城入口..."
+        desc2: "&c裡面傳來陰森的聲音！"
+        choice1:
+          text: "&c進入探索"
+          result: "&7你鼓起勇氣踏入黑暗..."
+      haunted_graveyard:
+        name: "&5鬧鬼墓地"
+        desc1: "&7一片陰森的墓地出現在眼前..."
+        desc2: "&c不死生物在墓碑間遊蕩！"
+        choice1:
+          text: "&c迎戰亡靈"
+          result: "&7骷髏從墳墓中爬出！"
+      dragon_lair_entrance:
+        name: "&4龍穴入口"
+        desc1: "&c前方是傳說中的龍穴..."
+        desc2: "&4空氣中瀰漫著危險的氣息！"
+        choice1:
+          text: "&c挑戰巨龍"
+          result: "&4巨龍的咆哮震動了整個洞穴！"
+      # 新增劇情事件
+      wandering_minstrel:
+        name: "&d流浪詩人"
+        desc1: "&7一位流浪詩人正在路邊彈奏..."
+        desc2: "&7他的音樂令人心曠神怡。"
+        choice1:
+          text: "&a給予小費 (花費10金幣)"
+          result: "&7詩人為你演奏了一曲療癒之歌！"
+        choice2:
+          text: "&c繼續趕路"
+          result: "&7你點頭致意後繼續前行。"
+        choice3:
+          text: "&e請他預言命運"
+          result: "&7詩人告訴你前方的危險，你獲得了情報獎勵！"
+      abandoned_mine:
+        name: "&8廢棄礦坑"
+        desc1: "&7你發現了一座廢棄的礦坑..."
+        desc2: "&7裡面似乎還有未開採的礦石。"
+        choice1:
+          text: "&a冒險開採"
+          result: "&7你發現了礦石，但也遇到了一些危險！"
+        choice2:
+          text: "&c離開"
+          result: "&7你決定不冒這個險。"
+        choice3:
+          text: "&e仔細搜索入口"
+          result: "&7你在入口發現了前人留下的物資！"
+      mystic_fountain:
+        name: "&b神秘泉水"
+        desc1: "&7一個發光的泉水出現在你面前..."
+        desc2: "&7泉水散發著神秘的力量。"
+        choice1:
+          text: "&a喝下泉水"
+          result: "&7神秘的能量流入你的身體！"
+        choice2:
+          text: "&d投入金幣許願 (花費15金幣)"
+          result: "&7泉水湧出治癒之力！"
+        choice3:
+          text: "&e收集泉水出售"
+          result: "&7你收集了泉水，但被泉水的守護者發現了！"
+      bandit_toll:
+        name: "&c山賊路障"
+        desc1: "&7一群山賊擋住了你的去路..."
+        desc2: "&7他們要求你付過路費。"
+        choice1:
+          text: "&a付過路費 (花費25金幣)"
+          result: "&7山賊們讓你通過了。"
+        choice2:
+          text: "&c嘗試突圍"
+          result: "&7你與山賊們發生了衝突！"
+        choice3:
+          text: "&e反擊搶劫他們"
+          result: "&7你擊敗了山賊並搶走了他們的財物！"
+      # 新增商店事件
+      potion_shop:
+        name: "&d藥水鋪"
+        desc1: "&7一間散發著奇怪氣味的藥水鋪。"
+        desc2: "&7店主是一位老巫師。"
+        choice1:
+          text: "&a瀏覽藥水"
+          result: "&7歡迎來到我的藥水鋪！"
+      wandering_trader:
+        name: "&6流動商販"
+        desc1: "&7一位背著大包袱的商販。"
+        desc2: "&7他聲稱有稀有物品出售。"
+        choice1:
+          text: "&a查看商品"
+          result: "&7來看看我的好東西吧！"
       # 固定階段事件
       starter_shop:
         name: "&a新手補給站"
@@ -529,6 +626,24 @@ sgame:
       slime:
         name: "&a史萊姆"
         desc: "一個綠色的彈跳生物"
+      goblin:
+        name: "&2哥布林"
+        desc: "一個狡猾的小型生物，喜歡偷東西"
+        skill1:
+          name: "&e偷竊"
+          desc: "嘗試偷取你的金幣"
+      wolf:
+        name: "&7狂狼"
+        desc: "一隻兇猛的野狼，行動迅速"
+        skill1:
+          name: "&7狼嚎"
+          desc: "發出嚎叫增強攻擊力"
+      bandit:
+        name: "&8山賊"
+        desc: "一個危險的亡命之徒"
+        skill1:
+          name: "&c偷襲"
+          desc: "從暗處發動突襲造成額外傷害"
       skeleton:
         name: "&f骷髏弓箭手"
         desc: "一個拿著弓的骷髏"
@@ -770,6 +885,113 @@ menu:
     vs_hint: "&7選擇你的行動來對抗敵人！"
   close: "&c✖ 關閉"
 
+# 物品翻譯
+items:
+  # Minecraft原版物品
+  "minecraft:iron_ingot": "鐵錠"
+  "minecraft:gold_ingot": "金錠"
+  "minecraft:diamond": "鑽石"
+  "minecraft:experience_bottle": "經驗瓶"
+  "minecraft:netherite_scrap": "獄髓碎片"
+  "minecraft:end_rod": "終界燭"
+  "minecraft:phantom_membrane": "乾燥飛膜"
+  "minecraft:nether_star": "乾燥之星"
+  "minecraft:prismarine_crystals": "海磷晶"
+  "minecraft:quartz": "乾燥石英"
+  "minecraft:enchanted_golden_apple": "附魔金蘋果"
+  "minecraft:quartz_block": "石英磚"
+  "minecraft:speed": "速度藥水"
+  "minecraft:haste": "急迫藥水"
+  "minecraft:strength": "力量藥水"
+  "minecraft:instant_health": "即時治療藥水"
+  "minecraft:jump_boost": "跳躍藥水"
+  "minecraft:regeneration": "再生藥水"
+  "minecraft:resistance": "抗性藥水"
+  "minecraft:fire_resistance": "火焰抗性藥水"
+  "minecraft:water_breathing": "水下呼吸藥水"
+  "minecraft:invisibility": "隱形藥水"
+  "minecraft:night_vision": "夜視藥水"
+  "minecraft:health_boost": "生命提升藥水"
+  "minecraft:absorption": "吸收藥水"
+  "minecraft:saturation": "飽和藥水"
+  "minecraft:glowing": "發光藥水"
+  "minecraft:levitation": "浮空藥水"
+  "minecraft:luck": "幸運藥水"
+  # 自定義物品
+  "purified_water_canteen": "淨化水壺"
+  "p_point": "P點數"
+  "potion_power": "力量藥劑"
+  "goety:recallfocus": "召回之焦"
+  "KirinOverlordBlazingArmor": "麒麟霸烈焰鎧"
+  "mysteryCardPack": "神秘卡包"
+  "focusBag": "焦點袋"
+  "iceologyfocus": "冰學之焦"
+  "launchfocus": "發射之焦"
+  "star_amulet": "星光護符"
+  "CelestineBreezeHelm": "青空微風盔"
+  "SkywhisperBoots": "雲語長靴"
+  "CloudspringAzureBlade": "碧波雲泉劍"
+  "flower_pie": "鮮花派"
+  "pink_cherry_sapling": "粉櫻樹苗"
+  "amethyst_chimes": "紫水晶風鈴"
+  "potion_revive": "復活藥劑"
+  "UnrivaledCrimsonFeatherBow": "絕代緋羽弓"
+  # 每日祈願獎勵
+  "bal5": "5 金幣"
+  "bal10": "10 金幣"
+  "bal30": "30 金幣"
+  "bal50": "50 金幣"
+  "bal100": "100 金幣"
+  "bal360": "360 金幣"
+  "bal1k": "1000 金幣"
+  "bal5k": "5000 金幣"
+  "bal10k": "10000 金幣"
+  "xp20": "20 經驗"
+  "xp100": "100 經驗"
+  "ppoint": "5 P點數"
+  "op_equip": "傳奇裝備"
+  "potions": "隨機藥水效果"
+
+# 公告系統
+announce:
+  usage: "&7用法: &f/announce &6<訊息>"
+  prefix: "&6【公告】&f "
+  success: "&a✔ &7公告已發送。"
+
+# 導航頁
+navigation:
+  title: "&#ff9933✦ 主選單"
+  wish_button: "&e✦ 祈願"
+  wish_lore: "&7進入祈願系統"
+  event_button: "&b✦ 活動"
+  event_lore: "&7查看可參與活動"
+  exp_button: "&a✦ 經驗銀行"
+  exp_lore: "&7管理經驗點數"
+  buy_button: "&d✦ 特權商店"
+  buy_lore: "&7購買VIP和月卡"
+  mail_button: "&f✦ 郵件"
+  mail_lore: "&7查看郵件"
+  sgame_button: "&6✦ 策略遊戲"
+  sgame_lore: "&7貓咪王國冒險"
+  help_button: "&7? 幫助"
+  help_lore: "&7查看幫助信息"
+
+# 幫助頁
+help:
+  title: "&#7dd3fc✦ 幫助"
+  general:
+    title: "&a常用指令"
+    content:
+      - "&f/wish &7- 祈願系統"
+      - "&f/event &7- 活動系統"
+      - "&f/exp &7- 經驗銀行"
+      - "&f/buy &7- 特權購買"
+      - "&f/mail &7- 郵件系統"
+      - "&f/sgame &7- 策略遊戲"
+      - "&f/language &7- 語言設置"
+  back_button: "&a◀ 返回主頁"
+  back_lore: "&7返回導航頁"
+
 artifact:
   usage: "&7用法: &f/artifact list &7或 &f/artifact give &6<玩家> <物品ID>"
   admin_usage: "&7用法: &f/artifact give &6<玩家> <物品ID>"
@@ -780,3 +1002,45 @@ artifact:
   no_items: "&e⚠ &7當前沒有可用的特別獎勵物品。"
   list_header: "&7可用的特別獎勵物品:"
   list_entry: "&7- &6{id}&7: {name} &8- &7{description}"
+
+# 傳送系統
+tp:
+  usage: "&7用法: &f/ntp &6<玩家>&7 發送傳送請求 &8| &f/ntp accept&7 接受 &8| &f/ntp deny&7 拒絕 &8| &f/ntp toggle&7 開關"
+  admin_usage: "&7用法: &f/ntpadmin &6<lock|unlock|status> <玩家>"
+  request_sent: "&a✔ &7已向 &6{target} &7發送傳送請求，等待回應... &8({timeout}秒後過期)"
+  request_received: "&e⚡ &6{requester} &7請求傳送到您身邊！&f/ntp accept &7接受 &8| &f/ntp deny &7拒絕"
+  request_received_interactive: "&e⚡ &6{requester} &7請求傳送到您身邊！ "
+  button_accept: "&a[接受]"
+  button_accept_hover: "&a點擊接受傳送請求"
+  button_deny: "&c[拒絕]"
+  button_deny_hover: "&c點擊拒絕傳送請求"
+  request_expired: "&c✖ &7傳送請求已過期。"
+  no_pending_request: "&c✖ &7沒有待處理的傳送請求。"
+  no_outgoing_request: "&c✖ &7您沒有發出的傳送請求。"
+  requester_offline: "&c✖ &7請求者已離線。"
+  target_disabled: "&c✖ &6{target} &7已關閉傳送功能。"
+  insufficient_balance: "&c✖ &7餘額不足，需 &6{cost}&c，當前 &6{balance}&c。"
+  requester_no_money: "&c✖ &7請求者餘額不足，傳送取消。"
+  cost_failure: "&c✖ &7扣款失敗，請稍後再試。"
+  success: "&a✔ &7已傳送至 &6{target}&7！"
+  accepted: "&a✔ &6{requester} &7已傳送到您身邊。"
+  denied: "&c✖ &6{target} &7拒絕了您的傳送請求。"
+  deny_success: "&a✔ &7已拒絕傳送請求。"
+  cancel_success: "&a✔ &7已取消傳送請求。"
+  request_cancelled: "&e⚠ &6{requester} &7取消了傳送請求。"
+  toggle_on: "&a✔ &7傳送功能已 &a開啟&7，其他玩家可以傳送到您身邊。"
+  toggle_off: "&a✔ &7傳送功能已 &c關閉&7，其他玩家無法傳送到您身邊。"
+  status_on: "&7傳送狀態: &a開啟"
+  status_off: "&7傳送狀態: &c關閉"
+  player_not_found: "&c✖ &7找不到玩家: &6{player}"
+  cannot_tp_self: "&c✖ &7不能傳送到自己身邊。"
+  # Admin-controlled lock messages (for dungeons, minigames, etc.)
+  locked_self: "&c✖ &7您目前被禁止使用傳送功能。"
+  target_locked: "&c✖ &6{target} &7目前被禁止使用傳送功能。"
+  requester_locked: "&c✖ &7請求者目前被禁止使用傳送功能。"
+  target_locked_now: "&c✖ &7目標玩家已被禁止傳送。"
+  locked_by_admin: "&e⚠ &7您已被禁止使用傳送功能 &8(副本/小遊戲等)"
+  unlocked_by_admin: "&a✔ &7您的傳送功能已恢復。"
+  admin_lock_success: "&a✔ &7已禁止 &6{player} &7使用傳送功能。"
+  admin_unlock_success: "&a✔ &7已恢復 &6{player} &7的傳送功能。"
+  admin_status: "&7玩家 &6{player}&7: 鎖定={locked}, 開關={enabled}"

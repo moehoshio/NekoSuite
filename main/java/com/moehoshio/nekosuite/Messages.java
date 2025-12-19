@@ -1,5 +1,10 @@
 package com.moehoshio.nekosuite;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -190,6 +195,48 @@ public class Messages {
             value = key;
         }
         return value;
+    }
+
+    /**
+     * Get translated item name. Looks up in items section using quoted key format.
+     * Falls back to the original itemId with cosmetic formatting if no translation exists.
+     */
+    public String getItemName(CommandSender target, String itemId) {
+        if (itemId == null || itemId.isEmpty()) {
+            return "Unknown";
+        }
+        // YAML files use quoted keys like: "minecraft:iron_ingot": "Iron Ingot"
+        // The YamlConfiguration getPath internally handles quoted keys
+        String key = "items.\"" + itemId + "\"";
+        String language = resolveLanguage(target);
+        String translated = getRawForLanguage(language, key);
+        if (translated == null) {
+            translated = getRawForLanguage(defaultLanguage, key);
+        }
+        // If still not found, use the itemId as-is but clean it up for display
+        if (translated == null) {
+            // Remove minecraft: prefix if present and capitalize
+            String cleanName = itemId;
+            if (cleanName.startsWith("minecraft:")) {
+                cleanName = cleanName.substring("minecraft:".length());
+            }
+            // Convert underscores to spaces and capitalize words
+            String[] parts = cleanName.split("_");
+            StringBuilder sb = new StringBuilder();
+            for (String part : parts) {
+                if (sb.length() > 0) {
+                    sb.append(" ");
+                }
+                if (part.length() > 0) {
+                    sb.append(Character.toUpperCase(part.charAt(0)));
+                    if (part.length() > 1) {
+                        sb.append(part.substring(1).toLowerCase());
+                    }
+                }
+            }
+            translated = sb.toString();
+        }
+        return translated;
     }
 
     public String format(String key) {
@@ -392,6 +439,107 @@ public class Messages {
         }
         text = translateHexColors(text);
         return ChatColor.translateAlternateColorCodes('&', text);
+    }
+
+    /**
+     * Create a TextComponent with hover text that shows when the player hovers over the message.
+     * 
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @return TextComponent with hover functionality
+     */
+    public TextComponent createHoverText(String text, String hoverText) {
+        TextComponent component = new TextComponent(colorize(text));
+        if (hoverText != null && !hoverText.isEmpty()) {
+            component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new Text(colorize(hoverText))));
+        }
+        return component;
+    }
+
+    /**
+     * Create a TextComponent with hover text and a click command.
+     * 
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @param command The command to run when clicked (without the leading /)
+     * @return TextComponent with hover and click functionality
+     */
+    public TextComponent createHoverClickText(String text, String hoverText, String command) {
+        TextComponent component = createHoverText(text, hoverText);
+        if (command != null && !command.isEmpty()) {
+            String cmd = command.startsWith("/") ? command : "/" + command;
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd));
+        }
+        return component;
+    }
+
+    /**
+     * Create a TextComponent with hover text that suggests a command when clicked.
+     * 
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @param command The command to suggest when clicked
+     * @return TextComponent with hover and suggest functionality
+     */
+    public TextComponent createHoverSuggestText(String text, String hoverText, String command) {
+        TextComponent component = createHoverText(text, hoverText);
+        if (command != null && !command.isEmpty()) {
+            String cmd = command.startsWith("/") ? command : "/" + command;
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, cmd));
+        }
+        return component;
+    }
+
+    /**
+     * Send a message with hover text to a player.
+     * 
+     * @param player The player to send the message to
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     */
+    public void sendHoverMessage(Player player, String text, String hoverText) {
+        TextComponent component = createHoverText(text, hoverText);
+        player.spigot().sendMessage(component);
+    }
+
+    /**
+     * Send a message with hover text and click action to a player.
+     * 
+     * @param player The player to send the message to
+     * @param text The main message text
+     * @param hoverText The text to show on hover
+     * @param command The command to run when clicked
+     */
+    public void sendHoverClickMessage(Player player, String text, String hoverText, String command) {
+        TextComponent component = createHoverClickText(text, hoverText, command);
+        player.spigot().sendMessage(component);
+    }
+
+    /**
+     * Build a composite message with multiple components.
+     * Each component can have its own hover and click actions.
+     * 
+     * @param components Array of TextComponents to combine
+     * @return Combined TextComponent
+     */
+    public TextComponent buildMessage(TextComponent... components) {
+        TextComponent result = new TextComponent();
+        for (TextComponent comp : components) {
+            result.addExtra(comp);
+        }
+        return result;
+    }
+
+    /**
+     * Send a composite message to a player.
+     * 
+     * @param player The player to send the message to
+     * @param components Array of TextComponents to combine and send
+     */
+    public void sendMessage(Player player, TextComponent... components) {
+        TextComponent message = buildMessage(components);
+        player.spigot().sendMessage(message);
     }
 
 }

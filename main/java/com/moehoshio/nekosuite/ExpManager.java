@@ -277,8 +277,26 @@ public class ExpManager {
                 messages.format(player, "exp.balance", balanceMap),
                 new String[0]);
         safeSet(inv, expLayout.getBalanceSlot(), balance);
+        // Add navigation button (back to main menu)
+        if (expLayout.getCloseSlot() > 0 && expLayout.getCloseSlot() - 1 >= 0 && expLayout.getCloseSlot() - 1 < inv.getSize()) {
+            safeSet(inv, expLayout.getCloseSlot() - 1, createHomeButton(player));
+        }
         safeSet(inv, expLayout.getCloseSlot(), createItem(Material.BARRIER, messages.format(player, "menu.close"), new String[0]));
         player.openInventory(inv);
+    }
+
+    private ItemStack createHomeButton(Player player) {
+        ItemStack item = new ItemStack(Material.COMPASS);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(messages.format(player, "help.back_button"));
+            List<String> lore = new ArrayList<String>();
+            lore.add(messages.format(player, "help.back_lore"));
+            lore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     private void safeSet(Inventory inv, int slot, ItemStack item) {
@@ -322,6 +340,8 @@ public class ExpManager {
                         long amount = parseNumber(id.substring(8));
                         if (amount > 0) {
                             deposit(player, amount);
+                            // Refresh menu to show updated values
+                            refreshMenu(player);
                         }
                         return true;
                     }
@@ -329,18 +349,39 @@ public class ExpManager {
                         long amount = parseNumber(id.substring(9));
                         if (amount > 0) {
                             withdraw(player, amount);
+                            // Refresh menu to show updated values
+                            refreshMenu(player);
                         }
                         return true;
                     }
                     if (id.startsWith("exchange_")) {
                         String exchangeId = id.substring(9);
                         exchange(player, exchangeId);
+                        // Refresh menu to show updated values
+                        refreshMenu(player);
                         return true;
                     }
                 }
             }
         }
         return true;
+    }
+
+    /**
+     * Refresh the exp menu in place without reopening the inventory.
+     * This allows dynamic updates to reflect changes immediately.
+     */
+    private void refreshMenu(Player player) {
+        // Schedule a task to reopen the menu on the next tick
+        // This ensures proper inventory state management
+        Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                if (player.isOnline()) {
+                    openMenu(player);
+                }
+            }
+        }, 1L);
     }
 
     private long parseNumber(String text) {
