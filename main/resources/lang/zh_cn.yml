@@ -98,6 +98,7 @@ event:
     not_found: "活动未找到"
     closed: "活动未开放"
     limit: "参与次数已达上限"
+    wrong_day: "今天不是此活动的开放日"
 
 exp:
   usage: "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
@@ -404,31 +405,62 @@ i18n:
   default: "&7默认语言: &6{language}"
 
 tab:
+  menu:
+    open: "<打开菜单>"
   wish:
-    pool: "<祈愿池名称>"
-    query_pool: "<查询的祈愿池>"
+    select_pool: "<选择祈愿池>"
     count: "<祈愿次数>"
+    do_wish: "<进行祈愿>"
+    execute: "<进行祈愿>"
   event:
-    id: "<参与的活动ID>"
+    select: "<选择活动>"
+    participate: "<参加此活动>"
   exp:
-    action: "<操作类型>"
-    exchange_id: "<兑换项目ID>"
-    deposit_amount: "<存入的经验数量>"
-    withdraw_amount: "<取出的经验数量>"
-    pay_target: "<转账对象玩家名>"
-    pay_amount: "<转账经验数量>"
+    select: "<选择操作>"
+    select_action: "<选择操作>"
+    select_exchange: "<选择兑换项目>"
+    select_player: "<选择玩家>"
+    deposit_amount: "<存入数量>"
+    do_deposit: "<执行存入>"
+    withdraw_amount: "<取出数量>"
+    do_withdraw: "<执行取出>"
+    pay_target: "<转账对象>"
+    pay_amount: "<转账数量>"
+    do_pay: "<执行转账>"
+    do_exchange: "<执行兑换>"
   cdk:
-    code: "<输入CDK兑换码>"
+    code: "<输入兑换码>"
+    redeem: "<兑换CDK>"
   buy:
-    type: "<购买的类型>"
-    level: "<开通的等级>"
+    select_type: "<选择类型>"
+    select_level: "<选择等级>"
+    purchase: "<购买此产品>"
   language:
-    code: "<语言代码>"
+    select: "<选择语言>"
+    list: "<显示可用语言>"
+    reset: "<重设为默认语言>"
+    set: "<设置此语言>"
   mail:
-    player: "<玩家名称>"
+    select_action: "<选择操作>"
+    select_player: "<选择玩家>"
+    select_claim: "<选择邮件领取>"
+    select_delete: "<选择邮件删除>"
+    do_claim: "<领取此邮件奖励>"
+    do_delete: "<删除此邮件>"
+    do_send: "<发送此邮件>"
+    admin_select: "<选择管理操作>"
+    select_template: "<选择模板>"
+    template_send: "<发送模板邮件>"
     subject: "<邮件主题>"
-    content: "<邮件内容>"
-    action: "<操作类型>"
+    content: "<邮件内容...>"
+  sgame:
+    status: "<查看游戏状态>"
+    abandon: "<放弃当前游戏>"
+  artifact:
+    select_item: "<选择物品>"
+    select_player: "<选择玩家>"
+    list: "<显示物品列表>"
+    do_give: "<按下 Enter 发放>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [邮件ID]"
@@ -732,3 +764,15 @@ sgame:
         name: "&d传奇冒险者奖励"
       king:
         name: "&6&l王者奖励"
+
+
+artifact:
+  usage: "&7用法: &f/artifact list &7或 &f/artifact give &6<玩家> <物品ID>"
+  admin_usage: "&7用法: &f/artifact give &6<玩家> <物品ID>"
+  not_found: "&c✖ 未找到物品: &7{item}"
+  player_not_found: "&c✖ 玩家 &7{player} &c不在线。"
+  admin_success: "&a✔ &7已向 &6{player} &7发放: &6{item}"
+  receive: "&a✔ &7您获得了特别奖励: {item}"
+  no_items: "&e⚠ &7当前没有可用的特别奖励物品。"
+  list_header: "&7可用的特别奖励物品:"
+  list_entry: "&7- &6{id}&7: {name} &8- &7{description}"

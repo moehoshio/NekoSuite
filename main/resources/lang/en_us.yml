@@ -98,6 +98,7 @@ event:
     not_found: "Event not found"
     closed: "Event is not open"
     limit: "Participation limit reached"
+    wrong_day: "This event is not available today"
 
 exp:
   usage: "&7Usage: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
@@ -404,31 +405,62 @@ i18n:
   default: "&7Default language: &6{language}"
 
 tab:
+  menu:
+    open: "<Open menu>"
   wish:
-    pool: "<pool_name>"
-    query_pool: "<pool_to_query>"
-    count: "<wish_count>"
+    select_pool: "<Select wish pool>"
+    count: "<Wish count>"
+    do_wish: "<Make a wish>"
+    execute: "<Make a wish>"
   event:
-    id: "<event_id>"
+    select: "<Select event>"
+    participate: "<Join this event>"
   exp:
-    action: "<action_type>"
-    exchange_id: "<exchange_id>"
-    deposit_amount: "<amount_to_deposit>"
-    withdraw_amount: "<amount_to_withdraw>"
-    pay_target: "<player_name>"
-    pay_amount: "<amount_to_pay>"
+    select: "<Select action>"
+    select_action: "<Select action>"
+    select_exchange: "<Select exchange item>"
+    select_player: "<Select player>"
+    deposit_amount: "<Amount to deposit>"
+    do_deposit: "<Execute deposit>"
+    withdraw_amount: "<Amount to withdraw>"
+    do_withdraw: "<Execute withdraw>"
+    pay_target: "<Transfer target>"
+    pay_amount: "<Amount to transfer>"
+    do_pay: "<Execute transfer>"
+    do_exchange: "<Execute exchange>"
   cdk:
-    code: "<enter_cdk_code>"
+    code: "<Enter CDK code>"
+    redeem: "<Redeem CDK>"
   buy:
-    type: "<product_type>"
-    level: "<product_level>"
+    select_type: "<Select type>"
+    select_level: "<Select level>"
+    purchase: "<Purchase this product>"
   language:
-    code: "<language_code>"
+    select: "<Select language>"
+    list: "<Show available languages>"
+    reset: "<Reset to default language>"
+    set: "<Set this language>"
   mail:
-    player: "<player_name>"
-    subject: "<mail_subject>"
-    content: "<mail_content>"
-    action: "<action_type>"
+    select_action: "<Select action>"
+    select_player: "<Select player>"
+    select_claim: "<Select mail to claim>"
+    select_delete: "<Select mail to delete>"
+    do_claim: "<Claim this mail's rewards>"
+    do_delete: "<Delete this mail>"
+    do_send: "<Send this mail>"
+    admin_select: "<Select admin action>"
+    select_template: "<Select template>"
+    template_send: "<Send template mail>"
+    subject: "<Mail subject>"
+    content: "<Mail content...>"
+  sgame:
+    status: "<View game status>"
+    abandon: "<Abandon current game>"
+  artifact:
+    select_item: "<Select item>"
+    select_player: "<Select player>"
+    list: "<Show item list>"
+    do_give: "<Press Enter to give>"
 
 mail:
   usage: "&7Usage: &f/mail &6<menu|list|claim|delete> [mailId]"
@@ -661,7 +693,7 @@ sgame:
         desc3: "&cThis is the final battle to save the kingdom of Meoceria!"
         choice1:
           text: "&c&lFace the final challenge"
-          result: "&4Dark Lord: ""Foolish adventurer... I will end your journey!"""
+          result: '&4Dark Lord: "Foolish adventurer... I will end your journey!"'
     # Shop items
     shop:
       small_potion:
@@ -732,3 +764,15 @@ sgame:
         name: "&dLegendary Adventurer Reward"
       king:
         name: "&6&lKing's Reward"
+
+
+artifact:
+  usage: "&7Usage: &f/artifact list &7or &f/artifact give &6<player> <itemId>"
+  admin_usage: "&7Usage: &f/artifact give &6<player> <itemId>"
+  not_found: "&c✖ Item not found: &7{item}"
+  player_not_found: "&c✖ Player &7{player} &cis not online."
+  admin_success: "&a✔ &7Gave &6{item} &7to &6{player}&7."
+  receive: "&a✔ &7You received a special artifact: {item}"
+  no_items: "&e⚠ &7No artifact items available."
+  list_header: "&7Available artifact items:"
+  list_entry: "&7- &6{id}&7: {name} &8- &7{description}"

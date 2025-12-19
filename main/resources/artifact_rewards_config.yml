@@ -1,0 +1,118 @@
+# artifact_rewards_config.yml
+# 特別獎勵發放模塊配置文件
+# 此模塊專門用於其他插件或命令調用發放特殊物品
+# 不提供玩家直接使用的功能
+
+# 物品配置說明：
+# items:
+#   <物品ID>:
+#     display_name: 顯示名稱 (支持顏色代碼，用於 Chat 顯示)
+#     material: 基礎物品類型 (如 minecraft:diamond_sword)
+#     nbt: NBT 數據 (完整的 give 命令 NBT 格式)
+#     description: 物品簡述 (用於 Chat 懸浮信息第一行)
+#     hover_lore: Chat 懸浮信息的額外行 (滑鼠放上去顯示的內容)
+#       - "&7穿戴時 +12% 移速"
+#       - "&6鍛利 X"
+#     commands: 發放時額外執行的命令列表 (可選)
+#       - "broadcast {player} 獲得了 {item_name}！"
+
+# 承繼者模板 (用於 NBT Lore):
+# '{"text":"","extra":[{"text":"承","color":"#8145e4"},{"text":"繼","color":"#785fe6"},{"text":"者","color":"#6f79e8"},{"text":"： ","color":"dark_aqua"},{"text":"$player","color":"#FFAA00"}]}'
+
+# 屬性UUID格式說明：
+# 以編輯日期開頭 (如 2025,3,13)，最後一位數字為當日編輯的物品數量
+# 每件物品 +10，每個屬性 +1，以確保唯一性
+
+# API 使用方式:
+# NekoSuitePlugin plugin = (NekoSuitePlugin) Bukkit.getPluginManager().getPlugin("NekoSuite");
+# ArtifactRewardsManager manager = plugin.getArtifactRewardsManager();
+# manager.giveRewardByName("玩家名", "CloudspringAzureBlade");
+# manager.sendItemMessage(player, "CloudspringAzureBlade", "&a恭喜獲得 {item}！");
+
+# 特別獎勵物品配置
+items:
+  # ========== 碧波雲泉劍 ==========
+  # 屬性UUID: 2025,3,13,60-62
+  CloudspringAzureBlade:
+    display_name: "&#74ccfa碧&#77ccfa波&#7accfa雲&#7dccfa泉&#80ccfa劍"
+    material: "minecraft:diamond_sword"
+    description: "劍光映碧波 出鞘起雲泉"
+    hover_lore:
+      - ""
+      - "&b在主手時 +0.8 攻擊速度"
+      - "&7鋒利 X"
+      - "&7擊退 V"
+      - "&7耐久 III"
+      - ""
+      - "&2 12.0 攻擊傷害"
+      - "&2 2.4 攻擊速度"
+    nbt: '{display:{Name:''{"text":"","extra":[{"text":"碧","color":"#74ccfa"},{"text":"波","color":"#77ccfa"},{"text":"雲","color":"#7accfa"},{"text":"泉","color":"#7dccfa"},{"text":"劍","color":"#80ccfa"},{"text":"","color":"#83ccfa"}]}'',Lore:[''{"text":"","extra":[{"text":"劍","color":"#77f6b1"},{"text":"光","color":"#6fedb8"},{"text":"映","color":"#67e4bf"},{"text":"碧","color":"#5fdbc6"},{"text":"波","color":"#57d2cd"},{"text":" ","color":"#4fc9d4"},{"text":"出","color":"#47c0db"},{"text":"鞘","color":"#3fb7e2"},{"text":"起","color":"#37aee9"},{"text":"雲","color":"#2fa5f0"},{"text":"泉","color":"#279cf7"},{"text":"","color":"#1f93fe"}]}'',''{"text":"","extra":[{"text":"承","color":"#8145e4"},{"text":"繼","color":"#785fe6"},{"text":"者","color":"#6f79e8"},{"text":"： ","color":"dark_aqua"},{"text":"{player}","color":"#FFAA00"}]}'',''{"text":""}'',''{"text":"在主手时 +0.8 攻击速度","color":"blue"}'',''{"text":"锋利 X","color":"#696969"}'',''{"text":"击退 V","color":"#696969"}'',''{"text":"耐久 III","color":"#696969"}'',''{"text":""}'',''{"text":" 12.0 攻击伤害","color":"dark_green"}'',''{"text":" 2.4 攻击速度","color":"dark_green"}'']},Enchantments:[{id:"minecraft:sharpness",lvl:10},{id:"minecraft:knockback",lvl:5},{id:"minecraft:unbreaking",lvl:3}],AttributeModifiers:[{"AttributeName":"generic.attack_speed","Name":"fix_base_attack_speed_-2.4","Amount":-2.4,"Operation":0,"Slot":"mainhand","UUID":[I;2025,3,13,60]},{"AttributeName":"generic.attack_speed","Name":"add_attack_speed_0.8","Amount":0.8,"Operation":0,"Slot":"mainhand","UUID":[I;2025,3,13,61]},{"AttributeName":"generic.attack_damage","Name":"add_attack_damage_5.5","Amount":5.5,"Operation":0,"Slot":"mainhand","UUID":[I;2025,3,13,62]}],HideFlags:3}'
+
+  # ========== 天語輕行 ==========
+  # 屬性UUID: 2025,3,15,30-33
+  SkywhisperBoots:
+    display_name: "&#6ccbef天&#51c8f3語&#36c5f7輕&#1bc2fb行"
+    material: "minecraft:diamond_boots"
+    description: "隨風而起 踏雲尋跡"
+    hover_lore:
+      - ""
+      - "&b穿戴時 +12% 移速"
+      - "&7保護 V"
+      - "&7輕盈 V"
+      - "&7深海漫遊 V"
+      - "&7冰霜行者 II"
+    nbt: '{Enchantments:[{id:"minecraft:protection",lvl:5},{id:"minecraft:feather_falling",lvl:5},{id:"minecraft:depth_strider",lvl:5},{id:"minecraft:frost_walker",lvl:2}],AttributeModifiers:[{AttributeName:"generic.movement_speed",Name:"add_movement_speed_0.12",Amount:0.12,Operation:1,Slot:"feet",UUID:[I;2025,3,15,30]},{AttributeName:"generic.armor",Name:"fix_base_armor_3.0",Amount:3,Operation:0,Slot:"feet",UUID:[I;2025,3,15,31]},{AttributeName:"generic.armor_toughness",Name:"fix_base_armor_toughness_2.0",Amount:2,Operation:0,Slot:"feet",UUID:[I;2025,3,15,33]}],display:{Name:''{"text":"","extra":[{"text":"天","color":"#6ccbef"},{"text":"語","color":"#51c8f3"},{"text":"輕","color":"#36c5f7"},{"text":"行","color":"#1bc2fb"},{"text":"","color":"#00bfff"}]}'',Lore:[''{"text":"","extra":[{"text":"隨","color":"#13bff9"},{"text":"風","color":"#26bff3"},{"text":"而","color":"#39bfed"},{"text":"起","color":"#4cbfe7"},{"text":" ","color":"#5fbfe1"},{"text":"踏","color":"#72bfdb"},{"text":"雲","color":"#85bfd5"},{"text":"尋","color":"#98bfcf"},{"text":"跡","color":"#abbfc9"},{"text":"","color":"#bebfc3"}]}'',''{"text":"","extra":[{"text":"承","color":"#8145e4"},{"text":"繼","color":"#785fe6"},{"text":"者","color":"#6f79e8"},{"text":"： ","color":"dark_aqua"},{"text":"{player}","color":"#FFAA00"}]}'',''{"text":""}'',''{"text":"穿戴时 +12% 移速","color":"blue"}'',''{"text":"保护 V","color":"#696969"}'',''{"text":"轻盈 V","color":"#696969"}'',''{"text":"深海漫游 V","color":"#696969"}'',''{"text":"冰霜行者 II","color":"#696969"}'']},HideFlags:1}'
+
+  # ========== 深海暴君 ==========
+  # 屬性UUID: 2025,3,12,70-73
+  TyrantOfTheDeep:
+    display_name: "&#66ffbb深&#4dffcc海&#34ffdd暴&#1bffee君"
+    material: "alexsmobs:shield_of_the_deep"
+    description: "持有它的人，將擁有深海暴君的威嚴與無畏之心"
+    hover_lore:
+      - ""
+      - "&b在主手時 +5.0 防禦，+2.0 韌性"
+      - "&5在副手時 +2.0 攻擊，+2.0 韌性"
+      - "&7經驗修補"
+    nbt: '{AttributeModifiers:[{AttributeName:"generic.attack_damage",Name:"add_attack_damage_2.0",Amount:2,Operation:0,Slot:"offhand",UUID:[I;2025,3,12,70]},{AttributeName:"generic.armor",Name:"add_armor_5.0",Amount:5,Operation:0,Slot:"mainhand",UUID:[I;2025,3,12,71]},{AttributeName:"generic.armor_toughness",Name:"add_armor_toughness_2.0",Amount:2,Operation:0,Slot:"offhand",UUID:[I;2025,3,12,72]},{AttributeName:"generic.armor_toughness",Name:"add_armor_toughness_2.0",Amount:2,Operation:0,Slot:"mainhand",UUID:[I;2025,3,12,73]}],Enchantments:[{id:"minecraft:mending",lvl:1}],display:{Name:''{"text":"","extra":[{"text":"深","color":"#66ffbb"},{"text":"海","color":"#4dffcc"},{"text":"暴","color":"#34ffdd"},{"text":"君","color":"#1bffee"},{"text":"","color":"#02ffff"}]}'',Lore:[''{"text":"","extra":[{"text":"持","color":"#2394fa"},{"text":"有","color":"#2898f5"},{"text":"它","color":"#2d9cf0"},{"text":"的","color":"#32a0eb"},{"text":"人","color":"#37a4e6"},{"text":"，","color":"#3ca8e1"},{"text":"將","color":"#41acdc"},{"text":"擁","color":"#46b0d7"},{"text":"有","color":"#4bb4d2"},{"text":"深","color":"#50b8cd"},{"text":"海","color":"#55bcc8"},{"text":"暴","color":"#5ac0c3"},{"text":"君","color":"#5fc4be"},{"text":"的","color":"#64c8b9"},{"text":"威","color":"#69ccb4"},{"text":"嚴","color":"#6ed0af"},{"text":"與","color":"#73d4aa"},{"text":"無","color":"#78d8a5"},{"text":"畏","color":"#7ddca0"},{"text":"之","color":"#82e09b"},{"text":"心","color":"#87e496"},{"text":"","color":"#8ce891"}]}'',''{"text":"","extra":[{"text":"承","color":"#8145e4"},{"text":"繼","color":"#785fe6"},{"text":"者","color":"#6f79e8"},{"text":"： ","color":"dark_aqua"},{"text":"{player}","color":"#FFAA00"}]}'',''{"text":""}'',''{"text":"在主手时 +5.0 防御， +2.0韧性","color":"blue"}'',''{"text":"在副手时 +2.0 攻击， +2.0韧性","color":"dark_purple"}'',''{"text":"经验修补","color":"#696969"}'']},HideFlags:1}'
+
+  # ========== 星風輕霜 ==========
+  # 屬性UUID: 2025,3,15,50-52
+  CelestineBreezeHelm:
+    display_name: "&#2d8afd星&#3c84fb風&#5a78f7輕&#6972f5霜"
+    material: "minecraft:diamond_helmet"
+    description: "星風為翼 霜影隨行"
+    hover_lore:
+      - ""
+      - "&b裝備時 +0.7 攻擊速度"
+      - "&7投射物保護 X"
+      - "&7保護 V"
+      - "&7耐久 III"
+    nbt: '{display:{Name:''{"text":"","extra":[{"text":"星","color":"#2d8afd"},{"text":"風","color":"#3c84fb"},{"text":"輕","color":"#5a78f7"},{"text":"霜","color":"#6972f5"}]}'',Lore:[''{"text":""}'',''{"text":"","extra":[{"text":"星","color":"#88c5f7"},{"text":"風","color":"#89bcf4"},{"text":"為","color":"#8ab3f1"},{"text":"翼","color":"#8baaee"},{"text":" ","color":"#8ca1eb"},{"text":"霜","color":"#8d98e8"},{"text":"影","color":"#8e8fe5"},{"text":"隨","color":"#8f86e2"},{"text":"行","color":"#907ddf"}]}'',''{"text":"","extra":[{"text":"承","color":"#8145e4"},{"text":"繼","color":"#785fe6"},{"text":"者","color":"#6f79e8"},{"text":"： ","color":"dark_aqua"},{"text":"{player}","color":"#FFAA00"}]}'',''{"text":""}'',''{"text":"装备时 +0.7 攻击速度","color":"blue"}'',''{"text":"投射物保护 X","color":"#696969"}'',''{"text":"保护 V","color":"#696969"}'',''{"text":"耐久 III","color":"#696969"}'']},Enchantments:[{id:"minecraft:protection",lvl:5},{id:"minecraft:projectile_protection",lvl:10},{id:"minecraft:unbreaking",lvl:3}],AttributeModifiers:[{AttributeName:"generic.armor",Name:"fix_base_armor_3.0",Amount:3,Operation:0,Slot:"head",UUID:[I;2025,3,15,50]},{AttributeName:"generic.armor_toughness",Name:"fix_base_armor_toughness_2.0",Amount:2,Operation:0,Slot:"head",UUID:[I;2025,3,15,51]},{AttributeName:"generic.attack_speed",Name:"add_attack_speed_0.7","Amount":0.7,"Operation":0,"Slot":"head","UUID":[I;2025,3,15,52]}],HideFlags:1}'
+
+  # ========== 麒麟霸炎铠 ==========
+  # 屬性UUID: 2025,8,5,12
+  KirinOverlordBlazingArmor:
+    display_name: "&#F08080麒麟霸炎铠"
+    material: "minecraft:golden_chestplate"
+    description: "麒麟踏炎 鎧耀霸世"
+    hover_lore:
+      - ""
+      - "&b裝備時 +4 最大生命值"
+      - "&7防火 X"
+      - "&7荊棘 V"
+      - "&7耐久 III"
+    nbt: '{display:{Name:''{"color":"#F08080","text":"麒麟霸炎铠"}'',Lore:[''{"text":"","extra":[{"text":"麒","color":"#ff8500"},{"text":"麟","color":"#ff7e00"},{"text":"踏","color":"#ff7700"},{"text":"炎","color":"#ff7000"},{"text":" ","color":"#ff6900"},{"text":"鎧","color":"#ff6200"},{"text":"耀","color":"#ff5b00"},{"text":"霸","color":"#ff5400"},{"text":"世","color":"#ff4d00"}]}'',''{"text":"","extra":[{"text":"承","color":"#8145e4"},{"text":"繼","color":"#785fe6"},{"text":"者","color":"#6f79e8"},{"text":"： ","color":"dark_aqua"},{"text":"{player}","color":"#FFAA00"}]}'',''{"text":""}'',''{"text":"装备时 +4 最大生命值","color":"blue"}'',''{"text":"防火 X","color":"#696969"}'',''{"text":"荆棘 V","color":"#696969"}'',''{"text":"耐久 III","color":"#696969"}'']},Enchantments:[{id:"minecraft:fire_protection",lvl:10},{id:"minecraft:thorns",lvl:5},{id:"minecraft:unbreaking",lvl:3}],AttributeModifiers:[{AttributeName:"generic.max_health",Name:"add_max_health_4.0",Amount:4,Operation:0,Slot:"chest",UUID:[I;2025,8,5,12]}],HideFlags:1}'
+
+# 示例物品模板 (可自行添加)
+# ExampleArtifact:
+#   display_name: "&6範例神器"
+#   material: "minecraft:netherite_sword"
+#   description: "這是一個範例物品"
+#   hover_lore:
+#     - ""
+#     - "&b特殊效果說明"
+#     - "&7附魔資訊"
+#   nbt: '{display:{Name:''{"text":"範例神器","color":"gold"}''}}'
+#   commands:
+#     - "broadcast &a{player} 獲得了 &6{item_name}&a！"

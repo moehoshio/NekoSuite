@@ -119,6 +119,7 @@ pools:
                 probability: 5.0
             potion_power:
                 probability: 5.0
+                display_material: "minecraft:potion"
                 commands:
                     - "minecraft:effect give {player} strength 180 1"
             goety:recallfocus:
@@ -126,6 +127,8 @@ pools:
                 display_model: 5202
             KirinOverlordBlazingArmor:
                 probability: 0.246
+                display_material: "minecraft:golden_chestplate"
+                enchanted: true
         guarantee_items:
             KirinOverlordBlazingArmor:
                 probability: 1
@@ -188,10 +191,16 @@ pools:
                 display_model: 5204
             CelestineBreezeHelm:
                 probability: 0.246
+                display_material: "minecraft:diamond_helmet"
+                enchanted: true
             SkywhisperBoots:
                 probability: 0.246
+                display_material: "minecraft:diamond_boots"
+                enchanted: true
             CloudspringAzureBlade:
                 probability: 0.246
+                display_material: "minecraft:diamond_sword"
+                enchanted: true
         guarantee_items:
             CelestineBreezeHelm:
                 probability: 1
@@ -233,6 +242,7 @@ pools:
             flower_pie:
                 probability: 10.0
                 amount: 3
+                display_material: "minecraft:pumpkin_pie"
             minecraft:enchanted_golden_apple:
                 probability: 5.0
             minecraft:experience_bottle:
@@ -245,14 +255,19 @@ pools:
                 amount: 10
             pink_cherry_sapling:
                 probability: 5.0
+                display_model: 5500
             amethyst_chimes:
                 probability: 3.0
+                display_material: "minecraft:amethyst_shard"
             potion_revive:
                 probability: 3.0
+                display_material: "minecraft:potion"
                 commands:
                     - "minecraft:effect give {player} instant_health 1 1"
             UnrivaledCrimsonFeatherBow:
                 probability: 0.246
+                display_material: "minecraft:bow"
+                enchanted: true
         guarantee_items:
             UnrivaledCrimsonFeatherBow:
                 probability: 1
@@ -279,68 +294,86 @@ pools:
             "1": 0
         auto_cost: false
         items:
-            bal:
+            bal5:
                 probability: 25.0
                 amount: 5
+                display_material: "minecraft:gold_nugget"
                 commands:
                     - "eco give {player} {amount}"
-            bal_high:
+            bal10:
                 probability: 20.0
                 amount: 10
+                display_material: "minecraft:gold_nugget"
                 commands:
                     - "eco give {player} {amount}"
-            bal_mid:
+            bal30:
                 probability: 10.0
                 amount: 30
+                display_material: "minecraft:gold_ingot"
                 commands:
                     - "eco give {player} {amount}"
-            bal_rich:
+            bal50:
                 probability: 5.0
                 amount: 50
+                display_material: "minecraft:gold_ingot"
                 commands:
                     - "eco give {player} {amount}"
-            bal_rare:
+            bal100:
                 probability: 2.0
                 amount: 100
+                display_material: "minecraft:gold_block"
                 commands:
                     - "eco give {player} {amount}"
-            bal_360:
+            bal360:
                 probability: 0.5
                 amount: 360
+                display_material: "minecraft:gold_block"
+                enchanted: true
                 commands:
                     - "eco give {player} {amount}"
-            bal_1k:
+            bal1k:
                 probability: 0.2
                 amount: 1000
+                display_material: "minecraft:gold_block"
+                enchanted: true
                 commands:
                     - "eco give {player} {amount}"
-            bal_5k:
+            bal5k:
                 probability: 0.1
                 amount: 5000
+                display_material: "minecraft:gold_block"
+                enchanted: true
                 commands:
                     - "eco give {player} {amount}"
-            bal_10k:
+            bal10k:
                 probability: 0.01
                 amount: 10000
+                display_material: "minecraft:gold_block"
+                enchanted: true
                 commands:
                     - "eco give {player} {amount}"
-            xp_low:
+            xp20:
                 probability: 20.0
                 amount: 20
+                display_material: "minecraft:experience_bottle"
                 commands:
                     - "minecraft:xp add {player} {amount} points"
-            xp_high:
+            xp100:
                 probability: 10.0
                 amount: 100
+                display_material: "minecraft:experience_bottle"
                 commands:
                     - "minecraft:xp add {player} {amount} points"
             ppoint:
                 probability: 10.0
                 amount: 5
+                display_model: 5100
                 commands:
                     - "scoreboard players add {player} p_point {amount}"
             op_equip:
                 probability: 0.01
+                display_material: "minecraft:diamond_chestplate"
+                enchanted: true
                 subList:
                     CloudspringAzureBlade:
                         probability: 1
@@ -350,6 +383,7 @@ pools:
                         probability: 1
             potions:
                 probability: 20.0
+                display_material: "minecraft:potion"
                 subList:
                     minecraft:speed:
                         probability: 1

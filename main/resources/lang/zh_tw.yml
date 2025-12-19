@@ -98,6 +98,7 @@ event:
     not_found: "活動不存在"
     closed: "活動未開啟"
     limit: "已達到參與限制"
+    wrong_day: "今天不是此活動的開放日"
 
 exp:
   usage: "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
@@ -259,12 +260,15 @@ tab:
     select_pool: "<選擇祈願池>"
     count: "<祈願次數>"
     do_wish: "<進行祈願>"
+    execute: "<進行祈願>"
   event:
     select: "<選擇活動>"
     participate: "<參加此活動>"
   exp:
+    select: "<選擇操作>"
     select_action: "<選擇操作>"
     select_exchange: "<選擇兌換項目>"
+    select_player: "<選擇玩家>"
     deposit_amount: "<存入數量>"
     do_deposit: "<執行存入>"
     withdraw_amount: "<取出數量>"
@@ -274,6 +278,7 @@ tab:
     do_pay: "<執行轉帳>"
     do_exchange: "<執行兌換>"
   cdk:
+    code: "<輸入兌換碼>"
     redeem: "<兌換CDK>"
   buy:
     select_type: "<選擇類型>"
@@ -300,6 +305,11 @@ tab:
   sgame:
     status: "<查看遊戲狀態>"
     abandon: "<放棄當前遊戲>"
+  artifact:
+    select_item: "<選擇物品>"
+    select_player: "<選擇玩家>"
+    list: "<顯示物品列表>"
+    do_give: "<按下 Enter 發放>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [郵件ID]"
@@ -834,3 +844,14 @@ menu:
 broadcast:
   usage: "&7用法: &f/nekobroadcast &6<訊息>"
   success: "&a✔ &7公告已發送。"
+
+artifact:
+  usage: "&7用法: &f/artifact list &7或 &f/artifact give &6<玩家> <物品ID>"
+  admin_usage: "&7用法: &f/artifact give &6<玩家> <物品ID>"
+  not_found: "&c✖ 未找到物品: &7{item}"
+  player_not_found: "&c✖ 玩家 &7{player} &c不在線。"
+  admin_success: "&a✔ &7已向 &6{player} &7發放: &6{item}"
+  receive: "&a✔ &7您獲得了特別獎勵: {item}"
+  no_items: "&e⚠ &7當前沒有可用的特別獎勵物品。"
+  list_header: "&7可用的特別獎勵物品:"
+  list_entry: "&7- &6{id}&7: {name} &8- &7{description}"
