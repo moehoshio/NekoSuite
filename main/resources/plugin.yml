@@ -47,3 +47,7 @@ commands:
     description: 策略遊戲
     usage: /sgame [menu|status|abandon]
     permission: nekosuite.sgame
+  artifact:
+    description: 特別獎勵發放 (僅管理員)
+    usage: /artifact list 或 /artifact give <玩家> <物品ID>
+    permission: nekosuite.artifact.admin

@@ -53,11 +53,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private MailManager mailManager;
     private MenuLayout menuLayout;
     private StrategyGameManager strategyGameManager;
+    private ArtifactRewardsManager artifactRewardsManager;
 
     @Override
     public void onEnable() {
         saveResource("language.yml", false);
         saveResource("lang/zh_tw.yml", false);
+        saveResource("lang/en_us.yml", false);
+        saveResource("lang/zh_cn.yml", false);
         saveResource("wish_config.yml", false);
         saveResource("event_config.yml", false);
         saveResource("exp_config.yml", false);
@@ -66,6 +69,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("mail_config.yml", false);
         saveResource("menu_layout.yml", false);
         saveResource("strategy_game_config.yml", false);
+        saveResource("artifact_rewards_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -153,6 +157,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("sgamemenu").setExecutor(this);
             getCommand("sgamemenu").setTabCompleter(this);
         }
+        if (getCommand("artifact") != null) {
+            getCommand("artifact").setExecutor(this);
+            getCommand("artifact").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -183,6 +191,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleReload(sender);
             case "sgame":
                 return handleStrategyGame(sender, args);
+            case "artifact":
+                return handleArtifact(sender, args);
             default:
                 return false;
         }
@@ -936,6 +946,46 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
                 break;
+            case "artifact":
+                // 此命令僅供管理員使用
+                if (!sender.hasPermission("nekosuite.artifact.admin")) {
+                    return Collections.emptyList();
+                }
+                if (args.length == 1) {
+                    List<String> options = new ArrayList<String>();
+                    options.add("list");
+                    options.add("give");
+                    return filter(options, args[0]);
+                }
+                if (args.length == 2) {
+                    String sub = args[0].toLowerCase();
+                    if ("give".equals(sub)) {
+                        List<String> players = new ArrayList<String>();
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            players.add(p.getName());
+                        }
+                        players.add(messages.getRaw(sender, "tab.artifact.select_player"));
+                        return filter(players, args[1]);
+                    }
+                    if ("list".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.artifact.list"));
+                    }
+                }
+                if (args.length == 3) {
+                    String sub = args[0].toLowerCase();
+                    if ("give".equals(sub)) {
+                        List<String> items = new ArrayList<String>(artifactRewardsManager.getAvailableItemIds());
+                        items.add(messages.getRaw(sender, "tab.artifact.select_item"));
+                        return filter(items, args[2]);
+                    }
+                }
+                if (args.length == 4) {
+                    String sub = args[0].toLowerCase();
+                    if ("give".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.artifact.do_give"));
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -996,6 +1046,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         buyManager = new BuyManager(this, messages, new File(getDataFolder(), "buy_config.yml"), menuLayout, economy, permission);
         mailManager = new MailManager(this, messages, new File(getDataFolder(), "mail_config.yml"), menuLayout);
         strategyGameManager = new StrategyGameManager(this, messages, new File(getDataFolder(), "strategy_game_config.yml"), menuLayout);
+        artifactRewardsManager = new ArtifactRewardsManager(this, messages, new File(getDataFolder(), "artifact_rewards_config.yml"));
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1046,6 +1097,86 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         Player player = (Player) sender;
         strategyGameManager.continueGame(player);
         return true;
+    }
+
+    private boolean handleArtifact(CommandSender sender, String[] args) {
+        // 此命令僅供管理員使用
+        if (!sender.hasPermission("nekosuite.artifact.admin")) {
+            sender.sendMessage(messages.format(sender, "common.no_permission"));
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(messages.format(sender, "artifact.usage"));
+            return true;
+        }
+
+        String sub = args[0].toLowerCase();
+        
+        // 列出可用物品
+        if ("list".equals(sub)) {
+            List<String> itemIds = artifactRewardsManager.getAvailableItemIds();
+            if (itemIds.isEmpty()) {
+                sender.sendMessage(messages.format(sender, "artifact.no_items"));
+                return true;
+            }
+            sender.sendMessage(messages.format(sender, "artifact.list_header"));
+            for (String id : itemIds) {
+                ArtifactRewardsManager.ArtifactItem item = artifactRewardsManager.getItem(id);
+                if (item != null) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("id", id);
+                    map.put("name", item.getDisplayName());
+                    map.put("description", item.getDescription() != null ? item.getDescription() : "");
+                    sender.sendMessage(messages.format(sender, "artifact.list_entry", map));
+                }
+            }
+            return true;
+        }
+
+        // 發放物品給玩家: /artifact give <玩家> <物品ID>
+        if ("give".equals(sub)) {
+            if (args.length < 3) {
+                sender.sendMessage(messages.format(sender, "artifact.admin_usage"));
+                return true;
+            }
+            String targetName = args[1];
+            String itemId = args[2];
+            Player target = Bukkit.getPlayer(targetName);
+            if (target == null || !target.isOnline()) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("player", targetName);
+                sender.sendMessage(messages.format(sender, "artifact.player_not_found", map));
+                return true;
+            }
+            try {
+                String displayName = artifactRewardsManager.giveReward(target, itemId);
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("player", target.getName());
+                map.put("item", displayName);
+                sender.sendMessage(messages.format(sender, "artifact.admin_success", map));
+                // 發送帶懸浮信息的訊息給目標玩家
+                artifactRewardsManager.sendItemMessage(target, itemId, 
+                    messages.format(target, "artifact.receive", map));
+            } catch (ArtifactRewardsManager.ArtifactException e) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("item", itemId);
+                sender.sendMessage(messages.format(sender, "artifact.not_found", map));
+            }
+            return true;
+        }
+
+        // 未知子命令，顯示用法
+        sender.sendMessage(messages.format(sender, "artifact.usage"));
+        return true;
+    }
+
+    /**
+     * 獲取 ArtifactRewardsManager 實例 (供其他插件調用)
+     * @return ArtifactRewardsManager 實例
+     */
+    public ArtifactRewardsManager getArtifactRewardsManager() {
+        return artifactRewardsManager;
     }
 
     private boolean handleLanguage(CommandSender sender, String[] args) {
@@ -1244,7 +1375,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 if (entry.getWeight() <= 0) {
                     continue;
                 }
-                ItemStack rewardItem = new ItemStack(org.bukkit.Material.PAPER);
+                // Use vanilla Minecraft material if available, otherwise use PAPER with custom_model_data
+                org.bukkit.Material displayMaterial = entry.getDisplayMaterial();
+                boolean isVanillaItem = displayMaterial != null;
+                if (!isVanillaItem) {
+                    displayMaterial = org.bukkit.Material.PAPER;
+                }
+                ItemStack rewardItem = new ItemStack(displayMaterial);
                 ItemMeta rewardMeta = rewardItem.getItemMeta();
                 if (rewardMeta != null) {
                     double percent = (entry.getWeight() / totalWeight) * 100;
@@ -1257,26 +1394,38 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     rewardPlaceholders.put("percent", percentStr);
                     rewardLore.add(messages.format(player, "menu.wish.pool_detail.reward_lore", rewardPlaceholders));
                     rewardMeta.setLore(rewardLore);
-                    // Apply custom model data for the reward preview
-                    if (entry.getDisplayModel() > 0) {
+                    // Only apply custom model data for non-vanilla items without display_material override
+                    if (!isVanillaItem && entry.getDisplayModel() > 0) {
                         rewardMeta.setCustomModelData(entry.getDisplayModel());
                     }
+                    // Add enchant glint if configured
+                    if (entry.isEnchanted()) {
+                        rewardMeta.addEnchant(org.bukkit.enchantments.Enchantment.DURABILITY, 1, true);
+                        rewardMeta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                    }
                     rewardItem.setItemMeta(rewardMeta);
+                    // Show a representative stack size using the primary action amount (clamped to 64)
+                    RewardAction primary = entry.getPrimaryAction();
+                    if (primary != null) {
+                        int stackAmount = Math.min(64, Math.max(1, primary.getMaxAmount()));
+                        rewardItem.setAmount(stackAmount);
+                    }
                 }
                 inv.setItem(rewardSlot++, rewardItem);
             }
         }
 
-        // Slots 39 and 41: Wish buttons
+        // Wish buttons - check if pool only has cost for 1 (no 5x option)
         Map<Integer, Integer> costs = pool.getCosts();
         int cost1 = costs.getOrDefault(1, 0);
-        int cost5 = costs.getOrDefault(5, cost1 * 5);
+        boolean hasFiveOption = costs.containsKey(5);
 
         // Get button configs
         ButtonConfig btn1x = wishManager.getWish1xButton();
         ButtonConfig btn5x = wishManager.getWish5xButton();
 
-        // Wish 1x button at slot 39
+        // Wish 1x button - centered at slot 40 if no 5x option, otherwise at slot 39
+        int wish1Slot = hasFiveOption ? 39 : 40;
         org.bukkit.Material wish1Material = org.bukkit.Material.PAPER;
         try {
             wish1Material = org.bukkit.Material.valueOf(btn1x.getMaterial().toUpperCase());
@@ -1304,37 +1453,40 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             wish1Item.setItemMeta(wish1Meta);
         }
-        inv.setItem(39, wish1Item);
+        inv.setItem(wish1Slot, wish1Item);
 
-        // Wish 5x button at slot 41
-        org.bukkit.Material wish5Material = org.bukkit.Material.PAPER;
-        try {
-            wish5Material = org.bukkit.Material.valueOf(btn5x.getMaterial().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            getLogger().warning("Invalid material for wish 5x button: " + btn5x.getMaterial());
-        }
-        ItemStack wish5Item = new ItemStack(wish5Material);
-        ItemMeta wish5Meta = wish5Item.getItemMeta();
-        if (wish5Meta != null) {
-            wish5Meta.setDisplayName(messages.format(player, "menu.wish.pool_detail.wish_five"));
-            List<String> wish5Lore = new ArrayList<String>();
-            Map<String, String> wish5Placeholders = new HashMap<String, String>();
-            wish5Placeholders.put("count", String.valueOf(status.getCount()));
-            wish5Placeholders.put("max_count", String.valueOf(pool.getMaxCount()));
-            wish5Placeholders.put("tickets", String.valueOf(status.getTicketCount()));
-            wish5Placeholders.put("cost", String.valueOf(cost5));
-            wish5Lore.add(messages.format(player, "menu.wish.pool_detail.fate_mark", wish5Placeholders));
-            wish5Lore.add(messages.format(player, "menu.wish.pool_detail.tickets", wish5Placeholders));
-            wish5Lore.add(messages.format(player, "menu.wish.pool_detail.cost", wish5Placeholders));
-            wish5Lore.add("");
-            wish5Lore.add(ChatColor.GRAY + "ACTION:WISH:5");
-            wish5Meta.setLore(wish5Lore);
-            if (btn5x.getCustomModelData() > 0) {
-                wish5Meta.setCustomModelData(btn5x.getCustomModelData());
+        // Wish 5x button at slot 41 - only show if pool has 5x cost option
+        if (hasFiveOption) {
+            int cost5 = costs.get(5);
+            org.bukkit.Material wish5Material = org.bukkit.Material.PAPER;
+            try {
+                wish5Material = org.bukkit.Material.valueOf(btn5x.getMaterial().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                getLogger().warning("Invalid material for wish 5x button: " + btn5x.getMaterial());
             }
-            wish5Item.setItemMeta(wish5Meta);
+            ItemStack wish5Item = new ItemStack(wish5Material);
+            ItemMeta wish5Meta = wish5Item.getItemMeta();
+            if (wish5Meta != null) {
+                wish5Meta.setDisplayName(messages.format(player, "menu.wish.pool_detail.wish_five"));
+                List<String> wish5Lore = new ArrayList<String>();
+                Map<String, String> wish5Placeholders = new HashMap<String, String>();
+                wish5Placeholders.put("count", String.valueOf(status.getCount()));
+                wish5Placeholders.put("max_count", String.valueOf(pool.getMaxCount()));
+                wish5Placeholders.put("tickets", String.valueOf(status.getTicketCount()));
+                wish5Placeholders.put("cost", String.valueOf(cost5));
+                wish5Lore.add(messages.format(player, "menu.wish.pool_detail.fate_mark", wish5Placeholders));
+                wish5Lore.add(messages.format(player, "menu.wish.pool_detail.tickets", wish5Placeholders));
+                wish5Lore.add(messages.format(player, "menu.wish.pool_detail.cost", wish5Placeholders));
+                wish5Lore.add("");
+                wish5Lore.add(ChatColor.GRAY + "ACTION:WISH:5");
+                wish5Meta.setLore(wish5Lore);
+                if (btn5x.getCustomModelData() > 0) {
+                    wish5Meta.setCustomModelData(btn5x.getCustomModelData());
+                }
+                wish5Item.setItemMeta(wish5Meta);
+            }
+            inv.setItem(41, wish5Item);
         }
-        inv.setItem(41, wish5Item);
 
         // Bottom buttons
         // Back button at slot 45
@@ -2163,12 +2315,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private final WeightedList subList;
         private final List<RewardAction> actions;
         private final int displayModel;  // custom_model_data for display in menu
+        private final String itemId;  // original item id from config (e.g., minecraft:iron_ingot)
+        private final String displayMaterialOverride;  // explicit display_material override from config
+        private final boolean enchanted;  // whether to show enchant glint
 
-        RewardEntry(double weight, WeightedList subList, List<RewardAction> actions, int displayModel) {
+        RewardEntry(double weight, WeightedList subList, List<RewardAction> actions, int displayModel, String itemId, String displayMaterialOverride, boolean enchanted) {
             this.weight = weight;
             this.subList = subList;
             this.actions = actions;
             this.displayModel = displayModel;
+            this.itemId = itemId;
+            this.displayMaterialOverride = displayMaterialOverride;
+            this.enchanted = enchanted;
         }
 
         static RewardEntry fromConfig(String key, Object rawValue, ConfigurationSection sectionValue) {
@@ -2176,10 +2334,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             WeightedList sub = null;
             List<RewardAction> actions = new ArrayList<RewardAction>();
             int displayModel = 0;
+            String displayMaterialOverride = null;
+            boolean enchanted = false;
 
             if (sectionValue != null) {
                 probability = sectionValue.getDouble("probability", 0.0);
                 displayModel = sectionValue.getInt("display_model", 0);
+                displayMaterialOverride = sectionValue.getString("display_material", null);
+                enchanted = sectionValue.getBoolean("enchanted", false);
                 sub = WeightedList.fromSection(sectionValue.getConfigurationSection("subList"));
                 List<Map<?, ?>> items = sectionValue.getMapList("items");
                 if (items != null && !items.isEmpty()) {
@@ -2209,7 +2371,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (actions.isEmpty()) {
                 actions.add(new RewardAction(key, 1, 1, null));
             }
-            return new RewardEntry(probability, sub, actions, displayModel);
+            return new RewardEntry(probability, sub, actions, displayModel, key, displayMaterialOverride, enchanted);
         }
 
         private static List<String> parseCommands(Object commandsObj, String singleCommand) {
@@ -2298,6 +2460,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return actions;
         }
 
+        RewardAction getPrimaryAction() {
+            if (actions == null || actions.isEmpty()) {
+                return null;
+            }
+            return actions.get(0);
+        }
+
         String getDisplayName() {
             if (actions == null || actions.isEmpty()) {
                 return RewardAction.DEFAULT_NAME;
@@ -2307,6 +2476,45 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         int getDisplayModel() {
             return displayModel;
+        }
+
+        String getItemId() {
+            return itemId;
+        }
+
+        boolean isEnchanted() {
+            return enchanted;
+        }
+
+        /**
+         * Get the Material to use for display in the GUI.
+         * Priority: 1) display_material override, 2) vanilla minecraft:xxx item, 3) null (use PAPER + custom_model_data)
+         */
+        org.bukkit.Material getDisplayMaterial() {
+            // First check for explicit display_material override
+            if (displayMaterialOverride != null && !displayMaterialOverride.isEmpty()) {
+                String materialStr = displayMaterialOverride;
+                if (materialStr.startsWith("minecraft:")) {
+                    materialStr = materialStr.substring("minecraft:".length());
+                }
+                try {
+                    return org.bukkit.Material.valueOf(materialStr.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    // Invalid material, fall through
+                }
+            }
+            
+            // Then check if itemId is a vanilla Minecraft item
+            if (itemId != null && !itemId.isEmpty() && itemId.startsWith("minecraft:")) {
+                String materialName = itemId.substring("minecraft:".length()).toUpperCase();
+                try {
+                    return org.bukkit.Material.valueOf(materialName);
+                } catch (IllegalArgumentException e) {
+                    // Not a valid Material, return null
+                    return null;
+                }
+            }
+            return null;
         }
     }
 
@@ -2352,6 +2560,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         List<String> getCommands() {
             return commands;
+        }
+
+        int getMinAmount() {
+            return minAmount;
+        }
+
+        int getMaxAmount() {
+            return maxAmount;
         }
     }
 
