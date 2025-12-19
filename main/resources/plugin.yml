@@ -51,3 +51,15 @@ commands:
     description: 特別獎勵發放 (僅管理員)
     usage: /artifact list 或 /artifact give <玩家> <物品ID>
     permission: nekosuite.artifact.admin
+  announce:
+    description: 發送公告
+    usage: /announce <訊息>
+    permission: nekosuite.announce
+  nekomenu:
+    description: 主選單/導航頁
+    usage: /nekomenu
+    permission: nekosuite.menu
+  nekohelp:
+    description: 幫助頁
+    usage: /nekohelp
+    permission: nekosuite.help

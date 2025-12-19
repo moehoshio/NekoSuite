@@ -319,6 +319,11 @@ public class MailManager {
             inv.setItem(mailLayout.getInfoSlot(), info);
         }
         
+        // Navigation button (back to main menu)
+        if (mailLayout.getCloseSlot() > 0 && mailLayout.getCloseSlot() - 1 >= 0 && mailLayout.getCloseSlot() - 1 < inv.getSize()) {
+            inv.setItem(mailLayout.getCloseSlot() - 1, createHomeButton(player));
+        }
+        
         // Close button
         if (mailLayout.getCloseSlot() >= 0 && mailLayout.getCloseSlot() < inv.getSize()) {
             ItemStack close = createItem(Material.BARRIER, messages.format(player, "menu.close"), new String[0]);
@@ -326,6 +331,20 @@ public class MailManager {
         }
         
         player.openInventory(inv);
+    }
+
+    private ItemStack createHomeButton(Player player) {
+        ItemStack item = new ItemStack(Material.COMPASS);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(messages.format(player, "help.back_button"));
+            List<String> lore = new ArrayList<String>();
+            lore.add(messages.format(player, "help.back_lore"));
+            lore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     private ItemStack createMailItem(Player player, Mail mail) {

@@ -192,6 +192,53 @@ public class Messages {
         return value;
     }
 
+    /**
+     * Get translated item name. Looks up in items.<itemId> key.
+     * Falls back to the original itemId if no translation exists.
+     */
+    public String getItemName(CommandSender target, String itemId) {
+        if (itemId == null || itemId.isEmpty()) {
+            return "Unknown";
+        }
+        String key = "items.\"" + itemId + "\"";
+        String translated = getRawForLanguage(resolveLanguage(target), key);
+        if (translated == null) {
+            translated = getRawForLanguage(defaultLanguage, key);
+        }
+        if (translated == null) {
+            // Try without quotes for compatibility
+            String simpleKey = "items." + itemId.replace(":", "\\:");
+            translated = getRawForLanguage(resolveLanguage(target), simpleKey);
+            if (translated == null) {
+                translated = getRawForLanguage(defaultLanguage, simpleKey);
+            }
+        }
+        // If still not found, use the itemId as-is but clean it up
+        if (translated == null) {
+            // Remove minecraft: prefix if present and capitalize
+            String cleanName = itemId;
+            if (cleanName.startsWith("minecraft:")) {
+                cleanName = cleanName.substring("minecraft:".length());
+            }
+            // Convert underscores to spaces and capitalize words
+            String[] parts = cleanName.split("_");
+            StringBuilder sb = new StringBuilder();
+            for (String part : parts) {
+                if (sb.length() > 0) {
+                    sb.append(" ");
+                }
+                if (part.length() > 0) {
+                    sb.append(Character.toUpperCase(part.charAt(0)));
+                    if (part.length() > 1) {
+                        sb.append(part.substring(1).toLowerCase());
+                    }
+                }
+            }
+            translated = sb.toString();
+        }
+        return translated;
+    }
+
     public String format(String key) {
         return color(getRaw(key));
     }
