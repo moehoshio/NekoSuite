@@ -579,6 +579,103 @@ sgame:
         choice1:
           text: "&aBrowse equipment"
           result: "&7Welcome to my blacksmith shop!"
+      # New battle events
+      goblin_camp:
+        name: "&2Goblin Camp"
+        desc1: "&7You discovered a goblin camp..."
+        desc2: "&cSeveral goblins noticed your presence!"
+        choice1:
+          text: "&cPrepare for battle"
+          result: "&7The goblins charge at you!"
+      dungeon_entrance:
+        name: "&8Dungeon Entrance"
+        desc1: "&7You found a mysterious dungeon entrance..."
+        desc2: "&cEerie sounds echo from within!"
+        choice1:
+          text: "&cEnter and explore"
+          result: "&7You gather courage and step into the darkness..."
+      haunted_graveyard:
+        name: "&5Haunted Graveyard"
+        desc1: "&7A sinister graveyard appears before you..."
+        desc2: "&cUndead creatures wander among the tombstones!"
+        choice1:
+          text: "&cFight the undead"
+          result: "&7Skeletons rise from their graves!"
+      dragon_lair_entrance:
+        name: "&4Dragon Lair Entrance"
+        desc1: "&cAhead lies the legendary dragon's lair..."
+        desc2: "&4The air is thick with danger!"
+        choice1:
+          text: "&cChallenge the dragon"
+          result: "&4The dragon's roar shakes the entire cavern!"
+      # New story events
+      wandering_minstrel:
+        name: "&dWandering Minstrel"
+        desc1: "&7A traveling minstrel plays by the roadside..."
+        desc2: "&7Their music is soothing and peaceful."
+        choice1:
+          text: "&aTip them (costs 10 gold)"
+          result: "&7The minstrel plays a healing melody for you!"
+        choice2:
+          text: "&cContinue on your way"
+          result: "&7You nod and continue your journey."
+        choice3:
+          text: "&eAsk for fortune telling"
+          result: "&7The minstrel warns you of dangers ahead, you gain intel!"
+      abandoned_mine:
+        name: "&8Abandoned Mine"
+        desc1: "&7You found an abandoned mine..."
+        desc2: "&7There might be unmined ore inside."
+        choice1:
+          text: "&aRisk mining"
+          result: "&7You found some ore, but also encountered some danger!"
+        choice2:
+          text: "&cLeave"
+          result: "&7You decide not to take the risk."
+        choice3:
+          text: "&eSearch the entrance carefully"
+          result: "&7You found supplies left by previous miners!"
+      mystic_fountain:
+        name: "&bMystic Fountain"
+        desc1: "&7A glowing fountain appears before you..."
+        desc2: "&7The water emanates mysterious power."
+        choice1:
+          text: "&aDrink from the fountain"
+          result: "&7Mysterious energy flows into your body!"
+        choice2:
+          text: "&dToss in a coin (costs 15 gold)"
+          result: "&7Healing power bursts from the fountain!"
+        choice3:
+          text: "&eCollect water to sell"
+          result: "&7You collected some water but the fountain's guardian noticed!"
+      bandit_toll:
+        name: "&cBandit Roadblock"
+        desc1: "&7A group of bandits block your path..."
+        desc2: "&7They demand a toll to pass."
+        choice1:
+          text: "&aPay the toll (costs 25 gold)"
+          result: "&7The bandits let you pass."
+        choice2:
+          text: "&cTry to break through"
+          result: "&7You get into a fight with the bandits!"
+        choice3:
+          text: "&eFight back and rob them"
+          result: "&7You defeat the bandits and take their loot!"
+      # New shop events
+      potion_shop:
+        name: "&dPotion Shop"
+        desc1: "&7A shop with strange smells wafting from it."
+        desc2: "&7The owner is an old wizard."
+        choice1:
+          text: "&aBrowse potions"
+          result: "&7Welcome to my potion shop!"
+      wandering_trader:
+        name: "&6Wandering Trader"
+        desc1: "&7A merchant carrying a large backpack."
+        desc2: "&7They claim to have rare items for sale."
+        choice1:
+          text: "&aView goods"
+          result: "&7Come see my fine wares!"
       # Fixed stage events
       starter_shop:
         name: "&aStarter Supply Station"
@@ -655,6 +752,24 @@ sgame:
       slime:
         name: "&aSlime"
         desc: "A green bouncing creature"
+      goblin:
+        name: "&2Goblin"
+        desc: "A cunning small creature that likes to steal"
+        skill1:
+          name: "&eSteal"
+          desc: "Attempts to steal your gold"
+      wolf:
+        name: "&7Dire Wolf"
+        desc: "A fierce wild wolf, swift and agile"
+        skill1:
+          name: "&7Wolf Howl"
+          desc: "Howls to boost attack power"
+      bandit:
+        name: "&8Bandit"
+        desc: "A dangerous outlaw"
+        skill1:
+          name: "&cSneak Attack"
+          desc: "Strikes from the shadows for extra damage"
       skeleton:
         name: "&fSkeleton Archer"
         desc: "A skeleton with a bow"

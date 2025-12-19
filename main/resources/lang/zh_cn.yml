@@ -579,6 +579,103 @@ sgame:
         choice1:
           text: "&a浏览装备"
           result: "&7欢迎来到我的铁匠铺！"
+      # 新增战斗事件
+      goblin_camp:
+        name: "&2哥布林营地"
+        desc1: "&7你发现了一个哥布林的营地..."
+        desc2: "&c几只哥布林注意到了你的存在！"
+        choice1:
+          text: "&c准备战斗"
+          result: "&7哥布林们向你冲来！"
+      dungeon_entrance:
+        name: "&8地下城入口"
+        desc1: "&7你发现了一个神秘的地下城入口..."
+        desc2: "&c里面传来阴森的声音！"
+        choice1:
+          text: "&c进入探索"
+          result: "&7你鼓起勇气踏入黑暗..."
+      haunted_graveyard:
+        name: "&5闹鬼墓地"
+        desc1: "&7一片阴森的墓地出现在眼前..."
+        desc2: "&c不死生物在墓碑间游荡！"
+        choice1:
+          text: "&c迎战亡灵"
+          result: "&7骷髅从坟墓中爬出！"
+      dragon_lair_entrance:
+        name: "&4龙穴入口"
+        desc1: "&c前方是传说中的龙穴..."
+        desc2: "&4空气中弥漫着危险的气息！"
+        choice1:
+          text: "&c挑战巨龙"
+          result: "&4巨龙的咆哮震动了整个洞穴！"
+      # 新增剧情事件
+      wandering_minstrel:
+        name: "&d流浪诗人"
+        desc1: "&7一位流浪诗人正在路边弹奏..."
+        desc2: "&7他的音乐令人心旷神怡。"
+        choice1:
+          text: "&a给予小费 (花费10金币)"
+          result: "&7诗人为你演奏了一曲疗愈之歌！"
+        choice2:
+          text: "&c继续赶路"
+          result: "&7你点头致意后继续前行。"
+        choice3:
+          text: "&e请他预言命运"
+          result: "&7诗人告诉你前方的危险，你获得了情报奖励！"
+      abandoned_mine:
+        name: "&8废弃矿坑"
+        desc1: "&7你发现了一座废弃的矿坑..."
+        desc2: "&7里面似乎还有未开采的矿石。"
+        choice1:
+          text: "&a冒险开采"
+          result: "&7你发现了矿石，但也遇到了一些危险！"
+        choice2:
+          text: "&c离开"
+          result: "&7你决定不冒这个险。"
+        choice3:
+          text: "&e仔细搜索入口"
+          result: "&7你在入口发现了前人留下的物资！"
+      mystic_fountain:
+        name: "&b神秘泉水"
+        desc1: "&7一个发光的泉水出现在你面前..."
+        desc2: "&7泉水散发着神秘的力量。"
+        choice1:
+          text: "&a喝下泉水"
+          result: "&7神秘的能量流入你的身体！"
+        choice2:
+          text: "&d投入金币许愿 (花费15金币)"
+          result: "&7泉水涌出治愈之力！"
+        choice3:
+          text: "&e收集泉水出售"
+          result: "&7你收集了泉水，但被泉水的守护者发现了！"
+      bandit_toll:
+        name: "&c山贼路障"
+        desc1: "&7一群山贼挡住了你的去路..."
+        desc2: "&7他们要求你付过路费。"
+        choice1:
+          text: "&a付过路费 (花费25金币)"
+          result: "&7山贼们让你通过了。"
+        choice2:
+          text: "&c尝试突围"
+          result: "&7你与山贼们发生了冲突！"
+        choice3:
+          text: "&e反击抢劫他们"
+          result: "&7你击败了山贼并抢走了他们的财物！"
+      # 新增商店事件
+      potion_shop:
+        name: "&d药水铺"
+        desc1: "&7一间散发着奇怪气味的药水铺。"
+        desc2: "&7店主是一位老巫师。"
+        choice1:
+          text: "&a浏览药水"
+          result: "&7欢迎来到我的药水铺！"
+      wandering_trader:
+        name: "&6流动商贩"
+        desc1: "&7一位背着大包袱的商贩。"
+        desc2: "&7他声称有稀有物品出售。"
+        choice1:
+          text: "&a查看商品"
+          result: "&7来看看我的好东西吧！"
       # 固定阶段事件
       starter_shop:
         name: "&a新手补给站"
@@ -655,6 +752,24 @@ sgame:
       slime:
         name: "&a史莱姆"
         desc: "一个绿色的弹跳生物"
+      goblin:
+        name: "&2哥布林"
+        desc: "一个狡猾的小型生物，喜欢偷东西"
+        skill1:
+          name: "&e偷窃"
+          desc: "尝试偷取你的金币"
+      wolf:
+        name: "&7狂狼"
+        desc: "一只凶猛的野狼，行动迅速"
+        skill1:
+          name: "&7狼嚎"
+          desc: "发出嚎叫增强攻击力"
+      bandit:
+        name: "&8山贼"
+        desc: "一个危险的亡命之徒"
+        skill1:
+          name: "&c偷袭"
+          desc: "从暗处发动突袭造成额外伤害"
       skeleton:
         name: "&f骷髅弓箭手"
         desc: "一个拿着弓的骷髅"

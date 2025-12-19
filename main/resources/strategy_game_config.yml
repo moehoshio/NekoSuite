@@ -268,6 +268,176 @@ events:
         gold_change: 0
         health_change: 0
 
+  # 新增戰鬥事件
+  goblin_camp:
+    name: "sgame.config.events.goblin_camp.name"
+    type: battle
+    weight: 10
+    description:
+      - "sgame.config.events.goblin_camp.desc1"
+      - "sgame.config.events.goblin_camp.desc2"
+    choices:
+      - text: "sgame.config.events.goblin_camp.choice1.text"
+        result: "sgame.config.events.goblin_camp.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  dungeon_entrance:
+    name: "sgame.config.events.dungeon_entrance.name"
+    type: battle
+    weight: 8
+    min_stage: 3
+    description:
+      - "sgame.config.events.dungeon_entrance.desc1"
+      - "sgame.config.events.dungeon_entrance.desc2"
+    choices:
+      - text: "sgame.config.events.dungeon_entrance.choice1.text"
+        result: "sgame.config.events.dungeon_entrance.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  haunted_graveyard:
+    name: "sgame.config.events.haunted_graveyard.name"
+    type: battle
+    weight: 10
+    min_stage: 4
+    description:
+      - "sgame.config.events.haunted_graveyard.desc1"
+      - "sgame.config.events.haunted_graveyard.desc2"
+    choices:
+      - text: "sgame.config.events.haunted_graveyard.choice1.text"
+        result: "sgame.config.events.haunted_graveyard.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  dragon_lair_entrance:
+    name: "sgame.config.events.dragon_lair_entrance.name"
+    type: battle
+    weight: 6
+    min_stage: 8
+    description:
+      - "sgame.config.events.dragon_lair_entrance.desc1"
+      - "sgame.config.events.dragon_lair_entrance.desc2"
+    choices:
+      - text: "sgame.config.events.dragon_lair_entrance.choice1.text"
+        result: "sgame.config.events.dragon_lair_entrance.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  # 新增劇情事件
+  wandering_minstrel:
+    name: "sgame.config.events.wandering_minstrel.name"
+    type: story
+    weight: 10
+    description:
+      - "sgame.config.events.wandering_minstrel.desc1"
+      - "sgame.config.events.wandering_minstrel.desc2"
+    choices:
+      - text: "sgame.config.events.wandering_minstrel.choice1.text"
+        result: "sgame.config.events.wandering_minstrel.choice1.result"
+        gold_change: -10
+        health_change: 15
+      - text: "sgame.config.events.wandering_minstrel.choice2.text"
+        result: "sgame.config.events.wandering_minstrel.choice2.result"
+        gold_change: 0
+        health_change: 0
+      - text: "sgame.config.events.wandering_minstrel.choice3.text"
+        result: "sgame.config.events.wandering_minstrel.choice3.result"
+        gold_change: 15
+        health_change: -5
+
+  abandoned_mine:
+    name: "sgame.config.events.abandoned_mine.name"
+    type: story
+    weight: 9
+    min_stage: 2
+    description:
+      - "sgame.config.events.abandoned_mine.desc1"
+      - "sgame.config.events.abandoned_mine.desc2"
+    choices:
+      - text: "sgame.config.events.abandoned_mine.choice1.text"
+        result: "sgame.config.events.abandoned_mine.choice1.result"
+        gold_change: 35
+        health_change: -10
+      - text: "sgame.config.events.abandoned_mine.choice2.text"
+        result: "sgame.config.events.abandoned_mine.choice2.result"
+        gold_change: 0
+        health_change: 0
+      - text: "sgame.config.events.abandoned_mine.choice3.text"
+        result: "sgame.config.events.abandoned_mine.choice3.result"
+        gold_change: 20
+        health_change: 0
+
+  mystic_fountain:
+    name: "sgame.config.events.mystic_fountain.name"
+    type: story
+    weight: 8
+    description:
+      - "sgame.config.events.mystic_fountain.desc1"
+      - "sgame.config.events.mystic_fountain.desc2"
+    choices:
+      - text: "sgame.config.events.mystic_fountain.choice1.text"
+        result: "sgame.config.events.mystic_fountain.choice1.result"
+        gold_change: 0
+        health_change: 30
+      - text: "sgame.config.events.mystic_fountain.choice2.text"
+        result: "sgame.config.events.mystic_fountain.choice2.result"
+        gold_change: -15
+        health_change: 50
+      - text: "sgame.config.events.mystic_fountain.choice3.text"
+        result: "sgame.config.events.mystic_fountain.choice3.result"
+        gold_change: 25
+        health_change: -20
+
+  bandit_toll:
+    name: "sgame.config.events.bandit_toll.name"
+    type: story
+    weight: 10
+    description:
+      - "sgame.config.events.bandit_toll.desc1"
+      - "sgame.config.events.bandit_toll.desc2"
+    choices:
+      - text: "sgame.config.events.bandit_toll.choice1.text"
+        result: "sgame.config.events.bandit_toll.choice1.result"
+        gold_change: -25
+        health_change: 0
+      - text: "sgame.config.events.bandit_toll.choice2.text"
+        result: "sgame.config.events.bandit_toll.choice2.result"
+        gold_change: 0
+        health_change: -15
+      - text: "sgame.config.events.bandit_toll.choice3.text"
+        result: "sgame.config.events.bandit_toll.choice3.result"
+        gold_change: 40
+        health_change: -25
+
+  # 新增商店事件
+  potion_shop:
+    name: "sgame.config.events.potion_shop.name"
+    type: shop
+    weight: 8
+    description:
+      - "sgame.config.events.potion_shop.desc1"
+      - "sgame.config.events.potion_shop.desc2"
+    choices:
+      - text: "sgame.config.events.potion_shop.choice1.text"
+        result: "sgame.config.events.potion_shop.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  wandering_trader:
+    name: "sgame.config.events.wandering_trader.name"
+    type: shop
+    weight: 7
+    min_stage: 3
+    description:
+      - "sgame.config.events.wandering_trader.desc1"
+      - "sgame.config.events.wandering_trader.desc2"
+    choices:
+      - text: "sgame.config.events.wandering_trader.choice1.text"
+        result: "sgame.config.events.wandering_trader.choice1.result"
+        gold_change: 0
+        health_change: 0
+
   # 固定階段事件 - 第一關必定出現的新手引導商店
   starter_shop:
     name: "sgame.config.events.starter_shop.name"
@@ -470,6 +640,72 @@ battles:
       crit_chance: 5
       crit_multiplier: 1.3
       dodge_chance: 5
+
+    - id: goblin
+      name: "sgame.config.enemies.goblin.name"
+      description: "sgame.config.enemies.goblin.desc"
+      power: 25
+      damage: 10
+      health: 35
+      attack: 8
+      defense: 3
+      magic: 0
+      gold_reward: 18
+      min_stage: 0
+      crit_chance: 8
+      crit_multiplier: 1.4
+      dodge_chance: 12
+      skills:
+        - id: steal
+          name: "sgame.config.enemies.goblin.skill1.name"
+          description: "sgame.config.enemies.goblin.skill1.desc"
+          type: damage
+          power: 8
+          chance: 15
+
+    - id: wolf
+      name: "sgame.config.enemies.wolf.name"
+      description: "sgame.config.enemies.wolf.desc"
+      power: 30
+      damage: 12
+      health: 40
+      attack: 10
+      defense: 4
+      magic: 0
+      gold_reward: 20
+      min_stage: 1
+      crit_chance: 12
+      crit_multiplier: 1.5
+      dodge_chance: 18
+      skills:
+        - id: pack_howl
+          name: "sgame.config.enemies.wolf.skill1.name"
+          description: "sgame.config.enemies.wolf.skill1.desc"
+          type: damage
+          power: 15
+          chance: 20
+
+    - id: bandit
+      name: "sgame.config.enemies.bandit.name"
+      description: "sgame.config.enemies.bandit.desc"
+      power: 32
+      damage: 14
+      health: 50
+      attack: 12
+      defense: 6
+      magic: 0
+      gold_reward: 22
+      min_stage: 2
+      crit_chance: 15
+      crit_multiplier: 1.6
+      dodge_chance: 10
+      skills:
+        - id: sneak_attack
+          name: "sgame.config.enemies.bandit.skill1.name"
+          description: "sgame.config.enemies.bandit.skill1.desc"
+          type: damage
+          power: 18
+          chance: 25
       
     - id: skeleton
       name: "sgame.config.enemies.skeleton.name"
