@@ -503,7 +503,7 @@ sgame:
   equipped: "&a✔ &7Equipped: &6{item}"
   unequipped: "&a✔ &7Unequipped: &6{item}"
   not_enough_magic: "&c✖ &7You don't have enough magic!"
-  battle_round_result: "&7Round {round}: You used {player_action}, enemy used {enemy_action}. {result} &7(&aDealt {player_damage} damage&7, &cTook {enemy_damage} damage&7)"
+  battle_round_result: "&7Round {round}: You used {player_action}&7, enemy used {enemy_action}&7. {result}&7 (&aDealt {player_damage} damage&7, &cTook {enemy_damage} damage&7) {crit_info}"
   battle_victory_multiround: "&a✔ &7After {rounds} rounds, you defeated &c{enemy}&7! Gained &6{gold} &7gold!"
   round_attack_beats_skill: "&aAttack interrupted enemy's skill!"
   round_skill_beats_defense: "&dSkill bypassed enemy's defense!"

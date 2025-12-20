@@ -5,8 +5,8 @@ storage:
   data_dir: userdata
 
 game:
-  # 起始金幣 (增加到50以便玩家能購買初始裝備)
-  starting_gold: 50
+  # 起始金幣
+  starting_gold: 30
   # 起始生命值
   starting_health: 100
   # 完成遊戲所需的最大階段數

@@ -503,7 +503,7 @@ sgame:
   equipped: "&a✔ &7已装备: &6{item}"
   unequipped: "&a✔ &7已卸下: &6{item}"
   not_enough_magic: "&c✖ &7你没有足够的魔法值！"
-  battle_round_result: "&7第{round}回合: 你使用 {player_action}，敌人使用 {enemy_action}。{result} &7(&a你造成{player_damage}伤害&7, &c受到{enemy_damage}伤害&7)"
+  battle_round_result: "&7第{round}回合: 你使用了 {player_action}&7，敌人使用了 {enemy_action}&7。 {result}&7 (&a你造成{player_damage}伤害&7, &c受到{enemy_damage}伤害&7) {crit_info}"
   battle_victory_multiround: "&a✔ &7经过{rounds}回合激战，你击败了 &c{enemy}&7！获得 &6{gold} &7金币！"
   round_attack_beats_skill: "&a攻击打断了敌人的技能！"
   round_skill_beats_defense: "&d技能穿透了敌人的防御！"
