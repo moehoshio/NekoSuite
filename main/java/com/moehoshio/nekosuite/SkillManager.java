@@ -40,6 +40,10 @@ import java.util.UUID;
  */
 public class SkillManager implements Listener {
 
+    // Constants
+    private static final int PARTICLE_COUNT = 20;
+    private static final double FIRE_IGNITE_CHANCE = 0.3;
+
     private final JavaPlugin plugin;
     private final Messages messages;
     private final File storageDir;
@@ -58,7 +62,7 @@ public class SkillManager implements Listener {
         String dataDir = config.getString("storage.data_dir", "userdata");
         storageDir = new File(plugin.getDataFolder(), dataDir);
         if (!storageDir.exists() && !storageDir.mkdirs()) {
-            plugin.getLogger().warning("無法創建技能數據目錄: " + storageDir.getAbsolutePath());
+            plugin.getLogger().warning("Failed to create skill data directory: " + storageDir.getAbsolutePath());
         }
         
         loadConfig(config);
@@ -96,7 +100,7 @@ public class SkillManager implements Listener {
             }
         }
         
-        plugin.getLogger().info("已加載 " + skills.size() + " 個技能。");
+        plugin.getLogger().info("Loaded " + skills.size() + " skill(s).");
     }
 
     @EventHandler
@@ -249,7 +253,7 @@ public class SkillManager implements Listener {
                 executePoison(player, effects);
                 break;
             default:
-                plugin.getLogger().warning("未知的技能類型: " + type);
+                plugin.getLogger().warning("Unknown skill type: " + type);
                 break;
         }
     }
@@ -313,7 +317,7 @@ public class SkillManager implements Listener {
         if (igniteGround) {
             for (int x = -radius; x <= radius; x++) {
                 for (int z = -radius; z <= radius; z++) {
-                    if (random.nextDouble() < 0.3) { // 30% chance per block
+                    if (random.nextDouble() < FIRE_IGNITE_CHANCE) {
                         Location blockLoc = center.clone().add(x, 0, z);
                         Block block = blockLoc.getBlock();
                         Block above = block.getRelative(0, 1, 0);
@@ -337,12 +341,15 @@ public class SkillManager implements Listener {
         spawnParticles(center, effects, radius);
         
         // Apply slowness and damage to nearby entities
+        // Note: Potion amplifiers are 0-indexed (level 0 = level I, level 1 = level II)
+        // Config uses 1-indexed values for user-friendliness
+        int slownessAmplifier = Math.max(0, slownessLevel - 1);
         Collection<Entity> nearby = center.getWorld().getNearbyEntities(center, radius, radius, radius);
         for (Entity entity : nearby) {
             if (entity instanceof LivingEntity && !entity.equals(player)) {
                 LivingEntity living = (LivingEntity) entity;
                 living.damage(damage, player);
-                living.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slownessDuration, slownessLevel));
+                living.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slownessDuration, slownessAmplifier));
             }
         }
     }
@@ -409,7 +416,10 @@ public class SkillManager implements Listener {
         spawnParticles(player.getLocation(), effects, 2);
         
         // Apply speed effect
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, speedLevel));
+        // Note: Potion amplifiers are 0-indexed (level 0 = level I, level 1 = level II)
+        // Config uses 1-indexed values for user-friendliness
+        int speedAmplifier = Math.max(0, speedLevel - 1);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, speedAmplifier));
     }
 
     private void executeTeleport(Player player, Map<String, Object> effects) {
@@ -459,9 +469,9 @@ public class SkillManager implements Listener {
         spawnParticles(player.getLocation(), effects, 2);
         
         // Apply absorption effect
-        // The amplifier for absorption is absorption hearts / 4
-        int amplifier = (absorptionAmount / 4) - 1;
-        if (amplifier < 0) amplifier = 0;
+        // Absorption gives 2 absorption hearts per amplifier level (amplifier 0 = 2 hearts, amplifier 1 = 4 hearts, etc.)
+        // Config specifies the total absorption amount in half-hearts
+        int amplifier = Math.max(0, (absorptionAmount / 4));
         player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, duration, amplifier));
     }
 
@@ -475,11 +485,14 @@ public class SkillManager implements Listener {
         spawnParticles(center, effects, radius);
         
         // Apply poison to nearby entities
+        // Note: Potion amplifiers are 0-indexed (level 0 = level I, level 1 = level II)
+        // Config uses 1-indexed values for user-friendliness
+        int poisonAmplifier = Math.max(0, poisonLevel - 1);
         Collection<Entity> nearby = center.getWorld().getNearbyEntities(center, radius, radius, radius);
         for (Entity entity : nearby) {
             if (entity instanceof LivingEntity && !entity.equals(player)) {
                 LivingEntity living = (LivingEntity) entity;
-                living.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDuration, poisonLevel));
+                living.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDuration, poisonAmplifier));
             }
         }
     }
@@ -492,8 +505,8 @@ public class SkillManager implements Listener {
         try {
             Particle particle = Particle.valueOf(particleName);
             // Spawn particles in a circle
-            for (int i = 0; i < 20; i++) {
-                double angle = 2 * Math.PI * i / 20;
+            for (int i = 0; i < PARTICLE_COUNT; i++) {
+                double angle = 2 * Math.PI * i / PARTICLE_COUNT;
                 double x = Math.cos(angle) * radius;
                 double z = Math.sin(angle) * radius;
                 Location particleLoc = center.clone().add(x, 0.5, z);
