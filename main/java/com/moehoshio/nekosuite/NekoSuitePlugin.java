@@ -218,7 +218,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             case "announce":
                 return handleAnnounce(sender, args);
             case "nekomenu":
-                return handleNekoMenu(sender);
+            case "neko":
+                return handleNekoMenu(sender, args);
             case "nekohelp":
                 return handleNekoHelp(sender);
             case "ntp":
@@ -1049,6 +1050,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return filter(playerNames, args[1]);
                 }
                 break;
+            case "nekomenu":
+            case "neko":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("menu", "help"), args[0]);
+                }
+                break;
             default:
                 break;
         }
@@ -1271,12 +1278,20 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         return true;
     }
 
-    private boolean handleNekoMenu(CommandSender sender) {
+    private boolean handleNekoMenu(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(messages.format(sender, "common.only_player"));
             return true;
         }
         Player player = (Player) sender;
+        
+        // Handle /neko help subcommand
+        if (args.length > 0 && "help".equalsIgnoreCase(args[0])) {
+            openHelpMenu(player);
+            return true;
+        }
+        
+        // /neko or /neko menu opens navigation
         openNavigationMenu(player);
         return true;
     }
@@ -1518,6 +1533,54 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         public Inventory getInventory() { return null; }
     }
 
+    private static class GamesMenuHolder implements InventoryHolder {
+        public Inventory getInventory() { return null; }
+    }
+
+    private void openGamesMenu(Player player) {
+        MenuLayout.GamesLayout layout = menuLayout.getGamesLayout();
+        Inventory inv = Bukkit.createInventory(new GamesMenuHolder(), layout.getSize(), messages.format(player, layout.getTitleKey()));
+        
+        // Render items from config
+        for (MenuLayout.MenuItem item : layout.getItems().values()) {
+            org.bukkit.Material material = org.bukkit.Material.STONE;
+            try {
+                material = org.bukkit.Material.valueOf(item.getMaterial().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+            ItemStack stack = new ItemStack(material);
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(messages.format(player, item.getNameKey()));
+                List<String> lore = new ArrayList<String>();
+                // Check if lore_key is a list or single string
+                List<String> loreLines = messages.getList(player, item.getLoreKey());
+                if (loreLines != null && !loreLines.isEmpty()) {
+                    lore.addAll(messages.colorize(loreLines));
+                } else {
+                    String singleLore = messages.format(player, item.getLoreKey());
+                    if (!singleLore.equals(item.getLoreKey())) {
+                        lore.add(singleLore);
+                    }
+                }
+                if (item.hasAction()) {
+                    lore.add(ChatColor.DARK_GRAY + "ACTION:" + item.getAction());
+                }
+                if (item.hasCommand()) {
+                    lore.add(ChatColor.DARK_GRAY + "COMMAND:" + item.getCommand());
+                }
+                meta.setLore(lore);
+                stack.setItemMeta(meta);
+            }
+            inv.setItem(item.getSlot(), stack);
+        }
+        
+        // Close button
+        inv.setItem(layout.getCloseSlot(), createCloseItem(player));
+        
+        player.openInventory(inv);
+    }
+
     private boolean handleLanguage(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(messages.format(sender, "common.only_player"));
@@ -1659,6 +1722,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 case "OPEN_SGAME":
                     strategyGameManager.continueGame(player);
                     return true;
+                case "OPEN_GAMES":
+                    openGamesMenu(player);
+                    return true;
                 case "OPEN_HELP":
                     openHelpMenu(player);
                     return true;
@@ -1742,6 +1808,34 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private static class LanguageMenuHolder implements InventoryHolder {
         public Inventory getInventory() { return null; }
     }
+    
+    /**
+     * Get the display name for a wish pool using i18n if available.
+     * Looks up "menu.wish.pool.<poolId>.name", falls back to config display name.
+     */
+    private String getPoolDisplayName(Player player, String poolId, String configDefault) {
+        String i18nKey = "menu.wish.pool." + poolId + ".name";
+        String translated = messages.getRaw(player, i18nKey);
+        // If the key returns the same as input key, use config display
+        if (translated == null || translated.equals(i18nKey)) {
+            return configDefault;
+        }
+        return translated;
+    }
+    
+    /**
+     * Get the description for a wish pool using i18n if available.
+     * Looks up "menu.wish.pool.<poolId>.description", falls back to config description.
+     */
+    private List<String> getPoolDescription(Player player, String poolId, List<String> configDefault) {
+        String i18nKey = "menu.wish.pool." + poolId + ".description";
+        List<String> translated = messages.getList(player, i18nKey);
+        // If the key returns null or empty, use config description
+        if (translated == null || translated.isEmpty()) {
+            return configDefault;
+        }
+        return translated;
+    }
 
     private void openWishMenu(Player player) {
         MenuLayout.WishLayout layout = menuLayout.getWishLayout();
@@ -1769,14 +1863,16 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             ItemStack stack = new ItemStack(material);
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                // Use display name from config
-                meta.setDisplayName(messages.colorize(display.getName()));
+                // Use i18n for pool name, fallback to config display name
+                String poolName = getPoolDisplayName(player, pool.getId(), display.getName());
+                meta.setDisplayName(messages.colorize(poolName));
                 
                 List<String> lore = new ArrayList<String>();
                 lore.add(ChatColor.GRAY + "ID: " + pool.getId());
                 
-                // Add description from config
-                for (String line : display.getDescription()) {
+                // Use i18n for pool description, fallback to config description
+                List<String> poolDesc = getPoolDescription(player, pool.getId(), display.getDescription());
+                for (String line : poolDesc) {
                     lore.add(messages.colorize(line));
                 }
                 
@@ -1820,9 +1916,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         PoolDisplay display = pool.getDisplay();
         
+        // Use i18n for pool name, fallback to config display name
+        String poolName = getPoolDisplayName(player, poolId, display.getName());
+        
         // Use size 54 for the detail menu to fit rewards preview and buttons
         Map<String, String> titlePlaceholders = new HashMap<String, String>();
-        titlePlaceholders.put("pool", messages.colorize(display.getName()));
+        titlePlaceholders.put("pool", messages.colorize(poolName));
         titlePlaceholders.put("pool_id", poolId);
         Inventory inv = Bukkit.createInventory(new WishPoolDetailMenuHolder(poolId), 54, 
             messages.format(player, "menu.wish.pool_detail.title", titlePlaceholders));
@@ -1833,7 +1932,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         ItemStack infoItem = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
         org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) infoItem.getItemMeta();
         if (skullMeta != null) {
-            skullMeta.setDisplayName(messages.colorize(display.getName()));
+            skullMeta.setDisplayName(messages.colorize(poolName));
             List<String> infoLore = new ArrayList<String>();
             Map<String, String> placeholders = new HashMap<String, String>();
             placeholders.put("count", String.valueOf(status.getCount()));
@@ -1841,8 +1940,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             placeholders.put("tickets", String.valueOf(status.getTicketCount()));
             infoLore.add(messages.format(player, "menu.wish.pool_detail.fate_mark", placeholders));
             infoLore.add(messages.format(player, "menu.wish.pool_detail.tickets", placeholders));
-            // Add pool description
-            for (String line : display.getDescription()) {
+            // Use i18n for pool description, fallback to config description
+            List<String> poolDesc = getPoolDescription(player, poolId, display.getDescription());
+            for (String line : poolDesc) {
                 infoLore.add(messages.colorize(line));
             }
             skullMeta.setLore(infoLore);
@@ -2309,6 +2409,25 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return;
         }
         if (holder instanceof HelpMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            if (clicked.getType() == org.bukkit.Material.BARRIER) {
+                player.closeInventory();
+                return;
+            }
+            ItemMeta meta = clicked.getItemMeta();
+            String action = extractActionFromMeta(meta);
+            String command = extractCommandFromMeta(meta);
+            handleMenuAction(player, action, command);
+            return;
+        }
+        if (holder instanceof GamesMenuHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getView().getTopInventory()) {
                 return;

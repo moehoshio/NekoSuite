@@ -265,7 +265,9 @@ public class ExpManager {
             Map<String, String> costMap = new HashMap<String, String>();
             costMap.put("cost", String.valueOf(item.getCost()));
             String costLore = messages.format(player, "exp.exchange.cost_lore", costMap);
-            ItemStack stack = createItem(item.getMaterial(), item.getDisplay(), new String[]{costLore, "ID:exchange_" + item.getId()});
+            // Use i18n key for display name if configured
+            String displayName = getExchangeDisplayName(player, item);
+            ItemStack stack = createItem(item.getMaterial(), displayName, new String[]{costLore, "ID:exchange_" + item.getId()});
             safeSet(inv, expLayout.getExchangeSlots().get(slotIndex++), stack);
         }
 
@@ -320,6 +322,20 @@ public class ExpManager {
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    /**
+     * Get the display name for an exchange item using i18n if available.
+     * First tries i18n key "exp.exchange.item.<id>.name", then falls back to config display.
+     */
+    private String getExchangeDisplayName(Player player, ExchangeItem item) {
+        String i18nKey = "exp.exchange.item." + item.getId() + ".name";
+        String translated = messages.getRaw(player, i18nKey);
+        // If the key returns the same as input key or is null, use config display
+        if (translated == null || translated.equals(i18nKey)) {
+            return item.getDisplay();
+        }
+        return translated;
     }
 
     boolean handleMenuClick(Player player, ItemStack clicked) {

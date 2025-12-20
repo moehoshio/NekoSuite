@@ -27,6 +27,8 @@ import java.util.Map;
 
 public class BuyManager {
 
+    private static final long MS_PER_DAY = 24L * 60L * 60L * 1000L;
+    
     private final JavaPlugin plugin;
     private final Messages messages;
     private final File storageDir;
@@ -81,9 +83,63 @@ public class BuyManager {
         long expiry = data.getLong(key + ".expiry", 0L);
         boolean owned = data.getBoolean(key + ".owned", false);
         long now = System.currentTimeMillis();
-        // Check if already owned: permanent products use 'owned' flag, timed products use expiry
-        if (owned && (expiry == 0L || now <= expiry)) {
-            throw new BuyException(messages.format(player, "buy.already_active"));
+        
+        // Determine product category and level
+        String productIdLower = product.getId().toLowerCase();
+        String category = getProductCategory(productIdLower);
+        int level = extractLevel(productIdLower);
+        
+        // For bag products: don't allow buying lower level if user owns higher level
+        if ("bag".equals(category)) {
+            int ownedHighestBag = getHighestOwnedLevel(data, "bag");
+            if (ownedHighestBag > level) {
+                throw new BuyException(messages.format(player, "buy.bag_downgrade_blocked"));
+            }
+            // Check if already owned this exact level bag
+            if (owned && (expiry == 0L || now <= expiry)) {
+                throw new BuyException(messages.format(player, "buy.already_active"));
+            }
+        }
+        
+        // For vip/mcd: calculate time conversion for upgrade/downgrade
+        long convertedDays = 0;
+        Product oldProduct = null;
+        if (("vip".equals(category) || "mcd".equals(category)) && product.getDurationDays() > 0) {
+            // Find currently active subscription in this category
+            oldProduct = findActiveProduct(data, category, now);
+            if (oldProduct != null && !oldProduct.getId().equalsIgnoreCase(product.getId())) {
+                // Calculate remaining days from old product
+                String oldKey = "buy." + oldProduct.getId();
+                long oldExpiry = data.getLong(oldKey + ".expiry", 0L);
+                long remainingMs = oldExpiry - now;
+                if (remainingMs > 0) {
+                    long remainingDays = remainingMs / MS_PER_DAY;
+                    // Time conversion calculation:
+                    // 1. Calculate daily value of each tier: price / duration_days
+                    // 2. Calculate remaining value of old subscription: remaining_days * old_daily_value
+                    // 3. Convert remaining value to new tier's days: remaining_value / new_daily_value
+                    // This ensures fair conversion when upgrading (fewer new days) or downgrading (more new days)
+                    double oldDailyValue = (double) oldProduct.getPrice() / oldProduct.getDurationDays();
+                    double newDailyValue = (double) product.getPrice() / product.getDurationDays();
+                    if (newDailyValue > 0) {
+                        convertedDays = (long) ((remainingDays * oldDailyValue) / newDailyValue);
+                    }
+                    // Revoke old product
+                    for (String cmd : oldProduct.getRevokeCommands()) {
+                        dispatch(cmd, player, oldProduct.getDurationDays());
+                    }
+                    data.set(oldKey + ".owned", false);
+                    data.set(oldKey + ".expiry", 0L);
+                }
+            } else if (owned && expiry > 0L && now <= expiry) {
+                // Already have this exact product active
+                throw new BuyException(messages.format(player, "buy.already_active"));
+            }
+        } else if (!("bag".equals(category))) {
+            // For non-bag and non-vip/mcd products, check if already owned
+            if (owned && (expiry == 0L || now <= expiry)) {
+                throw new BuyException(messages.format(player, "buy.already_active"));
+            }
         }
 
         // balance check (Vault economy)
@@ -115,7 +171,9 @@ public class BuyManager {
 
         data.set(key + ".owned", true);
         if (product.getDurationDays() > 0) {
-            Instant exp = Instant.ofEpochMilli(now).plus(product.getDurationDays(), ChronoUnit.DAYS);
+            // Add converted days from old subscription + new duration
+            long totalDays = product.getDurationDays() + convertedDays;
+            Instant exp = Instant.ofEpochMilli(now).plus(totalDays, ChronoUnit.DAYS);
             data.set(key + ".expiry", exp.toEpochMilli());
         } else {
             data.set(key + ".expiry", 0L);
@@ -127,6 +185,80 @@ public class BuyManager {
         List<String> granted = new ArrayList<String>();
         granted.add(product.getId());
         return granted;
+    }
+    
+    /**
+     * Get the category of a product (vip, mcd, bag, or other).
+     */
+    private String getProductCategory(String productId) {
+        if (productId.startsWith("vip")) {
+            return "vip";
+        } else if (productId.startsWith("mcd")) {
+            return "mcd";
+        } else if (productId.startsWith("bag")) {
+            return "bag";
+        }
+        return "other";
+    }
+    
+    /**
+     * Extract the level number from a product id (e.g., "vip3" returns 3).
+     */
+    private int extractLevel(String productId) {
+        int end = productId.length();
+        int start = end;
+        while (start > 0 && Character.isDigit(productId.charAt(start - 1))) {
+            start--;
+        }
+        if (start == end) return 0;
+        try {
+            return Integer.parseInt(productId.substring(start, end));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    
+    /**
+     * Get the highest level bag the user currently owns.
+     */
+    private int getHighestOwnedLevel(YamlConfiguration data, String category) {
+        int highest = 0;
+        for (Product p : products.values()) {
+            String id = p.getId().toLowerCase();
+            if (!getProductCategory(id).equals(category)) {
+                continue;
+            }
+            String key = "buy." + p.getId();
+            boolean owned = data.getBoolean(key + ".owned", false);
+            long expiry = data.getLong(key + ".expiry", 0L);
+            // For bags (permanent), owned is enough; for timed products, check expiry
+            if (owned && (expiry == 0L || System.currentTimeMillis() <= expiry)) {
+                int level = extractLevel(id);
+                if (level > highest) {
+                    highest = level;
+                }
+            }
+        }
+        return highest;
+    }
+    
+    /**
+     * Find the currently active product in a category.
+     */
+    private Product findActiveProduct(YamlConfiguration data, String category, long now) {
+        for (Product p : products.values()) {
+            String id = p.getId().toLowerCase();
+            if (!getProductCategory(id).equals(category)) {
+                continue;
+            }
+            String key = "buy." + p.getId();
+            boolean owned = data.getBoolean(key + ".owned", false);
+            long expiry = data.getLong(key + ".expiry", 0L);
+            if (owned && expiry > 0L && now <= expiry) {
+                return p;
+            }
+        }
+        return null;
     }
 
     public void openMenu(Player player) {

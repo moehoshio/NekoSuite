@@ -59,6 +59,13 @@ exp:
     limit_total: "&c✖ 達到總兌換上限。"
     insufficient: "&c✖ 經驗不足，還需 &6{diff} &cxp。&7(需 &6{cost}&7，當前 &6{stored}&7)"
     cost_lore: "&7消耗: &c{cost} &7xp"
+    item:
+      CloudspringAzureBlade:
+        name: "&b碧波云泉劍"
+      bal100:
+        name: "&6100 金幣"
+      enchantedGoldenApple3:
+        name: "&6附魔金蘋果 x3"
 
 cdk:
   usage: "&7用法: &f/cdk &6<cdk代碼>"
@@ -75,6 +82,7 @@ buy:
   usage: "&7用法: &f/buy &6<類型> <等級> &7或 &f/buy menu"
   not_found: "&c✖ 未找到此商品"
   already_active: "&c✖ 您已經擁有該特權，尚未過期"
+  bag_downgrade_blocked: "&c✖ 您已擁有更高等級的背包，只有最高等級生效。"
   success: "&a✔ &7購買成功: &6{product}"
   expired: "&e⚠ &7已移除過期特權: &c{product}"
   insufficient_balance: "&c✖ 餘額不足，需 &6{cost}&c，當前 &6{balance}&c。"
@@ -312,7 +320,7 @@ sgame:
   equipped: "&a✔ &7已裝備: &6{item}"
   unequipped: "&a✔ &7已卸下: &6{item}"
   not_enough_magic: "&c✖ &7你沒有足夠的魔法值！"
-  battle_round_result: "&7第{round}回合: 你使用 {player_action}，敵人使用 {enemy_action}。{result} &7(&a造成{player_damage}&7, &c受到{enemy_damage}&7) {crit_info}"
+  battle_round_result: "&7第{round}回合: 你使用了 {player_action}&7，敵人使用了 {enemy_action}&7。 {result}&7 (&a造成{player_damage}&7, &c受到{enemy_damage}&7) {crit_info}"
   battle_victory_multiround: "&a✔ &7經過{rounds}回合激戰，你擊敗了 &c{enemy}&7！獲得 &6{gold} &7金幣！"
   round_attack_beats_skill: "&a攻擊打斷了敵人的技能！"
   round_skill_beats_defense: "&d技能穿透了敵人的防禦！"
@@ -739,6 +747,23 @@ menu:
     title: "&#c084fc✦ 祈願選單"
     pool:
       click_to_view: "&7點擊查看詳情"
+      # 祈願池翻譯 - 使用池ID作為鍵
+      StarPath:
+        name: "&e星途"
+        description:
+          - "&7星光指引旅途"
+      StarryMirage:
+        name: "&b星光如夢"
+        description:
+          - "&7限定: 2025-09-01 前結束"
+      OathOfTheRedRose:
+        name: "&d紅玫的誓約"
+        description:
+          - "&d情人節限定池"
+      GlimmeringPrayer:
+        name: "&6微光之願"
+        description:
+          - "&7每日免費祈願"
     pool_detail:
       title: "&#c084fc✦ {pool}"
       fate_mark: "&7命運刻痕: &6{count}&7/&e{max_count}"
@@ -790,6 +815,15 @@ menu:
     start_button_lore2: "&7起始生命: &c{starting_health}"
     start_button_lore3: "&7冒險關卡: &a{max_stages}"
     click_to_start: "&e點擊開始新遊戲"
+    difficulty_easy: "&a✦ 簡單模式"
+    difficulty_easy_desc1: "&7更多金幣和生命"
+    difficulty_easy_desc2: "&7金幣: &6{starting_gold} &8| &7生命: &c{starting_health}"
+    difficulty_normal: "&e✦ 普通模式"
+    difficulty_normal_desc1: "&7標準難度"
+    difficulty_normal_desc2: "&7金幣: &6{starting_gold} &8| &7生命: &c{starting_health}"
+    difficulty_hard: "&c✦ 困難模式"
+    difficulty_hard_desc1: "&7更少金幣和生命，更具挑戰！"
+    difficulty_hard_desc2: "&7金幣: &6{starting_gold} &8| &7生命: &c{starting_health}"
     close: "&c✖ 關閉"
     status_title: "&7冒險狀態"
     gold_lore: "&6金幣: &f{gold}"
@@ -984,10 +1018,20 @@ navigation:
   buy_lore: "&7購買VIP和月卡"
   mail_button: "&f✦ 郵件"
   mail_lore: "&7查看郵件"
-  sgame_button: "&6✦ 策略遊戲"
-  sgame_lore: "&7貓咪王國冒險"
+  games_button: "&6✦ 遊戲"
+  games_lore: "&7遊玩小遊戲"
   help_button: "&7? 幫助"
   help_lore: "&7查看幫助信息"
+
+# 遊戲頁
+games:
+  title: "&#ffcc00✦ 小遊戲"
+  sgame:
+    title: "&6✦ 貓咪王國冒險"
+    lore:
+      - "&7策略冒險遊戲"
+      - "&7探索、戰鬥、交易！"
+      - "&e點擊開始遊玩"
 
 # 幫助頁
 help:

@@ -59,12 +59,36 @@ exp:
     limit_total: "&c✖ Total exchange limit reached."
     insufficient: "&c✖ Not enough experience, need &6{diff} &cmore xp. &7(requires &6{cost}&7, have &6{stored}&7)"
     cost_lore: "&7Cost: &c{cost} &7xp"
+    item:
+      CloudspringAzureBlade:
+        name: "&bCloudspring Azure Blade"
+      bal100:
+        name: "&6100 Gold"
+      enchantedGoldenApple3:
+        name: "&6Enchanted Golden Apple x3"
 
 menu:
   wish:
     title: "&#c084fc✦ Wish Menu"
     pool:
       click_to_view: "&7Click to view details"
+      # Pool-specific translations - use pool id as key
+      StarPath:
+        name: "&eStar Path"
+        description:
+          - "&7Starlight guides your journey"
+      StarryMirage:
+        name: "&bStarry Mirage"
+        description:
+          - "&7Limited: ends 2025-09-01"
+      OathOfTheRedRose:
+        name: "&dOath of the Red Rose"
+        description:
+          - "&dValentine's Limited Pool"
+      GlimmeringPrayer:
+        name: "&6Glimmering Prayer"
+        description:
+          - "&7Daily free wish"
     pool_detail:
       title: "&#c084fc✦ {pool}"
       fate_mark: "&7Fate Mark: &6{count}&7/&e{max_count}"
@@ -116,6 +140,15 @@ menu:
     start_button_lore2: "&7Starting health: &c{starting_health}"
     start_button_lore3: "&7Adventure stages: &a{max_stages}"
     click_to_start: "&eClick to start new game"
+    difficulty_easy: "&a✦ Easy Mode"
+    difficulty_easy_desc1: "&7More gold and health"
+    difficulty_easy_desc2: "&7Gold: &6{starting_gold} &8| &7Health: &c{starting_health}"
+    difficulty_normal: "&e✦ Normal Mode"
+    difficulty_normal_desc1: "&7Standard difficulty"
+    difficulty_normal_desc2: "&7Gold: &6{starting_gold} &8| &7Health: &c{starting_health}"
+    difficulty_hard: "&c✦ Hard Mode"
+    difficulty_hard_desc1: "&7Less gold and health, more challenge!"
+    difficulty_hard_desc2: "&7Gold: &6{starting_gold} &8| &7Health: &c{starting_health}"
     close: "&c✖ Close"
     status_title: "&7Adventure Status"
     gold_lore: "&6Gold: &f{gold}"
@@ -231,6 +264,7 @@ buy:
   usage: "&7Usage: &f/buy &6<type> <level> &7or &f/buy menu"
   not_found: "&c✖ Product not found"
   already_active: "&c✖ You already own this perk and it is not expired"
+  bag_downgrade_blocked: "&c✖ You already own a higher level backpack. Only the highest level is effective."
   success: "&a✔ &7Purchased: &6{product}"
   expired: "&e⚠ &7Removed expired perk: &c{product}"
   insufficient_balance: "&c✖ Insufficient balance, need &6{cost}&c, you have &6{balance}&c."
@@ -469,7 +503,7 @@ sgame:
   equipped: "&a✔ &7Equipped: &6{item}"
   unequipped: "&a✔ &7Unequipped: &6{item}"
   not_enough_magic: "&c✖ &7You don't have enough magic!"
-  battle_round_result: "&7Round {round}: You used {player_action}, enemy used {enemy_action}. {result} &7(&aDealt {player_damage} damage&7, &cTook {enemy_damage} damage&7)"
+  battle_round_result: "&7Round {round}: You used {player_action}&7, enemy used {enemy_action}&7. {result}&7 (&aDealt {player_damage} damage&7, &cTook {enemy_damage} damage&7) {crit_info}"
   battle_victory_multiround: "&a✔ &7After {rounds} rounds, you defeated &c{enemy}&7! Gained &6{gold} &7gold!"
   round_attack_beats_skill: "&aAttack interrupted enemy's skill!"
   round_skill_beats_defense: "&dSkill bypassed enemy's defense!"
@@ -921,10 +955,20 @@ navigation:
   buy_lore: "&7Purchase VIP and monthly cards"
   mail_button: "&f✦ Mail"
   mail_lore: "&7View your mail"
-  sgame_button: "&6✦ Strategy Game"
-  sgame_lore: "&7Cat Kingdom Adventure"
+  games_button: "&6✦ Games"
+  games_lore: "&7Play mini-games"
   help_button: "&7? Help"
   help_lore: "&7View help information"
+
+# Games page
+games:
+  title: "&#ffcc00✦ Mini Games"
+  sgame:
+    title: "&6✦ Cat Kingdom Adventure"
+    lore:
+      - "&7A strategy adventure game"
+      - "&7Explore, battle, and trade!"
+      - "&eClick to play"
 
 # Help page
 help:

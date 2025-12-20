@@ -77,18 +77,37 @@ navigation:
       name_key: "navigation.mail_button"
       lore_key: "navigation.mail_lore"
       action: "OPEN_MAIL"
-    sgame:
+    games:
       slot: 15
       material: COMPASS
-      name_key: "navigation.sgame_button"
-      lore_key: "navigation.sgame_lore"
-      action: "OPEN_SGAME"
+      name_key: "navigation.games_button"
+      lore_key: "navigation.games_lore"
+      action: "OPEN_GAMES"
     help:
       slot: 16
       material: BOOK
       name_key: "navigation.help_button"
       lore_key: "navigation.help_lore"
       action: "OPEN_HELP"
+
+# Games menu configuration
+games:
+  size: 27
+  title_key: "games.title"
+  close_slot: 26
+  items:
+    sgame:
+      slot: 13
+      material: MAP
+      name_key: "games.sgame.title"
+      lore_key: "games.sgame.lore"
+      action: "OPEN_SGAME"
+    back:
+      slot: 18
+      material: ARROW
+      name_key: "help.back_button"
+      lore_key: "help.back_lore"
+      action: "OPEN_NAV"
 
 # Help menu configuration
 help:

@@ -159,18 +159,37 @@ public class StrategyGameManager {
      * Start a new game session for a player.
      */
     public void startGame(Player player) {
+        startGame(player, "normal");
+    }
+    
+    public void startGame(Player player, String difficulty) {
         String playerName = player.getName();
         if (activeSessions.containsKey(playerName)) {
             player.sendMessage(messages.format(player, "sgame.already_in_game"));
             return;
         }
 
-        GameSession session = new GameSession(playerName, startingGold, startingHealth);
+        // Calculate starting stats based on difficulty
+        int gold = startingGold;
+        int health = startingHealth;
+        int attack = startingAttack;
+        int defense = startingDefense;
+        int magic = startingMagic;
+        
+        if ("easy".equals(difficulty)) {
+            gold = (int)(startingGold * 1.5);
+            health = (int)(startingHealth * 1.3);
+        } else if ("hard".equals(difficulty)) {
+            gold = (int)(startingGold * 0.7);
+            health = (int)(startingHealth * 0.8);
+        }
+        
+        GameSession session = new GameSession(playerName, gold, health);
         // Initialize combat stats
-        session.setAttack(startingAttack);
-        session.setDefense(startingDefense);
-        session.setMagic(startingMagic);
-        session.setMaxMagic(startingMagic);
+        session.setAttack(attack);
+        session.setDefense(defense);
+        session.setMagic(magic);
+        session.setMaxMagic(magic);
         
         activeSessions.put(playerName, session);
         saveSession(session);
@@ -332,23 +351,57 @@ public class StrategyGameManager {
             });
         safeSet(inv, 4, storyItem);
 
-        // Start new game button
-        Map<String, String> startMap = new HashMap<String, String>();
-        startMap.put("starting_gold", String.valueOf(startingGold));
-        startMap.put("starting_health", String.valueOf(startingHealth));
-        startMap.put("max_stages", String.valueOf(maxStages));
+        // Difficulty selection buttons
+        Map<String, String> easyMap = new HashMap<String, String>();
+        easyMap.put("starting_gold", String.valueOf((int)(startingGold * 1.5)));
+        easyMap.put("starting_health", String.valueOf((int)(startingHealth * 1.3)));
+        easyMap.put("max_stages", String.valueOf(maxStages));
+        easyMap.put("difficulty", messages.format(player, "menu.sgame.difficulty_easy"));
         
-        ItemStack startItem = createItem(Material.LIME_WOOL,
-            messages.format(player, "menu.sgame.start_button"),
+        ItemStack easyItem = createItem(Material.LIME_WOOL,
+            messages.format(player, "menu.sgame.difficulty_easy"),
             new String[]{
-                messages.format(player, "menu.sgame.start_button_lore1", startMap),
-                messages.format(player, "menu.sgame.start_button_lore2", startMap),
-                messages.format(player, "menu.sgame.start_button_lore3", startMap),
+                messages.format(player, "menu.sgame.difficulty_easy_desc1"),
+                messages.format(player, "menu.sgame.difficulty_easy_desc2", easyMap),
                 "",
                 messages.format(player, "menu.sgame.click_to_start"),
-                "ID:start_new_game"
+                "ID:start_easy"
             });
-        safeSet(inv, 13, startItem);
+        safeSet(inv, 11, easyItem);
+        
+        Map<String, String> normalMap = new HashMap<String, String>();
+        normalMap.put("starting_gold", String.valueOf(startingGold));
+        normalMap.put("starting_health", String.valueOf(startingHealth));
+        normalMap.put("max_stages", String.valueOf(maxStages));
+        normalMap.put("difficulty", messages.format(player, "menu.sgame.difficulty_normal"));
+        
+        ItemStack normalItem = createItem(Material.YELLOW_WOOL,
+            messages.format(player, "menu.sgame.difficulty_normal"),
+            new String[]{
+                messages.format(player, "menu.sgame.difficulty_normal_desc1"),
+                messages.format(player, "menu.sgame.difficulty_normal_desc2", normalMap),
+                "",
+                messages.format(player, "menu.sgame.click_to_start"),
+                "ID:start_normal"
+            });
+        safeSet(inv, 13, normalItem);
+        
+        Map<String, String> hardMap = new HashMap<String, String>();
+        hardMap.put("starting_gold", String.valueOf((int)(startingGold * 0.7)));
+        hardMap.put("starting_health", String.valueOf((int)(startingHealth * 0.8)));
+        hardMap.put("max_stages", String.valueOf(maxStages));
+        hardMap.put("difficulty", messages.format(player, "menu.sgame.difficulty_hard"));
+        
+        ItemStack hardItem = createItem(Material.RED_WOOL,
+            messages.format(player, "menu.sgame.difficulty_hard"),
+            new String[]{
+                messages.format(player, "menu.sgame.difficulty_hard_desc1"),
+                messages.format(player, "menu.sgame.difficulty_hard_desc2", hardMap),
+                "",
+                messages.format(player, "menu.sgame.click_to_start"),
+                "ID:start_hard"
+            });
+        safeSet(inv, 15, hardItem);
 
         // Navigation button (back to main menu) - slot before close button
         int navSlot = layout.getCloseSlot() > 0 ? layout.getCloseSlot() - 1 : DEFAULT_NAV_SLOT;
@@ -674,8 +727,21 @@ public class StrategyGameManager {
             return;
         }
 
-        // Pick a random enemy based on stage
-        BattleEnemy enemy = pickEnemy(session.getCurrentStage());
+        // Check if current event has a specific enemy configured
+        BattleEnemy enemy = null;
+        String currentEventId = session.getCurrentEventId();
+        if (currentEventId != null) {
+            GameEvent currentEvent = findEvent(currentEventId);
+            if (currentEvent != null && currentEvent.hasEnemyId()) {
+                enemy = findEnemy(currentEvent.getEnemyId());
+            }
+        }
+        
+        // Fallback to random enemy based on stage if no specific enemy
+        if (enemy == null) {
+            enemy = pickEnemy(session.getCurrentStage());
+        }
+        
         session.setCurrentEnemyId(enemy.getId());
         // Initialize enemy HP for multi-round combat
         session.setCurrentEnemyHp(enemy.getHealth());
@@ -1306,9 +1372,15 @@ public class StrategyGameManager {
      * Handle clicks in the start game menu.
      */
     private void handleStartGameMenuClick(Player player, String id) {
-        if ("start_new_game".equals(id)) {
+        if ("start_easy".equals(id)) {
             player.closeInventory();
-            startGame(player);
+            startGame(player, "easy");
+        } else if ("start_normal".equals(id) || "start_new_game".equals(id)) {
+            player.closeInventory();
+            startGame(player, "normal");
+        } else if ("start_hard".equals(id)) {
+            player.closeInventory();
+            startGame(player, "hard");
         } else if ("close".equals(id)) {
             player.closeInventory();
         }
@@ -2961,11 +3033,12 @@ public class StrategyGameManager {
         private final List<String> prerequisiteEvents; // Must have visited these events first
         private final int fixedStage; // Stage where this event MUST appear (-1 = no fixed stage)
         private final boolean exclusive; // If true, only this event appears at fixed stage
+        private final String enemyId; // Specific enemy for battle events (null = random)
 
         GameEvent(String id, String name, List<String> description, List<EventChoice> choices, 
                   String eventType, EventRequirement requirement, int weight, 
                   List<String> followupEvents, List<String> prerequisiteEvents,
-                  int fixedStage, boolean exclusive) {
+                  int fixedStage, boolean exclusive, String enemyId) {
             this.id = id;
             this.name = name;
             this.description = description != null ? description : new ArrayList<String>();
@@ -2977,6 +3050,7 @@ public class StrategyGameManager {
             this.prerequisiteEvents = prerequisiteEvents != null ? prerequisiteEvents : new ArrayList<String>();
             this.fixedStage = fixedStage;
             this.exclusive = exclusive;
+            this.enemyId = enemyId;
         }
 
         static GameEvent fromSection(String id, ConfigurationSection section) {
@@ -2989,6 +3063,7 @@ public class StrategyGameManager {
             List<String> prereqs = section.getStringList("prerequisite_events");
             int fixedStage = section.getInt("fixed_stage", -1);
             boolean exclusive = section.getBoolean("exclusive", false);
+            String enemyId = section.getString("enemy_id", null);
             
             List<EventChoice> choices = new ArrayList<EventChoice>();
             List<Map<?, ?>> choiceList = section.getMapList("choices");
@@ -2999,7 +3074,7 @@ public class StrategyGameManager {
                 }
             }
             
-            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs, fixedStage, exclusive);
+            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs, fixedStage, exclusive, enemyId);
         }
 
         String getId() { return id; }
@@ -3016,6 +3091,8 @@ public class StrategyGameManager {
         int getFixedStage() { return fixedStage; }
         boolean hasFixedStage() { return fixedStage >= 0; }
         boolean isExclusive() { return exclusive; }
+        String getEnemyId() { return enemyId; }
+        boolean hasEnemyId() { return enemyId != null && !enemyId.isEmpty(); }
     }
 
     /**

@@ -59,12 +59,36 @@ exp:
     limit_total: "&c✖ 已达总兑换上限。"
     insufficient: "&c✖ 经验不足，还需 &6{diff} &c经验。&7(需 &6{cost}&7，当前 &6{stored}&7)"
     cost_lore: "&7消耗: &c{cost} &7xp"
+    item:
+      CloudspringAzureBlade:
+        name: "&b碧波云泉剑"
+      bal100:
+        name: "&6100 金币"
+      enchantedGoldenApple3:
+        name: "&6附魔金苹果 x3"
 
 menu:
   wish:
     title: "&#c084fc✦ 祈愿菜单"
     pool:
       click_to_view: "&7点击查看详情"
+      # 祈愿池翻译 - 使用池ID作为键
+      StarPath:
+        name: "&e星途"
+        description:
+          - "&7星光指引旅途"
+      StarryMirage:
+        name: "&b星光如梦"
+        description:
+          - "&7限定: 2025-09-01 前结束"
+      OathOfTheRedRose:
+        name: "&d红玫的誓约"
+        description:
+          - "&d情人节限定池"
+      GlimmeringPrayer:
+        name: "&6微光之愿"
+        description:
+          - "&7每日免费祈愿"
     pool_detail:
       title: "&#c084fc✦ {pool}"
       fate_mark: "&7命运刻痕: &6{count}&7/&e{max_count}"
@@ -116,6 +140,15 @@ menu:
     start_button_lore2: "&7起始生命: &c{starting_health}"
     start_button_lore3: "&7冒险关卡: &a{max_stages}"
     click_to_start: "&e点击开始新游戏"
+    difficulty_easy: "&a✦ 简单模式"
+    difficulty_easy_desc1: "&7更多金币和生命"
+    difficulty_easy_desc2: "&7金币: &6{starting_gold} &8| &7生命: &c{starting_health}"
+    difficulty_normal: "&e✦ 普通模式"
+    difficulty_normal_desc1: "&7标准难度"
+    difficulty_normal_desc2: "&7金币: &6{starting_gold} &8| &7生命: &c{starting_health}"
+    difficulty_hard: "&c✦ 困难模式"
+    difficulty_hard_desc1: "&7更少金币和生命，更具挑战！"
+    difficulty_hard_desc2: "&7金币: &6{starting_gold} &8| &7生命: &c{starting_health}"
     close: "&c✖ 关闭"
     status_title: "&7冒险状态"
     gold_lore: "&6金币: &f{gold}"
@@ -231,6 +264,7 @@ buy:
   usage: "&7用法: &f/buy &6<类型> <等级> &7或 &f/buy menu"
   not_found: "&c✖ 未找到该商品"
   already_active: "&c✖ 你已拥有该特权且未过期"
+  bag_downgrade_blocked: "&c✖ 你已拥有更高等级的背包，只有最高等级生效。"
   success: "&a✔ &7购买成功: &6{product}"
   expired: "&e⚠ &7已移除过期特权: &c{product}"
   insufficient_balance: "&c✖ 余额不足，需 &6{cost}&c，当前 &6{balance}&c。"
@@ -469,7 +503,7 @@ sgame:
   equipped: "&a✔ &7已装备: &6{item}"
   unequipped: "&a✔ &7已卸下: &6{item}"
   not_enough_magic: "&c✖ &7你没有足够的魔法值！"
-  battle_round_result: "&7第{round}回合: 你使用 {player_action}，敌人使用 {enemy_action}。{result} &7(&a你造成{player_damage}伤害&7, &c受到{enemy_damage}伤害&7)"
+  battle_round_result: "&7第{round}回合: 你使用了 {player_action}&7，敌人使用了 {enemy_action}&7。 {result}&7 (&a你造成{player_damage}伤害&7, &c受到{enemy_damage}伤害&7) {crit_info}"
   battle_victory_multiround: "&a✔ &7经过{rounds}回合激战，你击败了 &c{enemy}&7！获得 &6{gold} &7金币！"
   round_attack_beats_skill: "&a攻击打断了敌人的技能！"
   round_skill_beats_defense: "&d技能穿透了敌人的防御！"
@@ -921,10 +955,20 @@ navigation:
   buy_lore: "&7购买VIP和月卡"
   mail_button: "&f✦ 邮件"
   mail_lore: "&7查看邮件"
-  sgame_button: "&6✦ 策略游戏"
-  sgame_lore: "&7猫咪王国冒险"
+  games_button: "&6✦ 游戏"
+  games_lore: "&7游玩小游戏"
   help_button: "&7? 帮助"
   help_lore: "&7查看帮助信息"
+
+# 游戏页
+games:
+  title: "&#ffcc00✦ 小游戏"
+  sgame:
+    title: "&6✦ 猫咪王国冒险"
+    lore:
+      - "&7策略冒险游戏"
+      - "&7探索、战斗、交易！"
+      - "&e点击开始游玩"
 
 # 帮助页
 help:

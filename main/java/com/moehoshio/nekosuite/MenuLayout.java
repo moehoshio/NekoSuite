@@ -26,6 +26,7 @@ public class MenuLayout {
     private final StrategyGameLayout strategyGameLayout;
     private final NavigationLayout navigationLayout;
     private final HelpLayout helpLayout;
+    private final GamesLayout gamesLayout;
 
     public MenuLayout(JavaPlugin plugin) {
         File file = new File(plugin.getDataFolder(), "menu_layout.yml");
@@ -41,6 +42,7 @@ public class MenuLayout {
         this.strategyGameLayout = new StrategyGameLayout(config.getConfigurationSection("strategy_game"));
         this.navigationLayout = new NavigationLayout(config.getConfigurationSection("navigation"));
         this.helpLayout = new HelpLayout(config.getConfigurationSection("help"));
+        this.gamesLayout = new GamesLayout(config.getConfigurationSection("games"));
     }
 
     public WishLayout getWishLayout() {
@@ -73,6 +75,10 @@ public class MenuLayout {
 
     public HelpLayout getHelpLayout() {
         return helpLayout;
+    }
+
+    public GamesLayout getGamesLayout() {
+        return gamesLayout;
     }
 
     public static class WishLayout {
@@ -460,6 +466,50 @@ public class MenuLayout {
 
         public int getCloseSlot() {
             return closeSlot;
+        }
+    }
+
+    /**
+     * Games menu layout configuration.
+     */
+    public static class GamesLayout {
+        private final int size;
+        private final String titleKey;
+        private final int closeSlot;
+        private final Map<String, MenuItem> items;
+
+        GamesLayout(ConfigurationSection section) {
+            this.size = section != null ? section.getInt("size", 27) : 27;
+            this.titleKey = section != null ? section.getString("title_key", "games.title") : "games.title";
+            this.closeSlot = section != null ? section.getInt("close_slot", 26) : 26;
+            this.items = new HashMap<String, MenuItem>();
+            if (section != null) {
+                ConfigurationSection itemsSection = section.getConfigurationSection("items");
+                if (itemsSection != null) {
+                    for (String key : itemsSection.getKeys(false)) {
+                        ConfigurationSection itemSection = itemsSection.getConfigurationSection(key);
+                        if (itemSection != null) {
+                            items.put(key, new MenuItem(key, itemSection));
+                        }
+                    }
+                }
+            }
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public String getTitleKey() {
+            return titleKey;
+        }
+
+        public int getCloseSlot() {
+            return closeSlot;
+        }
+
+        public Map<String, MenuItem> getItems() {
+            return Collections.unmodifiableMap(items);
         }
     }
 }
