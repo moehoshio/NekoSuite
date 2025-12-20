@@ -1124,3 +1124,43 @@ tp:
   admin_lock_success: "&a✔ &7已禁止 &6{player} &7使用傳送功能。"
   admin_unlock_success: "&a✔ &7已恢復 &6{player} &7的傳送功能。"
   admin_status: "&7玩家 &6{player}&7: 鎖定={locked}, 開關={enabled}"
+
+# 技能系統
+skill:
+  usage: "&7用法: &f/skill list &7列出所有技能 &8| &f/skill info &6<技能ID> &7查看技能詳情"
+  cast: "&a✔ &7已釋放技能: &6{skill}"
+  cooldown: "&c✖ &7技能冷卻中，請等待 &6{seconds} &7秒。"
+  no_permission: "&c✖ &7您沒有權限使用此技能。"
+  not_found: "&c✖ &7找不到該技能: &6{skill}"
+  disabled: "&c✖ &7技能系統目前已停用。"
+  list_header: "&7可用技能列表:"
+  list_entry: "&7- &6{id}&7: {name} &8- &7{trigger}"
+  info_header: "&8&m─────────────&r &6✦ 技能信息 ✦ &8&m─────────────&r"
+  info_name: "&7名稱: {name}"
+  info_type: "&7類型: &6{type}"
+  info_trigger: "&7觸發方式: &e{trigger}"
+  info_lore: "&7觸發Lore: &f{lore}"
+  info_cooldown: "&7冷卻時間: &b{cooldown} &7秒"
+  info_description: "&7描述: &f{description}"
+  triggers:
+    right_click: "右鍵"
+    left_click: "左鍵"
+    sneak_right_click: "潛行+右鍵"
+    sneak_left_click: "潛行+左鍵"
+  types:
+    lightning: "閃電"
+    fire: "火焰"
+    ice: "冰霜"
+    explosion: "爆炸"
+    heal: "治療"
+    speed: "速度"
+    teleport: "傳送"
+    shield: "護盾"
+    poison: "毒素"
+
+tab:
+  skill:
+    select_action: "<選擇操作>"
+    select_skill: "<選擇技能>"
+    show_info: "<顯示技能詳情>"
+    show_list: "<顯示技能列表>"

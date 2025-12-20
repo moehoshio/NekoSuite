@@ -73,3 +73,7 @@ commands:
     description: 傳送系統管理 (鎖定/解鎖玩家)
     usage: /ntpadmin <lock|unlock|status> <玩家>
     permission: nekosuite.tp.admin
+  skill:
+    description: 技能系統
+    usage: /skill [list|info <技能ID>]
+    permission: nekosuite.skill

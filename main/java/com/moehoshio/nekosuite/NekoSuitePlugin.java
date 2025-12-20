@@ -55,6 +55,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private StrategyGameManager strategyGameManager;
     private ArtifactRewardsManager artifactRewardsManager;
     private TeleportManager teleportManager;
+    private SkillManager skillManager;
 
     @Override
     public void onEnable() {
@@ -72,6 +73,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("menu_layout.yml", false);
         saveResource("strategy_game_config.yml", false);
         saveResource("artifact_rewards_config.yml", false);
+        saveResource("skill_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -183,6 +185,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("ntpadmin").setExecutor(this);
             getCommand("ntpadmin").setTabCompleter(this);
         }
+        if (getCommand("skill") != null) {
+            getCommand("skill").setExecutor(this);
+            getCommand("skill").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -226,6 +232,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleTeleport(sender, args);
             case "ntpadmin":
                 return handleTeleportAdmin(sender, args);
+            case "skill":
+                return handleSkill(sender, args);
             default:
                 return false;
         }
@@ -1056,6 +1064,32 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return filter(Arrays.asList("menu", "help"), args[0]);
                 }
                 break;
+            case "skill":
+                if (args.length == 1) {
+                    List<String> options = new ArrayList<String>();
+                    options.add("list");
+                    options.add("info");
+                    options.add(messages.getRaw(sender, "tab.skill.select_action"));
+                    return filter(options, args[0]);
+                }
+                if (args.length == 2) {
+                    String sub = args[0].toLowerCase();
+                    if ("list".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.skill.show_list"));
+                    }
+                    if ("info".equals(sub)) {
+                        List<String> skillIds = new ArrayList<String>(skillManager.getSkillIds());
+                        skillIds.add(messages.getRaw(sender, "tab.skill.select_skill"));
+                        return filter(skillIds, args[1]);
+                    }
+                }
+                if (args.length == 3) {
+                    String sub = args[0].toLowerCase();
+                    if ("info".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.skill.show_info"));
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -1118,6 +1152,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         strategyGameManager = new StrategyGameManager(this, messages, new File(getDataFolder(), "strategy_game_config.yml"), menuLayout);
         artifactRewardsManager = new ArtifactRewardsManager(this, messages, new File(getDataFolder(), "artifact_rewards_config.yml"));
         teleportManager = new TeleportManager(this, messages, new File(getDataFolder(), "tp_config.yml"), economy);
+        skillManager = new SkillManager(this, messages, new File(getDataFolder(), "skill_config.yml"));
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1428,12 +1463,115 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
     }
 
+    private boolean handleSkill(CommandSender sender, String[] args) {
+        if (!skillManager.isEnabled()) {
+            sender.sendMessage(messages.format(sender, "skill.disabled"));
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(messages.format(sender, "skill.usage"));
+            return true;
+        }
+
+        String sub = args[0].toLowerCase();
+
+        if ("list".equals(sub)) {
+            List<String> skillIds = skillManager.getSkillIds();
+            if (skillIds.isEmpty()) {
+                sender.sendMessage(messages.format(sender, "skill.list_header"));
+                return true;
+            }
+            sender.sendMessage(messages.format(sender, "skill.list_header"));
+            for (String skillId : skillIds) {
+                SkillManager.SkillDefinition skill = skillManager.getSkill(skillId);
+                if (skill != null) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("id", skillId);
+                    map.put("name", skill.getName());
+                    String trigger = skill.getTrigger();
+                    String translatedTrigger = messages.getRaw(sender, "skill.triggers." + trigger);
+                    if (translatedTrigger.equals("skill.triggers." + trigger)) {
+                        translatedTrigger = trigger;
+                    }
+                    map.put("trigger", translatedTrigger);
+                    sender.sendMessage(messages.format(sender, "skill.list_entry", map));
+                }
+            }
+            return true;
+        }
+
+        if ("info".equals(sub)) {
+            if (args.length < 2) {
+                sender.sendMessage(messages.format(sender, "skill.usage"));
+                return true;
+            }
+            String skillId = args[1];
+            SkillManager.SkillDefinition skill = skillManager.getSkill(skillId);
+            if (skill == null) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("skill", skillId);
+                sender.sendMessage(messages.format(sender, "skill.not_found", map));
+                return true;
+            }
+            
+            // Display skill info
+            sender.sendMessage(messages.format(sender, "skill.info_header"));
+            
+            Map<String, String> nameMap = new HashMap<String, String>();
+            nameMap.put("name", skill.getName());
+            sender.sendMessage(messages.format(sender, "skill.info_name", nameMap));
+            
+            Map<String, String> typeMap = new HashMap<String, String>();
+            String type = skill.getType();
+            String translatedType = messages.getRaw(sender, "skill.types." + type);
+            if (translatedType.equals("skill.types." + type)) {
+                translatedType = type;
+            }
+            typeMap.put("type", translatedType);
+            sender.sendMessage(messages.format(sender, "skill.info_type", typeMap));
+            
+            Map<String, String> triggerMap = new HashMap<String, String>();
+            String trigger = skill.getTrigger();
+            String translatedTrigger = messages.getRaw(sender, "skill.triggers." + trigger);
+            if (translatedTrigger.equals("skill.triggers." + trigger)) {
+                translatedTrigger = trigger;
+            }
+            triggerMap.put("trigger", translatedTrigger);
+            sender.sendMessage(messages.format(sender, "skill.info_trigger", triggerMap));
+            
+            Map<String, String> loreMap = new HashMap<String, String>();
+            loreMap.put("lore", skill.getLoreRequirement());
+            sender.sendMessage(messages.format(sender, "skill.info_lore", loreMap));
+            
+            Map<String, String> cdMap = new HashMap<String, String>();
+            cdMap.put("cooldown", String.valueOf(skill.getCooldown()));
+            sender.sendMessage(messages.format(sender, "skill.info_cooldown", cdMap));
+            
+            Map<String, String> descMap = new HashMap<String, String>();
+            descMap.put("description", skill.getDescription());
+            sender.sendMessage(messages.format(sender, "skill.info_description", descMap));
+            
+            return true;
+        }
+
+        sender.sendMessage(messages.format(sender, "skill.usage"));
+        return true;
+    }
+
     /**
      * Get the TeleportManager instance for API access.
      * Other plugins/features can use this to lock/unlock players.
      */
     public TeleportManager getTeleportManager() {
         return teleportManager;
+    }
+
+    /**
+     * Get the SkillManager instance for API access.
+     */
+    public SkillManager getSkillManager() {
+        return skillManager;
     }
 
     private void openNavigationMenu(Player player) {
