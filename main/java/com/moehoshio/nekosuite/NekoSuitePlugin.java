@@ -3555,7 +3555,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     continue;
                 }
                 boolean can = canParticipate(def, data, now);
-                result.add(new EventAvailability(def.getId(), def.getName(), can));
+                String displayName = def.getDisplayName(messages, player);
+                result.add(new EventAvailability(def.getId(), displayName, can));
             }
             return result;
         }
@@ -3691,6 +3692,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private static class EventDefinition {
         private final String id;
         private final String name;
+        private final String nameKey;
         private final boolean enabled;
         private final TimeWindow window;
         private final EventLimit limit;
@@ -3698,9 +3700,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private final boolean grantAll;
         private final int rewardRolls;
 
-        EventDefinition(String id, String name, boolean enabled, TimeWindow window, EventLimit limit, WeightedList rewards, boolean grantAll, int rewardRolls) {
+        EventDefinition(String id, String name, String nameKey, boolean enabled, TimeWindow window, EventLimit limit, WeightedList rewards, boolean grantAll, int rewardRolls) {
             this.id = id;
             this.name = name;
+            this.nameKey = nameKey;
             this.enabled = enabled;
             this.window = window;
             this.limit = limit;
@@ -3711,6 +3714,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         static EventDefinition fromSection(String id, ConfigurationSection section, java.util.logging.Logger logger) {
             String name = section.getString("name", id);
+            String nameKey = section.getString("name_key", "event.names." + id);
             boolean enabled = section.getBoolean("enabled", true);
             TimeWindow window = TimeWindow.fromSection(section.getConfigurationSection("duration"), logger);
             EventLimit limit = EventLimit.fromSection(section.getConfigurationSection("limit_modes"), logger);
@@ -3720,7 +3724,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (rewardRolls <= 0) {
                 rewardRolls = 1;
             }
-            return new EventDefinition(id, name, enabled, window, limit, rewards, grantAll, rewardRolls);
+            return new EventDefinition(id, name, nameKey, enabled, window, limit, rewards, grantAll, rewardRolls);
         }
 
         String getId() {
@@ -3729,6 +3733,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         String getName() {
             return name;
+        }
+
+        String getDisplayName(Messages messages, CommandSender target) {
+            String translated = messages.format(target, nameKey);
+            if (translated == null || translated.equals(nameKey)) {
+                return messages.colorize(name);
+            }
+            return translated;
         }
 
         boolean isEnabled() {

@@ -136,6 +136,170 @@ events:
                 amount: 5
                 name: "minecraft:diamond_block"
 
+    christmas_2025:
+        name: "聖誕節限定"
+        description: "平安夜到聖誕節的節慶獎勵"
+        type: "holiday"
+        enabled: true
+        auto_claim: false
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2025-12-24T00:00:00Z"
+            endDate: "2025-12-26T23:59:59Z"
+        rewards:
+            santa_pouch:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:cookie 16"
+                  - "give {player} minecraft:snowball 32"
+            festive_boost:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 500 points"
+                  - "broadcast {player} 的聖誕鐘聲響起，祝大家節日快樂！"
+
+    neko_anniversary_3rd:
+        name: "NekoServer 3週年慶"
+        description: "慶祝伺服器三週年的限定活動"
+        type: "holiday"
+        enabled: false
+        auto_claim: false
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2026-03-01T00:00:00Z"
+            endDate: "2026-03-07T23:59:59Z"
+        rewards:
+            anniversary_tokens:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:firework_rocket 8"
+                  - "give {player} minecraft:cake 1"
+            xp_boost:
+                probability: 1
+                commands:
+                  - "minecraft:xp add {player} 1500 points"
+            shout_out:
+                probability: 1
+                commands:
+                  - "broadcast 感謝 {player} 陪伴NekoServer三週年！"
+
+    weekend_fun_run:
+        name: "周末小遊戲"
+        description: "短時間的輕量活動，伺服器人多就開"
+        type: "custom"
+        enabled: false
+        auto_claim: false
+        limit_modes:
+            count: 2
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            speed_box:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:potion{Potion:swiftness} 1"
+                  - "give {player} minecraft:golden_apple 2"
+
+    fishing_frenzy:
+        name: "釣魚瘋狂夜"
+        description: "限定時間釣魚獎勵倍增"
+        type: "custom"
+        enabled: false
+        auto_claim: false
+        limit_modes:
+            count: 3
+            time: "1d"
+            refresh_at_time: "18:00"
+        duration:
+            startDate: "2025-01-01T00:00:00Z"
+            endDate: "2099-12-31T23:59:59Z"
+        rewards:
+            fisher_pack:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:enchanted_book{StoredEnchantments:[{id:luck_of_the_sea,lvl:3s}]} 1"
+                  - "minecraft:xp add {player} 300 points"
+
+    valentines_day:
+        name: "情人節預備"
+        description: "情人節活動預留，未開放"
+        type: "holiday"
+        enabled: false
+        auto_claim: false
+        limit_modes:
+            count: 1
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2026-02-14T00:00:00Z"
+            endDate: "2026-02-14T23:59:59Z"
+        rewards:
+            heart_box:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:red_dye 8"
+                  - "give {player} minecraft:pink_dye 8"
+
+    lunar_new_year:
+        name: "農曆新年預備"
+        description: "新春紅包與煙火，未開放"
+        type: "holiday"
+        enabled: false
+        auto_claim: false
+        limit_modes:
+            count: 2
+            time: "1d"
+            refresh_at_time: "00:00"
+        duration:
+            startDate: "2026-01-27T00:00:00Z"
+            endDate: "2026-02-03T23:59:59Z"
+        rewards:
+            red_packet:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 888"
+                  - "give {player} minecraft:firework_star 4"
+
+    mid_autumn:
+        name: "中秋預備"
+        description: "月餅與賞月，未開放"
+        type: "holiday"
+        enabled: false
+        auto_claim: false
+        duration:
+            startDate: "2026-09-15T00:00:00Z"
+            endDate: "2026-09-17T23:59:59Z"
+        rewards:
+            moon_box:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:cookie 12"
+
+    halloween:
+        name: "萬聖節預備"
+        description: "Trick or Treat，未開放"
+        type: "holiday"
+        enabled: false
+        auto_claim: false
+        duration:
+            startDate: "2026-10-30T00:00:00Z"
+            endDate: "2026-11-01T23:59:59Z"
+        rewards:
+            spooky_box:
+                probability: 1
+                commands:
+                  - "give {player} minecraft:carved_pumpkin 2"
+                  - "give {player} minecraft:candle 8"
+
     test_unlimited:
         name: "測試活動"
         description: "用於測試的無限制活動"

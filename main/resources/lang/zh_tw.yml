@@ -34,6 +34,21 @@ event:
     closed: "活動未開啟"
     limit: "已達到參與限制"
     wrong_day: "今天不是此活動的開放日"
+  names:
+    daily_login: "每日登錄獎勵"
+    daily_checkin: "每日簽到"
+    sunday_special: "週日特別活動"
+    new_year_2026: "2026新年活動"
+    monthly_reward: "月度獎勵"
+    christmas_2025: "聖誕節限定"
+    neko_anniversary_3rd: "NekoServer 3週年慶"
+    weekend_fun_run: "周末小遊戲"
+    fishing_frenzy: "釣魚瘋狂夜"
+    valentines_day: "情人節預備"
+    lunar_new_year: "農曆新年預備"
+    mid_autumn: "中秋預備"
+    halloween: "萬聖節預備"
+    test_unlimited: "測試活動"
 
 exp:
   usage: "&7用法: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"

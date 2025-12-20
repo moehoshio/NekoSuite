@@ -34,6 +34,21 @@ event:
     closed: "Event is not open"
     limit: "Participation limit reached"
     wrong_day: "This event is not available today"
+  names:
+    daily_login: "Daily Login Reward"
+    daily_checkin: "Daily Check-In"
+    sunday_special: "Sunday Special"
+    new_year_2026: "2026 New Year Event"
+    monthly_reward: "Monthly Reward"
+    christmas_2025: "Christmas 2025"
+    neko_anniversary_3rd: "NekoServer 3rd Anniversary"
+    weekend_fun_run: "Weekend Fun Run"
+    fishing_frenzy: "Fishing Frenzy Night"
+    valentines_day: "Valentine's Day (Preview)"
+    lunar_new_year: "Lunar New Year (Preview)"
+    mid_autumn: "Mid-Autumn (Preview)"
+    halloween: "Halloween (Preview)"
+    test_unlimited: "Test Event"
 
 exp:
   usage: "&7Usage: &f/exp &6<balance|deposit|withdraw|pay|menu|exchange>"
