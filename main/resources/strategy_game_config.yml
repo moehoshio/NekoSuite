@@ -526,6 +526,7 @@ events:
     weight: 100
     fixed_stage: 14
     exclusive: true
+    enemy_id: dark_lord
     description:
       - "sgame.config.events.final_boss.desc1"
       - "sgame.config.events.final_boss.desc2"
