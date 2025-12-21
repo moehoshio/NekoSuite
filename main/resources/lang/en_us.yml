@@ -1065,12 +1065,30 @@ join_quit:
 # Games page
 games:
   title: "&#ffcc00✦ Mini Games"
+  rtp:
+    title: "&d✦ Random Teleport Run"
+    lore:
+      - "&7Teleport to a random spot"
+      - "&7Race to the target before time runs out"
+      - "&eClick to open menu"
+  arena:
+    title: "&c✦ Survival Arena"
+    lore:
+      - "&7Fight waves of enemies"
+      - "&7Check status or start a round"
+      - "&eClick to open menu"
   sgame:
     title: "&6✦ Cat Kingdom Adventure"
     lore:
       - "&7A strategy adventure game"
       - "&7Explore, battle, and trade!"
       - "&eClick to play"
+  fishing:
+    title: "&b✦ Fishing Contest"
+    lore:
+      - "&7Join the timed fishing contest"
+      - "&7View leaderboard and rewards"
+      - "&eClick to open menu"
 
 # Help page
 help:

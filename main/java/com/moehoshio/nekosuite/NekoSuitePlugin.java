@@ -2141,6 +2141,15 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 case "OPEN_SGAME":
                     strategyGameManager.continueGame(player);
                     return true;
+                case "OPEN_RTP":
+                    randomTeleportGameManager.openMenu(player);
+                    return true;
+                case "OPEN_ARENA":
+                    survivalArenaManager.openMenu(player);
+                    return true;
+                case "OPEN_FISHING":
+                    fishingContestManager.openMenu(player);
+                    return true;
                 case "OPEN_GAMES":
                     openGamesMenu(player);
                     return true;

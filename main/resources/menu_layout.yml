@@ -112,12 +112,30 @@ games:
   title_key: "games.title"
   close_slot: 26
   items:
+    rtp:
+      slot: 11
+      material: ENDER_PEARL
+      name_key: "games.rtp.title"
+      lore_key: "games.rtp.lore"
+      action: "OPEN_RTP"
+    arena:
+      slot: 12
+      material: IRON_SWORD
+      name_key: "games.arena.title"
+      lore_key: "games.arena.lore"
+      action: "OPEN_ARENA"
     sgame:
       slot: 13
       material: MAP
       name_key: "games.sgame.title"
       lore_key: "games.sgame.lore"
       action: "OPEN_SGAME"
+    fishing:
+      slot: 14
+      material: FISHING_ROD
+      name_key: "games.fishing.title"
+      lore_key: "games.fishing.lore"
+      action: "OPEN_FISHING"
     back:
       slot: 18
       material: ARROW
