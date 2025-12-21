@@ -1,6 +1,8 @@
 package com.moehoshio.nekosuite;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -414,6 +416,42 @@ public class TeleportManager {
         }
         requester.sendMessage(messages.format(requester, "tp.no_outgoing_request"));
         return false;
+
+    /**
+     * Directly teleport a player to a location (with optional cost).
+     */
+    public boolean teleportToLocation(Player player, Location target) {
+        if (target == null || target.getWorld() == null) {
+            player.sendMessage(messages.format(player, "tp.world_not_found"));
+            return false;
+        }
+
+        // Charge cost if configured
+        if (tpCost > 0 && economy != null) {
+            double balance = economy.getBalance(player);
+            if (balance < tpCost) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("cost", String.valueOf((long) tpCost));
+                map.put("balance", String.valueOf((long) balance));
+                player.sendMessage(messages.format(player, "tp.insufficient_balance", map));
+                return false;
+            }
+            EconomyResponse response = economy.withdrawPlayer(player, tpCost);
+            if (response == null || !response.transactionSuccess()) {
+                player.sendMessage(messages.format(player, "tp.cost_failure"));
+                return false;
+            }
+        }
+
+        player.teleport(target);
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("world", target.getWorld().getName());
+        map.put("x", String.format("%.1f", target.getX()));
+        map.put("y", String.format("%.1f", target.getY()));
+        map.put("z", String.format("%.1f", target.getZ()));
+        player.sendMessage(messages.format(player, "tp.coord_success", map));
+        return true;
+    }
     }
 
     /**

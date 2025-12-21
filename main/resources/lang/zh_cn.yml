@@ -1127,7 +1127,7 @@ artifact:
 
 # 传送系统
 tp:
-  usage: "&7用法: &f/ntp &6<玩家>&7 发送传送请求 &8| &f/ntp accept&7 接受 &8| &f/ntp deny&7 拒绝 &8| &f/ntp toggle&7 开关"
+  usage: "&7用法: &f/ntp &6<玩家>|accept|deny|toggle|cancel &8或 &f/ntp &6<x> <y> <z> [&7世界&6]"
   admin_usage: "&7用法: &f/ntpadmin &6<lock|unlock|status> <玩家>"
   request_sent: "&a✔ &7已向 &6{target} &7发送传送请求，等待回应... &8({timeout}秒后过期)"
   request_received: "&e⚡ &6{requester} &7请求传送到您身边！&f/ntp accept &7接受 &8| &f/ntp deny &7拒绝"
@@ -1156,6 +1156,8 @@ tp:
   status_off: "&7传送状态: &c关闭"
   player_not_found: "&c✖ &7找不到玩家: &6{player}"
   cannot_tp_self: "&c✖ &7不能传送到自己身边。"
+  world_not_found: "&c✖ &7找不到世界: &6{world}"
+  coord_success: "&a✔ &7已传送至 &6{world} &7(&f{x}&7, &f{y}&7, &f{z}&7)"
   # 管理员控制的锁定消息 (副本/小游戏等)
   locked_self: "&c✖ &7您目前被禁止使用传送功能。"
   target_locked: "&c✖ &6{target} &7目前被禁止使用传送功能。"

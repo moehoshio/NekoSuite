@@ -155,6 +155,22 @@ public class AnnouncementManager {
             inv.setItem(annLayout.getNextSlot(), createNavButton(player, "announcement.next_page", Material.ARROW, page + 1));
         }
         
+        // Back to navigation (put next to close slot if possible)
+        int backSlot = annLayout.getCloseSlot() - 1;
+        if (backSlot >= 0 && backSlot < size) {
+            ItemStack back = new ItemStack(Material.ARROW);
+            ItemMeta backMeta = back.getItemMeta();
+            if (backMeta != null) {
+                backMeta.setDisplayName(messages.format(player, "help.back_button"));
+                List<String> lore = new ArrayList<String>();
+                lore.add(messages.format(player, "help.back_lore"));
+                lore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_NAV");
+                backMeta.setLore(lore);
+                back.setItemMeta(backMeta);
+            }
+            inv.setItem(backSlot, back);
+        }
+
         // Close button
         ItemStack close = new ItemStack(Material.BARRIER);
         ItemMeta closeMeta = close.getItemMeta();

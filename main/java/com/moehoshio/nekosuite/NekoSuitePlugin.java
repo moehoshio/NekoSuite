@@ -1560,6 +1560,25 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         String subCommand = args[0].toLowerCase();
 
+        // Coordinate teleport: /ntp <x> <y> <z> [world]
+        if ((args.length == 3 && isNumber(args[0]) && isNumber(args[1]) && isNumber(args[2]))
+                || (args.length == 4 && isNumber(args[1]) && isNumber(args[2]) && isNumber(args[3]))) {
+            int offset = args.length == 4 ? 1 : 0;
+            org.bukkit.World world = offset == 1 ? Bukkit.getWorld(args[0]) : player.getWorld();
+            if (world == null) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("world", args[0]);
+                player.sendMessage(messages.format(player, "tp.world_not_found", map));
+                return true;
+            }
+            double x = Double.parseDouble(args[0 + offset]);
+            double y = Double.parseDouble(args[1 + offset]);
+            double z = Double.parseDouble(args[2 + offset]);
+            org.bukkit.Location targetLoc = new org.bukkit.Location(world, x, y, z);
+            teleportManager.teleportToLocation(player, targetLoc);
+            return true;
+        }
+
         switch (subCommand) {
             case "accept":
             case "yes":
@@ -1604,6 +1623,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 }
                 teleportManager.sendTpRequest(player, target);
                 return true;
+        }
+    }
+
+    private boolean isNumber(String raw) {
+        if (raw == null) {
+            return false;
+        }
+        try {
+            Double.parseDouble(raw);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
@@ -3000,6 +3031,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return;
             }
             ItemStack clicked = event.getCurrentItem();
+            ItemMeta meta = clicked != null ? clicked.getItemMeta() : null;
+            String action = extractActionFromMeta(meta);
+            String command = extractCommandFromMeta(meta);
+            if ((action != null && !action.isEmpty()) || (command != null && !command.isEmpty())) {
+                handleMenuAction(player, action, command);
+                return;
+            }
             AnnouncementManager.AnnouncementMenuHolder annHolder = (AnnouncementManager.AnnouncementMenuHolder) holder;
             announcementManager.handleMenuClick(player, clicked, annHolder.getPage());
             return;

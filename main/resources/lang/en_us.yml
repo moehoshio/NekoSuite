@@ -1127,7 +1127,7 @@ artifact:
 
 # Teleport system
 tp:
-  usage: "&7Usage: &f/ntp &6<player>&7 send request &8| &f/ntp accept&7 accept &8| &f/ntp deny&7 deny &8| &f/ntp toggle&7 toggle"
+  usage: "&7Usage: &f/ntp &6<player>|accept|deny|toggle|cancel &8or &f/ntp &6<x> <y> <z> [&7world&6]"
   admin_usage: "&7Usage: &f/ntpadmin &6<lock|unlock|status> <player>"
   request_sent: "&a✔ &7Sent teleport request to &6{target}&7, waiting for response... &8(expires in {timeout}s)"
   request_received: "&e⚡ &6{requester} &7wants to teleport to you! &f/ntp accept &7to accept &8| &f/ntp deny &7to deny"
@@ -1156,6 +1156,8 @@ tp:
   status_off: "&7Teleport status: &cDisabled"
   player_not_found: "&c✖ &7Player not found: &6{player}"
   cannot_tp_self: "&c✖ &7You cannot teleport to yourself."
+  world_not_found: "&c✖ &7World not found: &6{world}"
+  coord_success: "&a✔ &7Teleported to &6{world} &7(&f{x}&7, &f{y}&7, &f{z}&7)"
   # Admin-controlled lock messages (for dungeons, minigames, etc.)
   locked_self: "&c✖ &7You are currently blocked from using teleport."
   target_locked: "&c✖ &6{target} &7is currently blocked from using teleport."
