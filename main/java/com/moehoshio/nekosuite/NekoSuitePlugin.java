@@ -1613,7 +1613,11 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
             @Override
             public void run() {
-                final org.bukkit.inventory.meta.SkullMeta asyncMeta = (org.bukkit.inventory.meta.SkullMeta) finalInv.getItem(headSlot).getItemMeta();
+                ItemStack headItem = finalInv.getItem(headSlot);
+                if (headItem == null || headItem.getType() != org.bukkit.Material.PLAYER_HEAD) {
+                    return;
+                }
+                final org.bukkit.inventory.meta.SkullMeta asyncMeta = (org.bukkit.inventory.meta.SkullMeta) headItem.getItemMeta();
                 if (asyncMeta != null) {
                     asyncMeta.setOwningPlayer(targetPlayer);
                     // Update on main thread
@@ -1621,9 +1625,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                         @Override
                         public void run() {
                             if (targetPlayer.isOnline() && targetPlayer.getOpenInventory().getTopInventory().getHolder() instanceof NavigationMenuHolder) {
-                                ItemStack headItem = finalInv.getItem(headSlot);
-                                if (headItem != null) {
-                                    headItem.setItemMeta(asyncMeta);
+                                ItemStack currentHeadItem = finalInv.getItem(headSlot);
+                                if (currentHeadItem != null && currentHeadItem.getType() == org.bukkit.Material.PLAYER_HEAD) {
+                                    currentHeadItem.setItemMeta(asyncMeta);
                                 }
                             }
                         }

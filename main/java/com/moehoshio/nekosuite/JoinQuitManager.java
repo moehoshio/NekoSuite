@@ -169,9 +169,11 @@ public class JoinQuitManager {
                 }
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
             }
-        } else if (action instanceof PermissionAddAction) {
-            // Permission actions would need Vault integration
-            // This is a placeholder for future implementation
+        } else if (action instanceof PermissionAddAction || action instanceof PermissionRemoveAction) {
+            // Permission add/remove actions require Vault integration
+            // Use 'command' action type with permission plugin commands as a workaround
+            // Example: type: command, command: "lp user {player} permission set example.permission true"
+            plugin.getLogger().fine("Permission add/remove actions are reserved for future Vault integration.");
         }
     }
 
