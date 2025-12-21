@@ -4,7 +4,7 @@ common:
   reload_success: "&a✔ &7配置已重載。"
 
 wish:
-  usage: "&7用法: &f/wish &6<pool> [count] &7或 &f/wish query &6<pool> &7或 &f/wish menu"
+  usage: "&7用法: &f/wish &6<pool> [count] &7或 &f/wish menu &7或 &f/wish history"
   query:
     usage: "&7用法: &f/wish query &6<pool>"
   success: "&a✔ &7祈願成功，獲得: &6{rewards}"
@@ -18,6 +18,22 @@ wish:
   cost_insufficient: "&c✖ 餘額不足，需 &6{needed}&c，當前 &6{balance}&c。"
   cost_failure: "&c✖ 扣款失敗，請稍後再試。"
   status: "&7池: &6{pool} &8| &7已祈願: &6{count} &8| &7剩餘券: &6{tickets}"
+  ticket:
+    none: "&e⚠ &7您目前沒有任何祈願券。"
+    none_player: "&e⚠ &6{player} &7目前沒有任何祈願券。"
+    header: "&7您的祈願券:"
+    header_player: "&7&6{player} &7的祈願券:"
+    entry: "&7  - &f{ticket}&7: &e{amount}"
+    query_result: "&7&6{player} &7的 &f{ticket}&7: &e{amount}"
+    usage: "&7用法: &f/wish ticket &6<list|query|add|remove|set> [參數...]"
+    usage_add: "&7用法: &f/wish ticket add &6<玩家> <券ID> <數量>"
+    usage_remove: "&7用法: &f/wish ticket remove &6<玩家> <券ID> <數量>"
+    usage_set: "&7用法: &f/wish ticket set &6<玩家> <券ID> <數量>"
+    invalid_amount: "&c✖ 無效的數量。"
+    added: "&a✔ &7已為 &6{player} &7增加 &e{amount} &7張 &f{ticket}&7。"
+    removed: "&a✔ &7已從 &6{player} &7移除 &e{amount} &7張 &f{ticket}&7。"
+    set: "&a✔ &7已將 &6{player} &7的 &f{ticket} &7設為 &e{amount}&7。"
+    not_enough: "&c✖ &6{player} &7的 &f{ticket} &7不足。"
 
 event:
   no_available: "&e⚠ &7當前沒有可用的活動。"
@@ -780,6 +796,8 @@ sgame:
 menu:
   wish:
     title: "&#c084fc✦ 祈願選單"
+    history_button: "&b✦ 祈願歷史"
+    history_button_lore: "&7查看您的祈願記錄"
     pool:
       click_to_view: "&7點擊查看詳情"
       # 祈願池翻譯 - 使用池ID作為鍵
@@ -809,6 +827,17 @@ menu:
       reward_lore: "&7獲得 &6{name}"
       back: "&a返回主頁"
       back_lore: "&7返回祈願主頁"
+    history:
+      title: "&#c084fc✦ 祈願歷史"
+      entry_title: "&6{reward}"
+      pool_lore: "&7祈願池: &e{pool}"
+      reward_lore: "&7獲得: &f{reward}"
+      time_lore: "&7時間: &8{time}"
+      prev_page: "&a◀ 上一頁 ({page})"
+      next_page: "&a下一頁 ({page}) ▶"
+      page_info: "&7頁碼: &e{page}&7/&e{total}"
+      total_records: "&7總記錄數: &6{count}"
+      back: "&c返回祈願選單"
   event:
     title: "&#60a5fa✦ 活動選單"
   exp:
@@ -1089,6 +1118,8 @@ navigation:
   exp_info: "&a✦ 等級: &f{level} &7(&6{exp} &7經驗)"
   stored_exp_info: "&b⚡ 銀行經驗: &f{stored}"
   playtime_info: "&e⏱ 遊玩時間: &f{hours}小時 {minutes}分"
+  tickets_header: "&d✦ 祈願券:"
+  ticket_entry: "&7  - &f{ticket}&7: &e{amount}"
   announcement_button: "&6✦ 公告"
   announcement_lore: "&7查看伺服器公告"
   wish_button: "&e✦ 祈願"

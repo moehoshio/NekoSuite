@@ -283,10 +283,32 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             openWishMenu(player);
             return true;
         }
-        if ("menu".equalsIgnoreCase(args[0])) {
+        String subCommand = args[0].toLowerCase();
+        
+        // Menu command
+        if ("menu".equals(subCommand)) {
             openWishMenu(player);
             return true;
         }
+        
+        // History command
+        if ("history".equals(subCommand)) {
+            int page = 1;
+            if (args.length > 1) {
+                try {
+                    page = Integer.parseInt(args[1]);
+                } catch (NumberFormatException ignored) {}
+            }
+            openWishHistoryMenu(player, Math.max(1, page));
+            return true;
+        }
+        
+        // Ticket management commands (admin only)
+        if ("ticket".equals(subCommand)) {
+            return handleWishTicket(player, args);
+        }
+        
+        // Default: treat as pool name and wish count
         String pool = args[0];
         int count = 1;
         if (args.length > 1) {
@@ -308,6 +330,191 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             map.put("reason", e.getMessage());
             sender.sendMessage(messages.format(sender, "wish.failure", map));
         }
+        return true;
+    }
+
+    private boolean handleWishTicket(Player player, String[] args) {
+        // /wish ticket query [player] [ticketId]
+        // /wish ticket add <player> <ticketId> <amount>
+        // /wish ticket remove <player> <ticketId> <amount>
+        // /wish ticket set <player> <ticketId> <amount>
+        // /wish ticket list [player]
+        
+        if (args.length < 2) {
+            // Show player's own tickets
+            Map<String, Integer> tickets = wishManager.getAllTickets(player.getName());
+            if (tickets.isEmpty()) {
+                player.sendMessage(messages.format(player, "wish.ticket.none"));
+            } else {
+                player.sendMessage(messages.format(player, "wish.ticket.header"));
+                for (Map.Entry<String, Integer> entry : tickets.entrySet()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("ticket", entry.getKey());
+                    map.put("amount", String.valueOf(entry.getValue()));
+                    player.sendMessage(messages.format(player, "wish.ticket.entry", map));
+                }
+            }
+            return true;
+        }
+        
+        String action = args[1].toLowerCase();
+        
+        // List tickets
+        if ("list".equals(action)) {
+            String targetName = args.length > 2 ? args[2] : player.getName();
+            
+            // Check permission for viewing others' tickets
+            if (!targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("nekosuite.wish.ticket.admin")) {
+                player.sendMessage(messages.format(player, "common.no_permission"));
+                return true;
+            }
+            
+            Map<String, Integer> tickets = wishManager.getAllTickets(targetName);
+            if (tickets.isEmpty()) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("player", targetName);
+                player.sendMessage(messages.format(player, "wish.ticket.none_player", map));
+            } else {
+                Map<String, String> headerMap = new HashMap<String, String>();
+                headerMap.put("player", targetName);
+                player.sendMessage(messages.format(player, "wish.ticket.header_player", headerMap));
+                for (Map.Entry<String, Integer> entry : tickets.entrySet()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("ticket", entry.getKey());
+                    map.put("amount", String.valueOf(entry.getValue()));
+                    player.sendMessage(messages.format(player, "wish.ticket.entry", map));
+                }
+            }
+            return true;
+        }
+        
+        // Query specific ticket
+        if ("query".equals(action)) {
+            String targetName = args.length > 2 ? args[2] : player.getName();
+            String ticketId = args.length > 3 ? args[3] : null;
+            
+            // Check permission for viewing others' tickets
+            if (!targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("nekosuite.wish.ticket.admin")) {
+                player.sendMessage(messages.format(player, "common.no_permission"));
+                return true;
+            }
+            
+            if (ticketId == null) {
+                // Show all tickets for target
+                Map<String, Integer> tickets = wishManager.getAllTickets(targetName);
+                if (tickets.isEmpty()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("player", targetName);
+                    player.sendMessage(messages.format(player, "wish.ticket.none_player", map));
+                } else {
+                    Map<String, String> headerMap = new HashMap<String, String>();
+                    headerMap.put("player", targetName);
+                    player.sendMessage(messages.format(player, "wish.ticket.header_player", headerMap));
+                    for (Map.Entry<String, Integer> entry : tickets.entrySet()) {
+                        Map<String, String> map = new HashMap<String, String>();
+                        map.put("ticket", entry.getKey());
+                        map.put("amount", String.valueOf(entry.getValue()));
+                        player.sendMessage(messages.format(player, "wish.ticket.entry", map));
+                    }
+                }
+            } else {
+                int count = wishManager.getTicketCount(targetName, ticketId);
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("player", targetName);
+                map.put("ticket", ticketId);
+                map.put("amount", String.valueOf(count));
+                player.sendMessage(messages.format(player, "wish.ticket.query_result", map));
+            }
+            return true;
+        }
+        
+        // Admin commands require permission
+        if (!player.hasPermission("nekosuite.wish.ticket.admin")) {
+            player.sendMessage(messages.format(player, "common.no_permission"));
+            return true;
+        }
+        
+        // Add tickets
+        if ("add".equals(action)) {
+            if (args.length < 5) {
+                player.sendMessage(messages.format(player, "wish.ticket.usage_add"));
+                return true;
+            }
+            String targetName = args[2];
+            String ticketId = args[3];
+            int amount;
+            try {
+                amount = Integer.parseInt(args[4]);
+            } catch (NumberFormatException e) {
+                player.sendMessage(messages.format(player, "wish.ticket.invalid_amount"));
+                return true;
+            }
+            
+            wishManager.addTickets(targetName, ticketId, amount);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", targetName);
+            map.put("ticket", ticketId);
+            map.put("amount", String.valueOf(amount));
+            player.sendMessage(messages.format(player, "wish.ticket.added", map));
+            return true;
+        }
+        
+        // Remove tickets
+        if ("remove".equals(action)) {
+            if (args.length < 5) {
+                player.sendMessage(messages.format(player, "wish.ticket.usage_remove"));
+                return true;
+            }
+            String targetName = args[2];
+            String ticketId = args[3];
+            int amount;
+            try {
+                amount = Integer.parseInt(args[4]);
+            } catch (NumberFormatException e) {
+                player.sendMessage(messages.format(player, "wish.ticket.invalid_amount"));
+                return true;
+            }
+            
+            boolean success = wishManager.removeTickets(targetName, ticketId, amount);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", targetName);
+            map.put("ticket", ticketId);
+            map.put("amount", String.valueOf(amount));
+            if (success) {
+                player.sendMessage(messages.format(player, "wish.ticket.removed", map));
+            } else {
+                player.sendMessage(messages.format(player, "wish.ticket.not_enough", map));
+            }
+            return true;
+        }
+        
+        // Set tickets
+        if ("set".equals(action)) {
+            if (args.length < 5) {
+                player.sendMessage(messages.format(player, "wish.ticket.usage_set"));
+                return true;
+            }
+            String targetName = args[2];
+            String ticketId = args[3];
+            int amount;
+            try {
+                amount = Integer.parseInt(args[4]);
+            } catch (NumberFormatException e) {
+                player.sendMessage(messages.format(player, "wish.ticket.invalid_amount"));
+                return true;
+            }
+            
+            wishManager.setTickets(targetName, ticketId, amount);
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", targetName);
+            map.put("ticket", ticketId);
+            map.put("amount", String.valueOf(amount));
+            player.sendMessage(messages.format(player, "wish.ticket.set", map));
+            return true;
+        }
+        
+        // Show usage
+        player.sendMessage(messages.format(player, "wish.ticket.usage"));
         return true;
     }
 
@@ -1961,6 +2168,23 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 lore.add(messages.format(player, "navigation.stored_exp_info", storedExpPlaceholders));
             }
             
+            // Add wish tickets info
+            if (wishManager != null) {
+                Map<String, Integer> tickets = wishManager.getAllTickets(player.getName());
+                if (!tickets.isEmpty()) {
+                    lore.add(""); // Empty line separator
+                    lore.add(messages.format(player, "navigation.tickets_header"));
+                    for (Map.Entry<String, Integer> entry : tickets.entrySet()) {
+                        if (entry.getValue() > 0) {
+                            Map<String, String> ticketPlaceholders = new HashMap<String, String>();
+                            ticketPlaceholders.put("ticket", entry.getKey());
+                            ticketPlaceholders.put("amount", String.valueOf(entry.getValue()));
+                            lore.add(messages.format(player, "navigation.ticket_entry", ticketPlaceholders));
+                        }
+                    }
+                }
+            }
+            
             // Add playtime info (if available via Statistic)
             try {
                 int playTicks = player.getStatistic(org.bukkit.Statistic.PLAY_ONE_MINUTE);
@@ -2485,6 +2709,20 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 inv.setItem(slot, stack);
             }
         }
+        // Add history button
+        if (layout.getCloseSlot() > 1 && layout.getCloseSlot() - 2 >= 0 && layout.getCloseSlot() - 2 < inv.getSize()) {
+            ItemStack historyItem = new ItemStack(org.bukkit.Material.BOOK);
+            ItemMeta historyMeta = historyItem.getItemMeta();
+            if (historyMeta != null) {
+                historyMeta.setDisplayName(messages.format(player, "menu.wish.history_button"));
+                List<String> historyLore = new ArrayList<String>();
+                historyLore.add(messages.format(player, "menu.wish.history_button_lore"));
+                historyLore.add(ChatColor.DARK_GRAY + "ACTION:OPEN_HISTORY");
+                historyMeta.setLore(historyLore);
+                historyItem.setItemMeta(historyMeta);
+            }
+            inv.setItem(layout.getCloseSlot() - 2, historyItem);
+        }
         // Add navigation button (back to main menu)
         if (layout.getCloseSlot() > 0 && layout.getCloseSlot() - 1 >= 0 && layout.getCloseSlot() - 1 < inv.getSize()) {
             inv.setItem(layout.getCloseSlot() - 1, createHomeButton(player));
@@ -2709,6 +2947,130 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         player.openInventory(inv);
     }
 
+    private void openWishHistoryMenu(Player player, int page) {
+        List<WishHistoryEntry> history = wishManager.getHistory(player.getName());
+        int itemsPerPage = 45; // Leave bottom row for navigation
+        int totalPages = Math.max(1, (int) Math.ceil((double) history.size() / itemsPerPage));
+        page = Math.max(1, Math.min(page, totalPages));
+        
+        String title = messages.format(player, "menu.wish.history.title");
+        Inventory inv = Bukkit.createInventory(new WishHistoryMenuHolder(page), 54, title);
+        
+        int startIndex = (page - 1) * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, history.size());
+        
+        // Format for displaying time
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+        
+        for (int i = startIndex; i < endIndex; i++) {
+            WishHistoryEntry entry = history.get(i);
+            int slot = i - startIndex;
+            
+            // Determine material based on pool
+            org.bukkit.Material material = org.bukkit.Material.PAPER;
+            WishPool pool = wishManager.getPools().get(entry.getPool());
+            if (pool != null && pool.getDisplay() != null) {
+                try {
+                    material = org.bukkit.Material.valueOf(pool.getDisplay().getMaterial().toUpperCase());
+                } catch (IllegalArgumentException ignored) {}
+            }
+            
+            ItemStack item = new ItemStack(material);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                // Get translated pool name
+                String poolName = entry.getPool();
+                if (pool != null && pool.getDisplay() != null) {
+                    poolName = getPoolDisplayName(player, entry.getPool(), pool.getDisplay().getName());
+                }
+                
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("pool", poolName);
+                map.put("reward", entry.getReward());
+                map.put("time", dateFormat.format(new java.util.Date(entry.getTimestamp())));
+                
+                meta.setDisplayName(messages.format(player, "menu.wish.history.entry_title", map));
+                
+                List<String> lore = new ArrayList<String>();
+                lore.add(messages.format(player, "menu.wish.history.pool_lore", map));
+                lore.add(messages.format(player, "menu.wish.history.reward_lore", map));
+                lore.add(messages.format(player, "menu.wish.history.time_lore", map));
+                meta.setLore(lore);
+                
+                // Apply custom model data if available
+                if (pool != null && pool.getDisplay() != null && pool.getDisplay().getCustomModelData() > 0) {
+                    meta.setCustomModelData(pool.getDisplay().getCustomModelData());
+                }
+                
+                item.setItemMeta(meta);
+            }
+            inv.setItem(slot, item);
+        }
+        
+        // Navigation buttons at bottom row
+        // Previous page button at slot 45
+        if (page > 1) {
+            ItemStack prevItem = new ItemStack(org.bukkit.Material.ARROW);
+            ItemMeta prevMeta = prevItem.getItemMeta();
+            if (prevMeta != null) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("page", String.valueOf(page - 1));
+                prevMeta.setDisplayName(messages.format(player, "menu.wish.history.prev_page", map));
+                List<String> lore = new ArrayList<String>();
+                lore.add("ID:prev");
+                prevMeta.setLore(lore);
+                prevItem.setItemMeta(prevMeta);
+            }
+            inv.setItem(45, prevItem);
+        }
+        
+        // Page info at slot 49
+        ItemStack infoItem = new ItemStack(org.bukkit.Material.BOOK);
+        ItemMeta infoMeta = infoItem.getItemMeta();
+        if (infoMeta != null) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("page", String.valueOf(page));
+            map.put("total", String.valueOf(totalPages));
+            map.put("count", String.valueOf(history.size()));
+            infoMeta.setDisplayName(messages.format(player, "menu.wish.history.page_info", map));
+            List<String> lore = new ArrayList<String>();
+            lore.add(messages.format(player, "menu.wish.history.total_records", map));
+            infoMeta.setLore(lore);
+            infoItem.setItemMeta(infoMeta);
+        }
+        inv.setItem(49, infoItem);
+        
+        // Next page button at slot 53
+        if (page < totalPages) {
+            ItemStack nextItem = new ItemStack(org.bukkit.Material.ARROW);
+            ItemMeta nextMeta = nextItem.getItemMeta();
+            if (nextMeta != null) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("page", String.valueOf(page + 1));
+                nextMeta.setDisplayName(messages.format(player, "menu.wish.history.next_page", map));
+                List<String> lore = new ArrayList<String>();
+                lore.add("ID:next");
+                nextMeta.setLore(lore);
+                nextItem.setItemMeta(nextMeta);
+            }
+            inv.setItem(53, nextItem);
+        }
+        
+        // Back button at slot 47
+        ItemStack backItem = new ItemStack(org.bukkit.Material.BARRIER);
+        ItemMeta backMeta = backItem.getItemMeta();
+        if (backMeta != null) {
+            backMeta.setDisplayName(messages.format(player, "menu.wish.history.back"));
+            List<String> lore = new ArrayList<String>();
+            lore.add("ID:back");
+            backMeta.setLore(lore);
+            backItem.setItemMeta(backMeta);
+        }
+        inv.setItem(47, backItem);
+        
+        player.openInventory(inv);
+    }
+
     private void openEventMenu(Player player) {
         MenuLayout.EventLayout layout = menuLayout.getEventLayout();
         Inventory inv = Bukkit.createInventory(new EventMenuHolder(), layout.getSize(), messages.format(player, "menu.event.title"));
@@ -2882,6 +3244,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 openNavigationMenu(player);
                 return;
             }
+            if (action != null && action.equals("OPEN_HISTORY")) {
+                openWishHistoryMenu(player, 1);
+                return;
+            }
             String id = extractIdFromMeta(meta);
             if (id != null) {
                 // Open the pool detail menu instead of immediately performing a wish
@@ -2938,6 +3304,37 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (action != null && action.equals("BACK")) {
                 openWishMenu(player);
                 return;
+            }
+            return;
+        }
+        if (holder instanceof WishHistoryMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+            
+            ItemMeta meta = clicked.getItemMeta();
+            String id = extractIdFromMeta(meta);
+            WishHistoryMenuHolder historyHolder = (WishHistoryMenuHolder) holder;
+            int currentPage = historyHolder.getPage();
+            
+            if (id != null) {
+                if ("prev".equals(id) && currentPage > 1) {
+                    openWishHistoryMenu(player, currentPage - 1);
+                    return;
+                }
+                if ("next".equals(id)) {
+                    openWishHistoryMenu(player, currentPage + 1);
+                    return;
+                }
+                if ("back".equals(id)) {
+                    openWishMenu(player);
+                    return;
+                }
             }
             return;
         }
@@ -3264,6 +3661,22 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
     }
 
+    private static class WishHistoryMenuHolder implements InventoryHolder {
+        private final int page;
+
+        WishHistoryMenuHolder(int page) {
+            this.page = page;
+        }
+
+        int getPage() {
+            return page;
+        }
+
+        public Inventory getInventory() {
+            return null;
+        }
+    }
+
     private static class EventMenuHolder implements InventoryHolder {
         public Inventory getInventory() {
             return null;
@@ -3405,7 +3818,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 if (rewardResult != null) {
                     dispatchReward(player, rewardResult, plugin);
                     // Use translated item names for display
-                    rewards.add(rewardResult.getTranslatedDisplay(messages, player));
+                    String rewardDisplay = rewardResult.getTranslatedDisplay(messages, player);
+                    rewards.add(rewardDisplay);
+                    // Record history
+                    recordHistory(data, poolId, rewardResult.getRawDisplay(), nowMillis);
                 }
             }
             data.set("wish.counts." + countsName, updatedCount);
@@ -3489,6 +3905,123 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             } catch (IOException e) {
                 plugin.getLogger().warning("保存用戶數據失敗: " + e.getMessage());
             }
+        }
+
+        private void recordHistory(YamlConfiguration data, String poolId, String reward, long timestamp) {
+            List<Map<?, ?>> historyList = data.getMapList("wish.history");
+            if (historyList == null) {
+                historyList = new ArrayList<Map<?, ?>>();
+            }
+            // Create new mutable list
+            List<Map<String, Object>> mutableHistory = new ArrayList<Map<String, Object>>();
+            for (Map<?, ?> entry : historyList) {
+                Map<String, Object> map = new HashMap<String, Object>();
+                for (Map.Entry<?, ?> e : entry.entrySet()) {
+                    map.put(e.getKey().toString(), e.getValue());
+                }
+                mutableHistory.add(map);
+            }
+            
+            // Add new entry
+            Map<String, Object> newEntry = new HashMap<String, Object>();
+            newEntry.put("pool", poolId);
+            newEntry.put("reward", reward);
+            newEntry.put("time", timestamp);
+            mutableHistory.add(0, newEntry); // Add at beginning (newest first)
+            
+            // Limit history size (default 100)
+            int maxSize = 100;
+            while (mutableHistory.size() > maxSize) {
+                mutableHistory.remove(mutableHistory.size() - 1);
+            }
+            
+            data.set("wish.history", mutableHistory);
+        }
+
+        /**
+         * Get wish history for a player.
+         */
+        List<WishHistoryEntry> getHistory(String playerName) {
+            YamlConfiguration data = loadUserData(playerName);
+            List<Map<?, ?>> historyList = data.getMapList("wish.history");
+            List<WishHistoryEntry> result = new ArrayList<WishHistoryEntry>();
+            if (historyList != null) {
+                for (Map<?, ?> entry : historyList) {
+                    String pool = entry.get("pool") != null ? entry.get("pool").toString() : "";
+                    String reward = entry.get("reward") != null ? entry.get("reward").toString() : "";
+                    long time = 0;
+                    if (entry.get("time") != null) {
+                        try {
+                            time = Long.parseLong(entry.get("time").toString());
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    result.add(new WishHistoryEntry(pool, reward, time));
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Get all ticket counts for a player.
+         */
+        Map<String, Integer> getAllTickets(String playerName) {
+            YamlConfiguration data = loadUserData(playerName);
+            Map<String, Integer> result = new HashMap<String, Integer>();
+            ConfigurationSection ticketsSection = data.getConfigurationSection("wish.tickets");
+            if (ticketsSection != null) {
+                for (String ticketId : ticketsSection.getKeys(false)) {
+                    result.put(ticketId, ticketsSection.getInt(ticketId, 0));
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Get ticket count for a specific ticket type.
+         */
+        int getTicketCount(String playerName, String ticketId) {
+            YamlConfiguration data = loadUserData(playerName);
+            return data.getInt("wish.tickets." + ticketId, 0);
+        }
+
+        /**
+         * Add tickets to a player.
+         */
+        void addTickets(String playerName, String ticketId, int amount) {
+            YamlConfiguration data = loadUserData(playerName);
+            int current = data.getInt("wish.tickets." + ticketId, 0);
+            data.set("wish.tickets." + ticketId, current + amount);
+            saveUserData(playerName, data);
+        }
+
+        /**
+         * Remove tickets from a player. Returns false if not enough tickets.
+         */
+        boolean removeTickets(String playerName, String ticketId, int amount) {
+            YamlConfiguration data = loadUserData(playerName);
+            int current = data.getInt("wish.tickets." + ticketId, 0);
+            if (current < amount) {
+                return false;
+            }
+            data.set("wish.tickets." + ticketId, current - amount);
+            saveUserData(playerName, data);
+            return true;
+        }
+
+        /**
+         * Set ticket count for a player.
+         */
+        void setTickets(String playerName, String ticketId, int amount) {
+            YamlConfiguration data = loadUserData(playerName);
+            data.set("wish.tickets." + ticketId, Math.max(0, amount));
+            saveUserData(playerName, data);
+        }
+
+        /**
+         * Get all defined ticket rules.
+         */
+        List<TicketRule> getTicketRules() {
+            return tickets;
         }
 
         Map<String, WishPool> getPools() {
@@ -4124,6 +4657,17 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             return String.join(", ", parts);
         }
+
+        /**
+         * Get raw display string (without translation, for storage)
+         */
+        String getRawDisplay() {
+            List<String> parts = new ArrayList<String>();
+            for (RewardAction action : actions) {
+                parts.add(action.getName() + " x" + action.getAmount());
+            }
+            return String.join(", ", parts);
+        }
     }
 
     private static class TicketRule {
@@ -4204,6 +4748,30 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         int getTicketCount() {
             return ticketCount;
+        }
+    }
+
+    private static class WishHistoryEntry {
+        private final String pool;
+        private final String reward;
+        private final long timestamp;
+
+        WishHistoryEntry(String pool, String reward, long timestamp) {
+            this.pool = pool;
+            this.reward = reward;
+            this.timestamp = timestamp;
+        }
+
+        String getPool() {
+            return pool;
+        }
+
+        String getReward() {
+            return reward;
+        }
+
+        long getTimestamp() {
+            return timestamp;
         }
     }
 
