@@ -212,6 +212,11 @@ public class SurvivalArenaManager {
 
             // Check if wave is complete
             if (session.getMobCount() == 0) {
+                // Cancel mob check task to prevent duplicate completeWave call
+                if (session.getMobCheckTask() != null) {
+                    session.getMobCheckTask().cancel();
+                    session.setMobCheckTask(null);
+                }
                 completeWave(player, session);
             }
         }
@@ -250,6 +255,9 @@ public class SurvivalArenaManager {
         // Cancel any running tasks
         if (session.getWaveTask() != null) {
             session.getWaveTask().cancel();
+        }
+        if (session.getMobCheckTask() != null) {
+            session.getMobCheckTask().cancel();
         }
 
         // Remove all arena mobs
@@ -383,6 +391,52 @@ public class SurvivalArenaManager {
 
             session.addMob(entity.getUniqueId());
         }
+
+        // Start mob check task to handle mobs that die from non-player causes (e.g., sunlight)
+        startMobCheckTask(player, session);
+    }
+
+    /**
+     * Start a periodic task to check for dead mobs that weren't killed by player.
+     * This handles cases like mobs burning in sunlight.
+     */
+    private void startMobCheckTask(Player player, ArenaSession session) {
+        // Cancel any existing mob check task
+        if (session.getMobCheckTask() != null) {
+            session.getMobCheckTask().cancel();
+        }
+
+        BukkitTask checkTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline() || session.isEnded()) {
+                    cancel();
+                    return;
+                }
+
+                // Check all tracked mobs and remove dead ones
+                List<UUID> deadMobs = new ArrayList<UUID>();
+                for (UUID mobId : session.getMobIds()) {
+                    Entity entity = Bukkit.getEntity(mobId);
+                    if (entity == null || entity.isDead()) {
+                        deadMobs.add(mobId);
+                    }
+                }
+
+                // Remove dead mobs from session
+                for (UUID deadId : deadMobs) {
+                    session.removeMob(deadId);
+                }
+
+                // Check if wave is complete
+                if (session.getMobCount() == 0) {
+                    cancel();
+                    completeWave(player, session);
+                }
+            }
+        }.runTaskTimer(plugin, 20L, 20L); // Check every second
+
+        session.setMobCheckTask(checkTask);
     }
 
     private void completeWave(Player player, ArenaSession session) {
@@ -575,6 +629,9 @@ public class SurvivalArenaManager {
             if (session.getWaveTask() != null) {
                 session.getWaveTask().cancel();
             }
+            if (session.getMobCheckTask() != null) {
+                session.getMobCheckTask().cancel();
+            }
             clearArenaMobs(session);
             activeSessions.remove(playerName);
         }
@@ -653,6 +710,7 @@ public class SurvivalArenaManager {
         private int totalKills;
         private boolean ended;
         private BukkitTask waveTask;
+        private BukkitTask mobCheckTask;
         private final Set<UUID> mobIds;
 
         ArenaSession(String playerName, Location arenaCenter, int maxWaves) {
@@ -679,6 +737,8 @@ public class SurvivalArenaManager {
         void setEnded(boolean ended) { this.ended = ended; }
         BukkitTask getWaveTask() { return waveTask; }
         void setWaveTask(BukkitTask task) { this.waveTask = task; }
+        BukkitTask getMobCheckTask() { return mobCheckTask; }
+        void setMobCheckTask(BukkitTask task) { this.mobCheckTask = task; }
 
         void addMob(UUID id) { mobIds.add(id); }
         void removeMob(UUID id) { mobIds.remove(id); }
