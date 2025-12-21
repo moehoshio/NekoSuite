@@ -77,15 +77,9 @@ commands:
     description: 技能系統
     usage: /skill [list|info <技能ID>]
     permission: nekosuite.skill
-  rtpgame:
-    description: 隨機傳送挑戰遊戲
-    usage: /rtpgame [menu|start|status|end]
-    permission: nekosuite.rtpgame
-  arena:
-    description: 生存競技場 (波次防守)
-    usage: /arena [menu|start|status|end]
-    permission: nekosuite.arena
-  fishing:
-    description: 釣魚大賽
-    usage: /fishing [menu|start|join|status|leaderboard|end]
-    permission: nekosuite.fishing
+  ngame:
+    description: 小遊戲系統
+    usage: /ngame <rtp|arena|fishing> [子命令]
+    permission: nekosuite.game
+    aliases:
+      - nekogame

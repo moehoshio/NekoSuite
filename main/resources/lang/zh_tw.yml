@@ -1195,10 +1195,14 @@ skill:
     shield: "護盾"
     poison: "毒素"
 
+# 小遊戲系統
+ngame:
+  usage: "&e用法: &f/ngame <rtp|arena|fishing> [子命令]\n&7或使用 &f/neko game &7開啟遊戲選單"
+
 # 隨機傳送挑戰遊戲
 rtpgame:
   disabled: "&c✖ &7此遊戲模式目前已停用。"
-  already_in_game: "&e⚠ &7您已經在挑戰中！使用 &f/rtpgame status &7查看進度。"
+  already_in_game: "&e⚠ &7您已經在挑戰中！使用 &f/ngame rtp status &7查看進度。"
   no_active_game: "&e⚠ &7您沒有進行中的挑戰。"
   game_started: "&a✔ &7隨機傳送挑戰開始！您有 &6{time} &7到達目標位置！"
   target_info: "&7目標位置: &6X:{target_x} Y:{target_y} Z:{target_z} &7(半徑 {radius} 方塊內)"

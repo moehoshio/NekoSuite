@@ -198,17 +198,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("skill").setExecutor(this);
             getCommand("skill").setTabCompleter(this);
         }
-        if (getCommand("rtpgame") != null) {
-            getCommand("rtpgame").setExecutor(this);
-            getCommand("rtpgame").setTabCompleter(this);
-        }
-        if (getCommand("arena") != null) {
-            getCommand("arena").setExecutor(this);
-            getCommand("arena").setTabCompleter(this);
-        }
-        if (getCommand("fishing") != null) {
-            getCommand("fishing").setExecutor(this);
-            getCommand("fishing").setTabCompleter(this);
+        if (getCommand("ngame") != null) {
+            getCommand("ngame").setExecutor(this);
+            getCommand("ngame").setTabCompleter(this);
         }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
@@ -255,12 +247,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleTeleportAdmin(sender, args);
             case "skill":
                 return handleSkill(sender, args);
-            case "rtpgame":
-                return handleRandomTeleportGame(sender, args);
-            case "arena":
-                return handleSurvivalArena(sender, args);
-            case "fishing":
-                return handleFishingContest(sender, args);
+            case "ngame":
+                return handleNekoGame(sender, args);
             default:
                 return false;
         }
@@ -1088,7 +1076,25 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             case "nekomenu":
             case "neko":
                 if (args.length == 1) {
-                    return filter(Arrays.asList("menu", "help"), args[0]);
+                    return filter(Arrays.asList("menu", "help", "game"), args[0]);
+                }
+                // Handle /neko game <subcommand> tab completion
+                if (args.length >= 2 && "game".equalsIgnoreCase(args[0])) {
+                    if (args.length == 2) {
+                        return filter(Arrays.asList("rtp", "arena", "fishing", "menu"), args[1]);
+                    }
+                    if (args.length == 3) {
+                        String gameType = args[1].toLowerCase();
+                        if ("rtp".equals(gameType)) {
+                            return filter(Arrays.asList("menu", "start", "status", "end"), args[2]);
+                        }
+                        if ("arena".equals(gameType)) {
+                            return filter(Arrays.asList("menu", "start", "status", "end"), args[2]);
+                        }
+                        if ("fishing".equals(gameType)) {
+                            return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[2]);
+                        }
+                    }
                 }
                 break;
             case "skill":
@@ -1117,19 +1123,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
                 break;
-            case "rtpgame":
+            case "ngame":
                 if (args.length == 1) {
-                    return filter(Arrays.asList("menu", "start", "status", "end"), args[0]);
+                    return filter(Arrays.asList("rtp", "arena", "fishing", "menu"), args[0]);
                 }
-                break;
-            case "arena":
-                if (args.length == 1) {
-                    return filter(Arrays.asList("menu", "start", "status", "end"), args[0]);
-                }
-                break;
-            case "fishing":
-                if (args.length == 1) {
-                    return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[0]);
+                if (args.length == 2) {
+                    String sub = args[0].toLowerCase();
+                    if ("rtp".equals(sub)) {
+                        return filter(Arrays.asList("menu", "start", "status", "end"), args[1]);
+                    }
+                    if ("arena".equals(sub)) {
+                        return filter(Arrays.asList("menu", "start", "status", "end"), args[1]);
+                    }
+                    if ("fishing".equals(sub)) {
+                        return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[1]);
+                    }
                 }
                 break;
             default:
@@ -1373,8 +1381,146 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return true;
         }
         
+        // Handle /neko game subcommand - redirect to game menu
+        if (args.length > 0 && "game".equalsIgnoreCase(args[0])) {
+            // Shift args for handleNekoGame
+            String[] gameArgs = new String[args.length - 1];
+            System.arraycopy(args, 1, gameArgs, 0, args.length - 1);
+            return handleNekoGame(sender, gameArgs);
+        }
+        
         // /neko or /neko menu opens navigation
         openNavigationMenu(player);
+        return true;
+    }
+
+    /**
+     * Unified game command handler for /ngame or /neko game
+     * Subcommands: rtp, arena, fishing
+     */
+    private boolean handleNekoGame(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+
+        // No args or "menu" - open games menu
+        if (args.length == 0 || "menu".equalsIgnoreCase(args[0])) {
+            openGamesMenu(player);
+            return true;
+        }
+
+        String gameType = args[0].toLowerCase();
+        // Shift args to get subcommand
+        String[] subArgs = new String[args.length - 1];
+        if (args.length > 1) {
+            System.arraycopy(args, 1, subArgs, 0, args.length - 1);
+        }
+
+        switch (gameType) {
+            case "rtp":
+                return handleRtpGameSubcommand(player, subArgs);
+            case "arena":
+                return handleArenaSubcommand(player, subArgs);
+            case "fishing":
+                return handleFishingSubcommand(player, subArgs);
+            default:
+                // Unknown game type - show usage
+                sender.sendMessage(messages.format(sender, "ngame.usage"));
+                return true;
+        }
+    }
+
+    private boolean handleRtpGameSubcommand(Player player, String[] args) {
+        if (args.length == 0) {
+            randomTeleportGameManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                randomTeleportGameManager.openMenu(player);
+                break;
+            case "start":
+                randomTeleportGameManager.startGame(player);
+                break;
+            case "status":
+                randomTeleportGameManager.showStatus(player);
+                break;
+            case "end":
+            case "stop":
+                randomTeleportGameManager.endGame(player);
+                break;
+            default:
+                randomTeleportGameManager.openMenu(player);
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleArenaSubcommand(Player player, String[] args) {
+        if (args.length == 0) {
+            survivalArenaManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                survivalArenaManager.openMenu(player);
+                break;
+            case "start":
+                survivalArenaManager.startGame(player);
+                break;
+            case "status":
+                survivalArenaManager.showStatus(player);
+                break;
+            case "end":
+            case "stop":
+                survivalArenaManager.endGame(player);
+                break;
+            default:
+                survivalArenaManager.openMenu(player);
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleFishingSubcommand(Player player, String[] args) {
+        if (args.length == 0) {
+            fishingContestManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                fishingContestManager.openMenu(player);
+                break;
+            case "start":
+                fishingContestManager.startContest(player);
+                break;
+            case "join":
+                fishingContestManager.joinContest(player);
+                break;
+            case "status":
+                fishingContestManager.showStatus(player);
+                break;
+            case "leaderboard":
+            case "top":
+                fishingContestManager.showLeaderboard(player);
+                break;
+            case "end":
+            case "stop":
+                if (player.hasPermission("nekosuite.fishing.admin")) {
+                    fishingContestManager.endContest();
+                } else {
+                    player.sendMessage(messages.format(player, "common.no_permission"));
+                }
+                break;
+            default:
+                fishingContestManager.openMenu(player);
+                break;
+        }
         return true;
     }
 
@@ -1603,113 +1749,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
 
         sender.sendMessage(messages.format(sender, "skill.usage"));
-        return true;
-    }
-
-    private boolean handleRandomTeleportGame(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(messages.format(sender, "common.only_player"));
-            return true;
-        }
-        Player player = (Player) sender;
-        if (args.length == 0) {
-            randomTeleportGameManager.openMenu(player);
-            return true;
-        }
-        String sub = args[0].toLowerCase();
-        switch (sub) {
-            case "menu":
-                randomTeleportGameManager.openMenu(player);
-                break;
-            case "start":
-                randomTeleportGameManager.startGame(player);
-                break;
-            case "status":
-                randomTeleportGameManager.showStatus(player);
-                break;
-            case "end":
-            case "stop":
-                randomTeleportGameManager.endGame(player);
-                break;
-            default:
-                randomTeleportGameManager.openMenu(player);
-                break;
-        }
-        return true;
-    }
-
-    private boolean handleSurvivalArena(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(messages.format(sender, "common.only_player"));
-            return true;
-        }
-        Player player = (Player) sender;
-        if (args.length == 0) {
-            survivalArenaManager.openMenu(player);
-            return true;
-        }
-        String sub = args[0].toLowerCase();
-        switch (sub) {
-            case "menu":
-                survivalArenaManager.openMenu(player);
-                break;
-            case "start":
-                survivalArenaManager.startGame(player);
-                break;
-            case "status":
-                survivalArenaManager.showStatus(player);
-                break;
-            case "end":
-            case "stop":
-                survivalArenaManager.endGame(player);
-                break;
-            default:
-                survivalArenaManager.openMenu(player);
-                break;
-        }
-        return true;
-    }
-
-    private boolean handleFishingContest(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(messages.format(sender, "common.only_player"));
-            return true;
-        }
-        Player player = (Player) sender;
-        if (args.length == 0) {
-            fishingContestManager.openMenu(player);
-            return true;
-        }
-        String sub = args[0].toLowerCase();
-        switch (sub) {
-            case "menu":
-                fishingContestManager.openMenu(player);
-                break;
-            case "start":
-                fishingContestManager.startContest(player);
-                break;
-            case "join":
-                fishingContestManager.joinContest(player);
-                break;
-            case "status":
-                fishingContestManager.showStatus(player);
-                break;
-            case "leaderboard":
-            case "top":
-                fishingContestManager.showLeaderboard(player);
-                break;
-            case "end":
-            case "stop":
-                if (player.hasPermission("nekosuite.fishing.admin")) {
-                    fishingContestManager.endContest();
-                } else {
-                    sender.sendMessage(messages.format(sender, "common.no_permission"));
-                }
-                break;
-            default:
-                fishingContestManager.openMenu(player);
-                break;
-        }
         return true;
     }
 
