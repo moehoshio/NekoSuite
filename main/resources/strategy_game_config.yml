@@ -554,6 +554,13 @@ shop:
       effect_type: heal
       effect_value: 50
       effect_description: "sgame.config.shop.large_potion.effect"
+    - id: magic_potion
+      name: "sgame.config.shop.magic_potion.name"
+      price: 25
+      material: LINGERING_POTION
+      effect_type: magic
+      effect_value: 15
+      effect_description: "sgame.config.shop.magic_potion.effect"
     - id: health_upgrade
       name: "sgame.config.shop.health_upgrade.name"
       price: 70
@@ -571,7 +578,7 @@ shop:
     - id: healing_potion
       name: "sgame.config.shop.healing_potion.name"
       price: 20
-      material: LINGERING_POTION
+      material: DRAGON_BREATH
       effect_type: item
       effect_value: 1
       effect_description: "sgame.config.shop.healing_potion.effect"

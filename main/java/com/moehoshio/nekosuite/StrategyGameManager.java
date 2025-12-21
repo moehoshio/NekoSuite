@@ -814,14 +814,23 @@ public class StrategyGameManager {
         String title = messages.format(player, "menu.sgame.battle_action_title");
         Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.BATTLE_ACTION), layout.getSize(), title);
 
-        // Round indicator at top center
+        // Round indicator at top center with combo info
         Map<String, String> roundMap = new HashMap<String, String>();
         roundMap.put("round", String.valueOf(session.getBattleRound()));
+        List<String> roundLore = new ArrayList<String>();
+        roundLore.add(messages.format(player, "menu.sgame.battle_round_lore", roundMap));
+        
+        // Add combo display if active
+        if (session.getComboCount() >= 2) {
+            Map<String, String> comboMap = new HashMap<String, String>();
+            comboMap.put("combo", String.valueOf(session.getComboCount()));
+            comboMap.put("multiplier", String.format("%.1f", session.getComboMultiplier()));
+            roundLore.add(messages.format(player, "menu.sgame.combo_display", comboMap));
+        }
+        
         ItemStack roundItem = createItem(Material.CLOCK,
             messages.format(player, "menu.sgame.battle_round", roundMap),
-            new String[]{
-                messages.format(player, "menu.sgame.battle_round_lore", roundMap)
-            });
+            roundLore.toArray(new String[0]));
         safeSet(inv, 4, roundItem);
 
         // Player HP bar (left side, slot 0-2)
@@ -844,7 +853,7 @@ public class StrategyGameManager {
             });
         safeSet(inv, 0, playerItem);
 
-        // Enemy HP bar (right side, slot 8)
+        // Enemy HP bar (right side, slot 8) with behavior hints
         int enemyHp = session.getCurrentEnemyHp();
         int enemyMaxHp = session.getCurrentEnemyMaxHp();
         String enemyHpBar = createHpBar(enemyHp, enemyMaxHp);
@@ -855,13 +864,32 @@ public class StrategyGameManager {
         enemyMap.put("hp_bar", enemyHpBar);
         enemyMap.put("attack", String.valueOf(enemy.getAttack()));
         enemyMap.put("defense", String.valueOf(enemy.getDefense()));
+        
+        // Calculate enemy action probability for hints
+        int attackWeight = enemy.getAttack() + 10;
+        int defenseWeight = enemy.getDefense() + 5;
+        int skillWeight = enemy.getMagic() > 0 ? enemy.getMagic() + 5 : 2;
+        int totalWeight = attackWeight + defenseWeight + skillWeight;
+        int attackPercent = (attackWeight * 100) / totalWeight;
+        int defensePercent = (defenseWeight * 100) / totalWeight;
+        int skillPercent = 100 - attackPercent - defensePercent;
+        
+        enemyMap.put("attack_chance", String.valueOf(attackPercent));
+        enemyMap.put("defense_chance", String.valueOf(defensePercent));
+        enemyMap.put("skill_chance", String.valueOf(skillPercent));
 
+        List<String> enemyLore = new ArrayList<String>();
+        enemyLore.add(messages.format(player, "menu.sgame.enemy_hp_bar_lore", enemyMap));
+        enemyLore.add(messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap));
+        enemyLore.add("");
+        enemyLore.add(messages.format(player, "menu.sgame.enemy_behavior_title"));
+        enemyLore.add(messages.format(player, "menu.sgame.enemy_behavior_attack", enemyMap));
+        enemyLore.add(messages.format(player, "menu.sgame.enemy_behavior_defense", enemyMap));
+        enemyLore.add(messages.format(player, "menu.sgame.enemy_behavior_skill", enemyMap));
+        
         ItemStack enemyItem = createItem(Material.ZOMBIE_HEAD,
             messages.format(player, "menu.sgame.enemy_title", enemyMap),
-            new String[]{
-                messages.format(player, "menu.sgame.enemy_hp_bar_lore", enemyMap),
-                messages.format(player, "menu.sgame.enemy_stats_lore", enemyMap)
-            });
+            enemyLore.toArray(new String[0]));
         safeSet(inv, 8, enemyItem);
 
         // Action buttons (row 2: slots 10, 13, 16)
@@ -900,6 +928,33 @@ public class StrategyGameManager {
                 "ID:action_skill"
             });
         safeSet(inv, 16, skillItem);
+
+        // Use item button (slot 19) - allows using potions during battle
+        boolean hasUsableItems = session.hasItem("small_potion") || session.hasItem("large_potion") || session.hasItem("healing_potion");
+        List<String> itemLore = new ArrayList<String>();
+        itemLore.add(messages.format(player, "menu.sgame.use_item_lore"));
+        if (session.hasItem("small_potion")) {
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("count", String.valueOf(session.getItemCount("small_potion")));
+            itemLore.add(messages.format(player, "menu.sgame.item_small_potion_count", itemMap));
+        }
+        if (session.hasItem("large_potion")) {
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("count", String.valueOf(session.getItemCount("large_potion")));
+            itemLore.add(messages.format(player, "menu.sgame.item_large_potion_count", itemMap));
+        }
+        if (session.hasItem("magic_potion")) {
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("count", String.valueOf(session.getItemCount("magic_potion")));
+            itemLore.add(messages.format(player, "menu.sgame.item_magic_potion_count", itemMap));
+        }
+        itemLore.add(hasUsableItems ? messages.format(player, "menu.sgame.click_use_item") : messages.format(player, "menu.sgame.no_items_available"));
+        itemLore.add("ID:battle_use_item");
+        
+        ItemStack useItemBtn = createItem(hasUsableItems ? Material.POTION : Material.GLASS_BOTTLE,
+            messages.format(player, "menu.sgame.use_item_title"),
+            itemLore.toArray(new String[0]));
+        safeSet(inv, 19, useItemBtn);
 
         // VS indicator in the center
         ItemStack vsItem = createItem(Material.NETHER_STAR,
@@ -1495,6 +1550,25 @@ public class StrategyGameManager {
             return;
         }
 
+        // Handle item usage during battle
+        if ("battle_use_item".equals(id)) {
+            openBattleItemMenu(player);
+            return;
+        }
+        
+        // Handle specific item usage
+        if (id.startsWith("use_battle_item_")) {
+            String itemId = id.substring(16);
+            useBattleItem(player, session, itemId);
+            return;
+        }
+        
+        // Handle back to battle action
+        if ("back_to_battle".equals(id)) {
+            openBattleActionMenu(player);
+            return;
+        }
+
         BattleAction playerAction = null;
         if ("action_attack".equals(id)) {
             playerAction = BattleAction.ATTACK;
@@ -1512,6 +1586,128 @@ public class StrategyGameManager {
         if (playerAction != null) {
             resolveBattleRound(player, session, enemy, playerAction);
         }
+    }
+    
+    /**
+     * Open the battle item menu - allows using consumables during combat.
+     */
+    private void openBattleItemMenu(Player player) {
+        GameSession session = getOrLoadSession(player.getName());
+        if (session == null || session.isEnded()) {
+            return;
+        }
+
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.battle_item_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.BATTLE_ACTION), layout.getSize(), title);
+
+        // Show available items
+        int slot = 10;
+        
+        // Small potion
+        if (session.hasItem("small_potion")) {
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("count", String.valueOf(session.getItemCount("small_potion")));
+            ItemStack item = createItem(Material.POTION,
+                messages.format(player, "menu.sgame.small_potion_name"),
+                new String[]{
+                    messages.format(player, "menu.sgame.small_potion_effect"),
+                    messages.format(player, "menu.sgame.item_count", itemMap),
+                    messages.format(player, "menu.sgame.click_to_use"),
+                    "ID:use_battle_item_small_potion"
+                });
+            safeSet(inv, slot++, item);
+        }
+        
+        // Large potion
+        if (session.hasItem("large_potion")) {
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("count", String.valueOf(session.getItemCount("large_potion")));
+            ItemStack item = createItem(Material.SPLASH_POTION,
+                messages.format(player, "menu.sgame.large_potion_name"),
+                new String[]{
+                    messages.format(player, "menu.sgame.large_potion_effect"),
+                    messages.format(player, "menu.sgame.item_count", itemMap),
+                    messages.format(player, "menu.sgame.click_to_use"),
+                    "ID:use_battle_item_large_potion"
+                });
+            safeSet(inv, slot++, item);
+        }
+        
+        // Magic potion
+        if (session.hasItem("magic_potion")) {
+            Map<String, String> itemMap = new HashMap<String, String>();
+            itemMap.put("count", String.valueOf(session.getItemCount("magic_potion")));
+            ItemStack item = createItem(Material.LINGERING_POTION,
+                messages.format(player, "menu.sgame.magic_potion_name"),
+                new String[]{
+                    messages.format(player, "menu.sgame.magic_potion_effect"),
+                    messages.format(player, "menu.sgame.item_count", itemMap),
+                    messages.format(player, "menu.sgame.click_to_use"),
+                    "ID:use_battle_item_magic_potion"
+                });
+            safeSet(inv, slot++, item);
+        }
+
+        // Back button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.sgame.back"),
+            new String[]{
+                messages.format(player, "menu.sgame.back_to_battle_lore"),
+                "ID:back_to_battle"
+            });
+        safeSet(inv, layout.getCloseSlot(), backItem);
+
+        player.openInventory(inv);
+    }
+    
+    /**
+     * Use a consumable item during battle.
+     * This does NOT consume a turn - player still needs to choose an action.
+     */
+    private void useBattleItem(Player player, GameSession session, String itemId) {
+        if (!session.hasItem(itemId)) {
+            player.sendMessage(messages.format(player, "sgame.no_item"));
+            return;
+        }
+        
+        Map<String, String> map = new HashMap<String, String>();
+        
+        if ("small_potion".equals(itemId)) {
+            session.removeItem(itemId, 1);
+            int healAmount = 25;
+            int oldHealth = session.getHealth();
+            session.addHealth(healAmount);
+            int actualHeal = session.getHealth() - oldHealth;
+            map.put("heal", String.valueOf(actualHeal));
+            map.put("item", messages.format(player, "menu.sgame.small_potion_name"));
+            player.sendMessage(messages.format(player, "sgame.used_heal_item", map));
+        } else if ("large_potion".equals(itemId)) {
+            session.removeItem(itemId, 1);
+            int healAmount = 50;
+            int oldHealth = session.getHealth();
+            session.addHealth(healAmount);
+            int actualHeal = session.getHealth() - oldHealth;
+            map.put("heal", String.valueOf(actualHeal));
+            map.put("item", messages.format(player, "menu.sgame.large_potion_name"));
+            player.sendMessage(messages.format(player, "sgame.used_heal_item", map));
+        } else if ("magic_potion".equals(itemId)) {
+            session.removeItem(itemId, 1);
+            int manaRestore = 15;
+            int oldMagic = session.getMagic();
+            session.addMagic(manaRestore);
+            int actualRestore = session.getMagic() - oldMagic;
+            map.put("magic", String.valueOf(actualRestore));
+            map.put("item", messages.format(player, "menu.sgame.magic_potion_name"));
+            player.sendMessage(messages.format(player, "sgame.used_magic_item", map));
+        } else {
+            player.sendMessage(messages.format(player, "sgame.cannot_use_here"));
+            return;
+        }
+        
+        saveSession(session);
+        // Return to battle action menu
+        openBattleActionMenu(player);
     }
 
     private void handleShopMenuClick(Player player, GameSession session, String id) {
@@ -1878,6 +2074,19 @@ public class StrategyGameManager {
         // Determine advantage: 0 = tie, 1 = player wins RPS, -1 = enemy wins RPS
         int advantage = determineRpsAdvantage(playerAction, enemyAction);
         
+        // Track enemy action for prediction hints
+        session.setLastEnemyAction(enemyAction);
+        
+        // Handle combo system
+        double comboMultiplier = 1.0;
+        if (advantage == 1) {
+            session.incrementCombo();
+            comboMultiplier = session.getComboMultiplier();
+        } else if (advantage == -1) {
+            session.resetCombo();
+        }
+        // Tie doesn't affect combo
+        
         resultMap.put("player_action", getActionName(player, playerAction));
         resultMap.put("enemy_action", getActionName(player, enemyAction));
         
@@ -1890,6 +2099,8 @@ public class StrategyGameManager {
                     if (playerCrit) {
                         playerDamageDealt = (int)(playerDamageDealt * 1.5);
                     }
+                    // Apply combo multiplier
+                    playerDamageDealt = (int)(playerDamageDealt * comboMultiplier);
                 }
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_attack_beats_skill");
@@ -1901,6 +2112,8 @@ public class StrategyGameManager {
                     if (playerCrit) {
                         playerDamageDealt = (int)(playerDamageDealt * 1.5);
                     }
+                    // Apply combo multiplier
+                    playerDamageDealt = (int)(playerDamageDealt * comboMultiplier);
                 }
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_skill_beats_defense");
@@ -1908,6 +2121,8 @@ public class StrategyGameManager {
                 // Defense beats Attack - block enemy and counter attack
                 if (!enemyDodged) {
                     playerDamageDealt = Math.max(1, playerDefense / 2);
+                    // Apply combo multiplier to counter attack
+                    playerDamageDealt = (int)(playerDamageDealt * comboMultiplier);
                 }
                 enemyDamageDealt = 0;
                 roundResult = messages.format(player, "sgame.round_defense_beats_attack");
@@ -1984,26 +2199,38 @@ public class StrategyGameManager {
         resultMap.put("enemy_damage", String.valueOf(enemyDamageDealt));
         resultMap.put("result", roundResult);
         
-        // Add crit/dodge info to message
+        // Add crit/dodge/combo info to message
+        StringBuilder extraInfo = new StringBuilder();
         if (playerCrit && playerDamageDealt > 0) {
-            resultMap.put("crit_info", messages.format(player, "sgame.player_crit"));
+            extraInfo.append(messages.format(player, "sgame.player_crit"));
         } else if (enemyCrit && enemyDamageDealt > 0) {
-            resultMap.put("crit_info", messages.format(player, "sgame.enemy_crit"));
+            extraInfo.append(messages.format(player, "sgame.enemy_crit"));
         } else if (enemyDodged && playerDamageDealt == 0 && advantage >= 0) {
-            resultMap.put("crit_info", messages.format(player, "sgame.enemy_dodged"));
+            extraInfo.append(messages.format(player, "sgame.enemy_dodged"));
         } else if (playerDodged && enemyDamageDealt == 0 && advantage <= 0) {
-            resultMap.put("crit_info", messages.format(player, "sgame.player_dodged"));
-        } else {
-            resultMap.put("crit_info", "");
+            extraInfo.append(messages.format(player, "sgame.player_dodged"));
         }
+        
+        // Add combo info if active
+        if (session.getComboCount() >= 2) {
+            Map<String, String> comboMap = new HashMap<String, String>();
+            comboMap.put("combo", String.valueOf(session.getComboCount()));
+            comboMap.put("multiplier", String.format("%.1f", session.getComboMultiplier()));
+            if (extraInfo.length() > 0) {
+                extraInfo.append(" ");
+            }
+            extraInfo.append(messages.format(player, "sgame.combo_bonus", comboMap));
+        }
+        resultMap.put("crit_info", extraInfo.toString());
         
         // Send round result message
         player.sendMessage(messages.format(player, "sgame.battle_round_result", resultMap));
         
         // Check if battle ended
         if (session.getCurrentEnemyHp() <= 0) {
-            // Victory! Clear status effects
+            // Victory! Clear status effects and reset combo
             session.clearStatusEffects();
+            session.resetCombo();
             int goldReward = enemy.getGoldReward();
             session.addGold(goldReward);
             session.incrementBattleVictories();
@@ -2153,6 +2380,14 @@ public class StrategyGameManager {
             case "max_health":
                 session.setMaxHealth(session.getMaxHealth() + item.getEffectValue());
                 session.addHealth(item.getEffectValue());
+                break;
+            case "magic":
+                // Magic potion - restore magic points
+                session.addMagic(item.getEffectValue());
+                break;
+            case "item":
+                // Add item to inventory (e.g., healing_potion for events)
+                session.addItem(item.getId(), item.getEffectValue());
                 break;
             case "power":
                 // Could add power stat if needed
@@ -2767,6 +3002,10 @@ public class StrategyGameManager {
         
         // Avoidance tracking: tracks stages since last event of each type was completed
         private final Map<String, Integer> avoidanceCount; // event_type -> stages_since_last
+        
+        // Combo system: tracks consecutive RPS wins for damage bonus
+        private int comboCount;
+        private BattleAction lastEnemyAction; // Track enemy's last action for prediction
 
         GameSession(String playerName, int gold, int health) {
             this.playerName = playerName;
@@ -2789,6 +3028,10 @@ public class StrategyGameManager {
             this.defense = 5;
             this.magic = 20;
             this.maxMagic = 20;
+            
+            // Combo system
+            this.comboCount = 0;
+            this.lastEnemyAction = null;
             
             // Initialize avoidance tracking
             initAvoidanceTracking();
@@ -2862,6 +3105,24 @@ public class StrategyGameManager {
         int getBattleRound() { return battleRound; }
         void setBattleRound(int round) { this.battleRound = round; }
         void incrementBattleRound() { this.battleRound++; }
+        
+        // Combo system for consecutive RPS wins
+        int getComboCount() { return comboCount; }
+        void incrementCombo() { this.comboCount++; }
+        void resetCombo() { this.comboCount = 0; }
+        BattleAction getLastEnemyAction() { return lastEnemyAction; }
+        void setLastEnemyAction(BattleAction action) { this.lastEnemyAction = action; }
+        /**
+         * Get combo damage multiplier based on consecutive wins.
+         * 2 combo: 1.1x, 3 combo: 1.2x, 4 combo: 1.3x, 5+ combo: 1.5x
+         */
+        double getComboMultiplier() {
+            if (comboCount < 2) return 1.0;
+            if (comboCount == 2) return 1.1;
+            if (comboCount == 3) return 1.2;
+            if (comboCount == 4) return 1.3;
+            return 1.5;
+        }
         
         // Shop offering management
         List<ShopOffering> getCurrentShopOfferings() { return currentShopOfferings; }

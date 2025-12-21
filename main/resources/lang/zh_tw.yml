@@ -359,6 +359,13 @@ sgame:
   status_burn: "&c燃燒"
   status_freeze: "&b冰凍"
   status_stun: "&e暈眩"
+  # Combo system messages
+  combo_bonus: "&6✦ {combo}連擊！ &7(傷害 x{multiplier})"
+  # Battle item usage
+  used_heal_item: "&a✔ &7使用了 &6{item}&7，恢復了 &c{heal} &7點生命！"
+  used_magic_item: "&a✔ &7使用了 &6{item}&7，恢復了 &d{magic} &7點魔法！"
+  no_item: "&c✖ &7你沒有這個物品。"
+  cannot_use_here: "&c✖ &7這個物品不能在這裡使用。"
   # Config texts - Events
   config:
     events:
@@ -634,6 +641,9 @@ sgame:
       large_potion:
         name: "&a大型治療藥水"
         effect: "恢復 50 點生命值"
+      magic_potion:
+        name: "&d魔法藥水"
+        effect: "恢復 15 點魔法值"
       health_upgrade:
         name: "&c生命強化"
         effect: "永久增加 20 點最大生命值"
@@ -945,6 +955,31 @@ menu:
     action_skill_name: "&d技能"
     not_enough_magic: "&c魔法值不足"
     vs_hint: "&7選擇你的行動來對抗敵人！"
+    # Combo display
+    combo_display: "&6✦ 連擊數: &f{combo} &7(傷害 x&6{multiplier}&7)"
+    # Enemy behavior prediction
+    enemy_behavior_title: "&7敵人行動傾向:"
+    enemy_behavior_attack: "  &c⚔ 攻擊: &f{attack_chance}%"
+    enemy_behavior_defense: "  &e🛡 防禦: &f{defense_chance}%"
+    enemy_behavior_skill: "  &d✦ 技能: &f{skill_chance}%"
+    # Battle item usage
+    use_item_title: "&b✦ 使用道具"
+    use_item_lore: "&7戰鬥中使用藥水"
+    item_small_potion_count: "&a小型治療藥水 x{count}"
+    item_large_potion_count: "&a大型治療藥水 x{count}"
+    item_magic_potion_count: "&d魔法藥水 x{count}"
+    click_use_item: "&e點擊使用道具"
+    no_items_available: "&c沒有可用道具"
+    battle_item_title: "&#3399ff✦ 戰鬥道具"
+    small_potion_name: "&a小型治療藥水"
+    small_potion_effect: "&7恢復 25 點生命值"
+    large_potion_name: "&a大型治療藥水"
+    large_potion_effect: "&7恢復 50 點生命值"
+    magic_potion_name: "&d魔法藥水"
+    magic_potion_effect: "&7恢復 15 點魔法值"
+    item_count: "&7數量: &f{count}"
+    click_to_use: "&e點擊使用"
+    back_to_battle_lore: "&7返回戰鬥選擇"
   close: "&c✖ 關閉"
 
 # 物品翻譯
