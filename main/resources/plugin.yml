@@ -79,7 +79,19 @@ commands:
     permission: nekosuite.skill
   ngame:
     description: 小遊戲系統
-    usage: /ngame <rtp|arena|fishing> [子命令]
+    usage: /ngame <rtp|arena|fishing|cardbattle|blackjack> [子命令]
     permission: nekosuite.game
     aliases:
       - nekogame
+  cardbattle:
+    description: 卡牌對決遊戲
+    usage: /cardbattle [menu|pve|pvp <玩家>|accept|decline|surrender]
+    permission: nekosuite.game.cardbattle
+    aliases:
+      - cb
+  blackjack:
+    description: 21點遊戲
+    usage: /blackjack [menu|bet <金額>]
+    permission: nekosuite.game.blackjack
+    aliases:
+      - bj

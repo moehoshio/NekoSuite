@@ -1,0 +1,147 @@
+# Card Battle Game Configuration
+# 超級卡牌對決配置
+
+storage:
+  data_dir: "userdata"
+
+game:
+  enabled: true
+  starting_health: 30
+  starting_hand_size: 5
+  max_hand_size: 7
+  draw_per_turn: 1
+  starting_mana: 3
+  mana_per_turn: 1
+  max_mana: 10
+  turn_time_limit: 60
+
+# Reward commands executed when player wins
+rewards:
+  win_commands:
+    - "eco give {player} 50"
+
+# Card definitions
+cards:
+  # Attack cards
+  slash:
+    name: "cardbattle.cards.slash.name"
+    description: "cardbattle.cards.slash.desc"
+    type: "attack"
+    mana_cost: 1
+    value: 3
+    material: "IRON_SWORD"
+  
+  fireball:
+    name: "cardbattle.cards.fireball.name"
+    description: "cardbattle.cards.fireball.desc"
+    type: "attack"
+    mana_cost: 3
+    value: 6
+    material: "FIRE_CHARGE"
+  
+  lightning:
+    name: "cardbattle.cards.lightning.name"
+    description: "cardbattle.cards.lightning.desc"
+    type: "attack"
+    mana_cost: 4
+    value: 8
+    material: "LIGHTNING_ROD"
+  
+  poison:
+    name: "cardbattle.cards.poison.name"
+    description: "cardbattle.cards.poison.desc"
+    type: "attack"
+    mana_cost: 2
+    value: 4
+    material: "SPIDER_EYE"
+  
+  # Heal cards
+  heal:
+    name: "cardbattle.cards.heal.name"
+    description: "cardbattle.cards.heal.desc"
+    type: "heal"
+    mana_cost: 2
+    value: 4
+    material: "GOLDEN_APPLE"
+  
+  greater_heal:
+    name: "cardbattle.cards.greater_heal.name"
+    description: "cardbattle.cards.greater_heal.desc"
+    type: "heal"
+    mana_cost: 4
+    value: 8
+    material: "ENCHANTED_GOLDEN_APPLE"
+  
+  # Defense cards
+  shield:
+    name: "cardbattle.cards.shield.name"
+    description: "cardbattle.cards.shield.desc"
+    type: "defense"
+    mana_cost: 1
+    value: 4
+    material: "SHIELD"
+  
+  barrier:
+    name: "cardbattle.cards.barrier.name"
+    description: "cardbattle.cards.barrier.desc"
+    type: "defense"
+    mana_cost: 3
+    value: 8
+    material: "TOTEM_OF_UNDYING"
+  
+  # Utility cards
+  draw_card:
+    name: "cardbattle.cards.draw_card.name"
+    description: "cardbattle.cards.draw_card.desc"
+    type: "draw"
+    mana_cost: 1
+    value: 2
+    material: "BOOK"
+  
+  mana_crystal:
+    name: "cardbattle.cards.mana_crystal.name"
+    description: "cardbattle.cards.mana_crystal.desc"
+    type: "mana"
+    mana_cost: 0
+    value: 2
+    material: "DIAMOND"
+  
+  disrupt:
+    name: "cardbattle.cards.disrupt.name"
+    description: "cardbattle.cards.disrupt.desc"
+    type: "discard"
+    mana_cost: 2
+    value: 1
+    material: "TNT"
+
+# AI Opponents for PvE mode
+ai_opponents:
+  slime:
+    name: "cardbattle.ai.slime.name"
+    description: "cardbattle.ai.slime.desc"
+    health: 20
+    difficulty: "easy"
+  
+  goblin:
+    name: "cardbattle.ai.goblin.name"
+    description: "cardbattle.ai.goblin.desc"
+    health: 25
+    difficulty: "normal"
+  
+  skeleton:
+    name: "cardbattle.ai.skeleton.name"
+    description: "cardbattle.ai.skeleton.desc"
+    health: 30
+    difficulty: "normal"
+  
+  dark_mage:
+    name: "cardbattle.ai.dark_mage.name"
+    description: "cardbattle.ai.dark_mage.desc"
+    health: 35
+    difficulty: "hard"
+  
+  dragon:
+    name: "cardbattle.ai.dragon.name"
+    description: "cardbattle.ai.dragon.desc"
+    health: 50
+    difficulty: "hard"

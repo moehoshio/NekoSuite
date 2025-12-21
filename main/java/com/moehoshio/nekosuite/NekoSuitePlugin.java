@@ -61,6 +61,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private RandomTeleportGameManager randomTeleportGameManager;
     private SurvivalArenaManager survivalArenaManager;
     private FishingContestManager fishingContestManager;
+    private CardBattleManager cardBattleManager;
+    private BlackjackManager blackjackManager;
 
     @Override
     public void onEnable() {
@@ -83,6 +85,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("random_teleport_config.yml", false);
         saveResource("survival_arena_config.yml", false);
         saveResource("fishing_contest_config.yml", false);
+        saveResource("card_battle_config.yml", false);
+        saveResource("blackjack_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -202,6 +206,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("ngame").setExecutor(this);
             getCommand("ngame").setTabCompleter(this);
         }
+        if (getCommand("cardbattle") != null) {
+            getCommand("cardbattle").setExecutor(this);
+            getCommand("cardbattle").setTabCompleter(this);
+        }
+        if (getCommand("blackjack") != null) {
+            getCommand("blackjack").setExecutor(this);
+            getCommand("blackjack").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -249,6 +261,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleSkill(sender, args);
             case "ngame":
                 return handleNekoGame(sender, args);
+            case "cardbattle":
+            case "cb":
+                return handleCardBattle(sender, args);
+            case "blackjack":
+            case "bj":
+                return handleBlackjack(sender, args);
             default:
                 return false;
         }
@@ -1208,6 +1226,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         randomTeleportGameManager = new RandomTeleportGameManager(this, messages, new File(getDataFolder(), "random_teleport_config.yml"), menuLayout);
         survivalArenaManager = new SurvivalArenaManager(this, messages, new File(getDataFolder(), "survival_arena_config.yml"), menuLayout);
         fishingContestManager = new FishingContestManager(this, messages, new File(getDataFolder(), "fishing_contest_config.yml"), menuLayout);
+        cardBattleManager = new CardBattleManager(this, messages, new File(getDataFolder(), "card_battle_config.yml"), menuLayout);
+        blackjackManager = new BlackjackManager(this, messages, new File(getDataFolder(), "blackjack_config.yml"), menuLayout);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1396,7 +1416,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
     /**
      * Unified game command handler for /ngame or /neko game
-     * Subcommands: rtp, arena, fishing
+     * Subcommands: rtp, arena, fishing, cardbattle, blackjack
      */
     private boolean handleNekoGame(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
@@ -1425,6 +1445,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleArenaSubcommand(player, subArgs);
             case "fishing":
                 return handleFishingSubcommand(player, subArgs);
+            case "cardbattle":
+            case "cb":
+                return handleCardBattleSubcommand(player, subArgs);
+            case "blackjack":
+            case "bj":
+                return handleBlackjackSubcommand(player, subArgs);
             default:
                 // Unknown game type - show usage
                 sender.sendMessage(messages.format(sender, "ngame.usage"));
@@ -1522,6 +1548,100 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 break;
         }
         return true;
+    }
+
+    private boolean handleCardBattleSubcommand(Player player, String[] args) {
+        if (args.length == 0) {
+            cardBattleManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                cardBattleManager.openMenu(player);
+                break;
+            case "pve":
+                if (args.length > 1) {
+                    cardBattleManager.startPvEGame(player, args[1]);
+                } else {
+                    cardBattleManager.startPvEGame(player, "slime");
+                }
+                break;
+            case "pvp":
+                if (args.length > 1) {
+                    cardBattleManager.invitePvP(player, args[1]);
+                } else {
+                    player.sendMessage(messages.format(player, "cardbattle.pvp_usage"));
+                }
+                break;
+            case "accept":
+                cardBattleManager.acceptPvP(player);
+                break;
+            case "decline":
+                cardBattleManager.declinePvP(player);
+                break;
+            case "surrender":
+                cardBattleManager.surrender(player);
+                break;
+            default:
+                cardBattleManager.openMenu(player);
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleBlackjackSubcommand(Player player, String[] args) {
+        if (args.length == 0) {
+            blackjackManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                blackjackManager.openMenu(player);
+                break;
+            case "bet":
+                if (args.length > 1) {
+                    try {
+                        int bet = Integer.parseInt(args[1]);
+                        blackjackManager.startGame(player, bet);
+                    } catch (NumberFormatException e) {
+                        player.sendMessage(messages.format(player, "blackjack.invalid_bet"));
+                    }
+                } else {
+                    player.sendMessage(messages.format(player, "blackjack.usage"));
+                }
+                break;
+            case "hit":
+                blackjackManager.hit(player);
+                break;
+            case "stand":
+                blackjackManager.stand(player);
+                break;
+            case "double":
+                blackjackManager.doubleDown(player);
+                break;
+            default:
+                blackjackManager.openMenu(player);
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleCardBattle(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        return handleCardBattleSubcommand((Player) sender, args);
+    }
+
+    private boolean handleBlackjack(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        return handleBlackjackSubcommand((Player) sender, args);
     }
 
     private boolean handleNekoHelp(CommandSender sender) {
@@ -2180,6 +2300,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return true;
                 case "OPEN_FISHING":
                     fishingContestManager.openMenu(player);
+                    return true;
+                case "OPEN_CARDBATTLE":
+                    cardBattleManager.openMenu(player);
+                    return true;
+                case "OPEN_BLACKJACK":
+                    blackjackManager.openMenu(player);
                     return true;
                 case "OPEN_GAMES":
                     openGamesMenu(player);
@@ -3070,6 +3196,26 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             ItemStack clicked = event.getCurrentItem();
             FishingContestManager.FishingMenuHolder fishingHolder = (FishingContestManager.FishingMenuHolder) holder;
             fishingContestManager.handleMenuClick(player, clicked, fishingHolder);
+            return;
+        }
+        if (holder instanceof CardBattleManager.CardBattleMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            CardBattleManager.CardBattleMenuHolder cbHolder = (CardBattleManager.CardBattleMenuHolder) holder;
+            cardBattleManager.handleMenuClick(player, clicked, cbHolder);
+            return;
+        }
+        if (holder instanceof BlackjackManager.BlackjackMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            BlackjackManager.BlackjackMenuHolder bjHolder = (BlackjackManager.BlackjackMenuHolder) holder;
+            blackjackManager.handleMenuClick(player, clicked, bjHolder);
             return;
         }
     }
