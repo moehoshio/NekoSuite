@@ -1061,3 +1061,43 @@ tp:
   admin_lock_success: "&a✔ &7Blocked &6{player} &7from using teleport."
   admin_unlock_success: "&a✔ &7Restored teleport ability for &6{player}&7."
   admin_status: "&7Player &6{player}&7: locked={locked}, enabled={enabled}"
+
+# Skill system
+skill:
+  usage: "&7Usage: &f/skill list &7to list all skills &8| &f/skill info &6<skillId> &7to view skill details"
+  cast: "&a✔ &7Skill activated: &6{skill}"
+  cooldown: "&c✖ &7Skill is on cooldown, please wait &6{seconds} &7seconds."
+  no_permission: "&c✖ &7You do not have permission to use this skill."
+  not_found: "&c✖ &7Skill not found: &6{skill}"
+  disabled: "&c✖ &7The skill system is currently disabled."
+  list_header: "&7Available skills:"
+  list_entry: "&7- &6{id}&7: {name} &8- &7{trigger}"
+  info_header: "&8&m─────────────&r &6✦ Skill Info ✦ &8&m─────────────&r"
+  info_name: "&7Name: {name}"
+  info_type: "&7Type: &6{type}"
+  info_trigger: "&7Trigger: &e{trigger}"
+  info_lore: "&7Required Lore: &f{lore}"
+  info_cooldown: "&7Cooldown: &b{cooldown} &7seconds"
+  info_description: "&7Description: &f{description}"
+  triggers:
+    right_click: "Right Click"
+    left_click: "Left Click"
+    sneak_right_click: "Sneak + Right Click"
+    sneak_left_click: "Sneak + Left Click"
+  types:
+    lightning: "Lightning"
+    fire: "Fire"
+    ice: "Ice"
+    explosion: "Explosion"
+    heal: "Heal"
+    speed: "Speed"
+    teleport: "Teleport"
+    shield: "Shield"
+    poison: "Poison"
+
+tab:
+  skill:
+    select_action: "<Select action>"
+    select_skill: "<Select skill>"
+    show_info: "<Show skill details>"
+    show_list: "<Show skill list>"

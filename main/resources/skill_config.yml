@@ -1,0 +1,237 @@
+# skill_config.yml
+# 技能系統配置文件
+# 配置含有特定lore的物品可以釋放技能
+
+# 存儲目錄
+storage:
+  data_dir: "userdata"
+
+# 技能全局設置
+settings:
+  # 是否啟用技能系統
+  enabled: true
+  # 默認冷卻時間 (秒)
+  default_cooldown: 5
+  # 是否在聊天中顯示技能釋放訊息
+  show_cast_message: true
+
+# 技能定義
+# 每個技能需要配置:
+#   - name: 技能顯示名稱
+#   - description: 技能描述
+#   - type: 技能類型 (lightning, fire, ice, explosion, heal, speed, etc.)
+#   - trigger: 觸發方式 (right_click, left_click, sneak_right_click, sneak_left_click)
+#   - lore_requirement: 物品需要包含的lore文字 (支持顏色代碼)
+#   - permission: 使用權限 (可選)
+#   - cooldown: 冷卻時間 (秒)
+#   - effects: 技能效果配置
+#   - cost: 消耗配置 (可選，需要 Vault 經濟插件)
+
+skills:
+  # ========== 閃電技能 ==========
+  thunder_strike:
+    name: "&b⚡ 霹靂雷擊"
+    description: "在自身周圍隨機位置召喚閃電"
+    type: lightning
+    trigger: right_click
+    lore_requirement: "&b⚡ 雷電之力"
+    permission: ""
+    cooldown: 8
+    effects:
+      # 閃電數量
+      count: 5
+      # 最大範圍 (以方塊為單位)
+      radius: 6
+      # 是否造成火焰
+      set_fire: false
+      # 播放音效
+      sound: ENTITY_LIGHTNING_BOLT_THUNDER
+      # 粒子效果
+      particle: ELECTRIC_SPARK
+
+  # ========== 火焰技能 ==========
+  inferno_burst:
+    name: "&c🔥 烈焰爆發"
+    description: "在周圍區域引發火焰爆炸"
+    type: fire
+    trigger: right_click
+    lore_requirement: "&c🔥 烈焰之心"
+    permission: ""
+    cooldown: 10
+    effects:
+      # 火焰範圍
+      radius: 4
+      # 火焰持續時間 (ticks, 20 ticks = 1秒)
+      duration: 60
+      # 傷害
+      damage: 4.0
+      # 是否點燃地面
+      ignite_ground: true
+      sound: ENTITY_BLAZE_SHOOT
+      particle: FLAME
+
+  # ========== 冰霜技能 ==========
+  frost_nova:
+    name: "&b❄ 霜寒新星"
+    description: "釋放冰霜能量，緩速周圍敵人"
+    type: ice
+    trigger: right_click
+    lore_requirement: "&b❄ 霜寒之力"
+    permission: ""
+    cooldown: 12
+    effects:
+      radius: 5
+      # 緩速等級 (0-4)
+      slowness_level: 2
+      # 緩速持續時間 (ticks)
+      slowness_duration: 100
+      # 凍傷傷害
+      damage: 2.0
+      sound: BLOCK_GLASS_BREAK
+      particle: SNOWFLAKE
+
+  # ========== 爆炸技能 ==========
+  explosive_force:
+    name: "&6💥 衝擊波動"
+    description: "釋放強大的衝擊波擊退敵人"
+    type: explosion
+    trigger: sneak_right_click
+    lore_requirement: "&6💥 爆裂之力"
+    permission: ""
+    cooldown: 15
+    effects:
+      radius: 6
+      # 擊退力度
+      knockback: 2.5
+      # 傷害
+      damage: 6.0
+      # 是否破壞方塊
+      break_blocks: false
+      sound: ENTITY_GENERIC_EXPLODE
+      particle: EXPLOSION_LARGE
+
+  # ========== 治療技能 ==========
+  healing_aura:
+    name: "&a❤ 治癒光環"
+    description: "治療自己和周圍友方"
+    type: heal
+    trigger: sneak_right_click
+    lore_requirement: "&a❤ 生命之力"
+    permission: ""
+    cooldown: 20
+    effects:
+      # 治療量
+      heal_amount: 8.0
+      # 影響範圍 (對周圍玩家)
+      radius: 5
+      # 是否治療自己
+      heal_self: true
+      # 是否治療其他玩家
+      heal_others: true
+      sound: ENTITY_PLAYER_LEVELUP
+      particle: HEART
+
+  # ========== 速度技能 ==========
+  swift_dash:
+    name: "&e⚡ 疾風步"
+    description: "獲得短暫的移動速度提升"
+    type: speed
+    trigger: left_click
+    lore_requirement: "&e⚡ 疾風之力"
+    permission: ""
+    cooldown: 6
+    effects:
+      # 速度等級 (0-4)
+      speed_level: 3
+      # 持續時間 (ticks)
+      duration: 100
+      sound: ENTITY_ENDERMAN_TELEPORT
+      particle: CLOUD
+
+  # ========== 傳送技能 ==========
+  blink:
+    name: "&d✦ 閃現"
+    description: "向前方短距離傳送"
+    type: teleport
+    trigger: sneak_left_click
+    lore_requirement: "&d✦ 空間之力"
+    permission: ""
+    cooldown: 8
+    effects:
+      # 傳送距離 (方塊)
+      distance: 10
+      # 是否穿透方塊
+      pass_through_blocks: false
+      sound: ENTITY_ENDERMAN_TELEPORT
+      particle: PORTAL
+
+  # ========== 護盾技能 ==========
+  arcane_shield:
+    name: "&9🛡 奧術護盾"
+    description: "獲得短暫的傷害吸收"
+    type: shield
+    trigger: sneak_right_click
+    lore_requirement: "&9🛡 護盾之力"
+    permission: ""
+    cooldown: 25
+    effects:
+      # 吸收量 (半心為單位，4 = 2顆心)
+      absorption_amount: 8
+      # 持續時間 (ticks)
+      duration: 200
+      sound: ITEM_ARMOR_EQUIP_DIAMOND
+      particle: END_ROD
+
+  # ========== 毒霧技能 ==========
+  poison_cloud:
+    name: "&2☠ 毒霧"
+    description: "在周圍釋放毒霧傷害敵人"
+    type: poison
+    trigger: right_click
+    lore_requirement: "&2☠ 劇毒之力"
+    permission: ""
+    cooldown: 12
+    effects:
+      radius: 4
+      # 中毒等級 (0-4)
+      poison_level: 1
+      # 中毒持續時間 (ticks)
+      poison_duration: 100
+      sound: ENTITY_WITCH_AMBIENT
+      particle: SPELL_WITCH
+
+  # ========== 召喚閃電範例 ==========
+  chain_lightning:
+    name: "&b⚡⚡ 連鎖閃電"
+    description: "釋放連鎖閃電攻擊多個目標"
+    type: lightning
+    trigger: sneak_right_click
+    lore_requirement: "&b⚡⚡ 雷神之怒"
+    permission: ""
+    cooldown: 15
+    effects:
+      count: 8
+      radius: 10
+      set_fire: false
+      # 連鎖傷害
+      chain_damage: 3.0
+      sound: ENTITY_LIGHTNING_BOLT_THUNDER
+      particle: ELECTRIC_SPARK
+
+# 可以添加更多自定義技能...
+# 支持的技能類型 (type):
+#   - lightning: 閃電類技能
+#   - fire: 火焰類技能
+#   - ice: 冰霜類技能
+#   - explosion: 爆炸/擊退類技能
+#   - heal: 治療類技能
+#   - speed: 速度類技能
+#   - teleport: 傳送類技能
+#   - shield: 護盾類技能
+#   - poison: 毒素類技能
+
+# 支持的觸發方式 (trigger):
+#   - right_click: 右鍵點擊
+#   - left_click: 左鍵點擊
+#   - sneak_right_click: 潛行+右鍵
+#   - sneak_left_click: 潛行+左鍵
