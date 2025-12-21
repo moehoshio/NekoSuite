@@ -267,6 +267,31 @@ menu:
     action_skill_name: "&dSkill"
     not_enough_magic: "&cNot enough magic"
     vs_hint: "&7Choose your action to fight the enemy!"
+    # Combo display
+    combo_display: "&6✦ Combo: &f{combo} &7(Damage x&6{multiplier}&7)"
+    # Enemy behavior prediction
+    enemy_behavior_title: "&7Enemy behavior tendency:"
+    enemy_behavior_attack: "  &c⚔ Attack: &f{attack_chance}%"
+    enemy_behavior_defense: "  &e🛡 Defense: &f{defense_chance}%"
+    enemy_behavior_skill: "  &d✦ Skill: &f{skill_chance}%"
+    # Battle item usage
+    use_item_title: "&b✦ Use Item"
+    use_item_lore: "&7Use potions during battle"
+    item_small_potion_count: "&aSmall Healing Potion x{count}"
+    item_large_potion_count: "&aLarge Healing Potion x{count}"
+    item_magic_potion_count: "&dMagic Potion x{count}"
+    click_use_item: "&eClick to use items"
+    no_items_available: "&cNo items available"
+    battle_item_title: "&#3399ff✦ Battle Items"
+    small_potion_name: "&aSmall Healing Potion"
+    small_potion_effect: "&7Restore 25 health"
+    large_potion_name: "&aLarge Healing Potion"
+    large_potion_effect: "&7Restore 50 health"
+    magic_potion_name: "&dMagic Potion"
+    magic_potion_effect: "&7Restore 15 magic"
+    item_count: "&7Count: &f{count}"
+    click_to_use: "&eClick to use"
+    back_to_battle_lore: "&7Return to battle selection"
   close: "&c✖ Close"
 
 cdk:
@@ -537,6 +562,28 @@ sgame:
   round_enemy_skill_beats_defense: "&cEnemy's skill bypassed your defense!"
   round_enemy_defense_beats_attack: "&cEnemy blocked your attack!"
   round_tie: "&7Both sides clashed!"
+  # Critical and dodge messages
+  player_crit: "&6✦ Critical Hit!"
+  enemy_crit: "&c✦ Enemy Critical!"
+  player_dodged: "&a✦ Dodged!"
+  enemy_dodged: "&e✦ Enemy Dodged!"
+  # Status effect messages
+  status_damage: "&cYou took {damage} status damage!"
+  status_skip_turn_stun: "&eYou are stunned, cannot act!"
+  status_skip_turn_freeze: "&bYou are frozen, cannot act!"
+  enemy_free_attack: "&cEnemy attacks freely! Dealt {damage} damage!"
+  status_applied: "&cYou were afflicted with {effect}! Lasts {duration} rounds."
+  status_poison: "&2Poisoned"
+  status_burn: "&cBurning"
+  status_freeze: "&bFrozen"
+  status_stun: "&eStunned"
+  # Combo system messages
+  combo_bonus: "&6✦ {combo} Combo! &7(Damage x{multiplier})"
+  # Battle item usage
+  used_heal_item: "&a✔ &7Used &6{item}&7, restored &c{heal} &7health!"
+  used_magic_item: "&a✔ &7Used &6{item}&7, restored &d{magic} &7magic!"
+  no_item: "&c✖ &7You don't have this item."
+  cannot_use_here: "&c✖ &7This item cannot be used here."
   # Config texts - Events
   config:
     events:
@@ -812,6 +859,9 @@ sgame:
       large_potion:
         name: "&aLarge Healing Potion"
         effect: "Restores 50 HP"
+      magic_potion:
+        name: "&dMagic Potion"
+        effect: "Restores 15 Magic"
       health_upgrade:
         name: "&cHealth Upgrade"
         effect: "Permanently increases max HP by 20"
