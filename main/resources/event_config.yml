@@ -134,8 +134,8 @@ events:
             festive_boost:
                 probability: 1
                 commands:
-                    - "minecraft:xp add {player} 500 points"
-                    - "broadcast {player} 的圣诞钟声响起，祝大家节日快乐！"
+                  - "minecraft:xp add {player} 500 points"
+                  - "broadcast {player} 的圣诞钟声响起，祝大家节日快乐！"
 
     neko_anniversary_3rd:
         name: "NekoServer 3周年庆"
