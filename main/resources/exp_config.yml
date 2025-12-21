@@ -20,12 +20,12 @@ exchanges:
     commands:
       - "artifact give {player} CloudspringAzureBlade"
     material: "DIAMOND_SWORD"
-  - id: "bal100"
-    display: "100 金幣"
-    cost: 10000
-    limit_daily: 1
+  - id: "bal200"
+    display: "200 金幣"
+    cost: 8000
+    limit_daily: 3
     commands:
-      - "essentials:eco give {player} 100"
+      - "essentials:eco give {player} 200"
     material: "EMERALD"
   - id: "enchantedGoldenApple3"
     display: "附魔金蘋果 x3"

@@ -316,39 +316,39 @@ pools:
             "1": 0
         auto_cost: false
         items:
-            bal5:
+            bal15:
                 probability: 25.0
-                amount: 5
-                display_material: "minecraft:gold_nugget"
-                commands:
-                    - "eco give {player} {amount}"
-            bal10:
-                probability: 20.0
-                amount: 10
+                amount: 15
                 display_material: "minecraft:gold_nugget"
                 commands:
                     - "eco give {player} {amount}"
             bal30:
-                probability: 10.0
+                probability: 20.0
                 amount: 30
-                display_material: "minecraft:gold_ingot"
+                display_material: "minecraft:gold_nugget"
                 commands:
                     - "eco give {player} {amount}"
-            bal50:
-                probability: 5.0
-                amount: 50
+            bal60:
+                probability: 10.0
+                amount: 60
                 display_material: "minecraft:gold_ingot"
                 commands:
                     - "eco give {player} {amount}"
             bal100:
-                probability: 2.0
+                probability: 5.0
                 amount: 100
+                display_material: "minecraft:gold_ingot"
+                commands:
+                    - "eco give {player} {amount}"
+            bal200:
+                probability: 2.0
+                amount: 200
                 display_material: "minecraft:gold_block"
                 commands:
                     - "eco give {player} {amount}"
-            bal360:
+            bal500:
                 probability: 0.5
-                amount: 360
+                amount: 500
                 display_material: "minecraft:gold_block"
                 enchanted: true
                 commands:

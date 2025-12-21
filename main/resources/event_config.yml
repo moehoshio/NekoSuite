@@ -16,14 +16,14 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance50:
+            balance150:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 50"
-            exp50:
+                  - "essentials:eco give {player} 150"
+            exp100:
                 probability: 1
                 commands:
-                  - "minecraft:xp add {player} 50 points"
+                  - "minecraft:xp add {player} 100 points"
 
     sunday_special:
         name: "周日特别奖励"
@@ -39,14 +39,14 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance100:
+            balance300:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 100"
-            exp200:
+                  - "essentials:eco give {player} 300"
+            exp400:
                 probability: 1
                 commands:
-                  - "minecraft:xp add {player} 200 points"
+                  - "minecraft:xp add {player} 400 points"
             netherite:
                 probability: 1
                 amount: 1
@@ -96,14 +96,14 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance500:
+            balance1000:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 500"
-            exp500:
+                  - "essentials:eco give {player} 1000"
+            exp1000:
                 probability: 1
                 commands:
-                  - "minecraft:xp add {player} 500 points"
+                  - "minecraft:xp add {player} 1000 points"
             diamond_block:
                 probability: 1
                 amount: 1
@@ -122,16 +122,20 @@ events:
             startDate: "2025-12-24T00:00:00Z"
             endDate: "2025-12-26T23:59:59Z"
         rewards:
+            balance500:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 500"
             santa_pouch:
                 probability: 1
                 commands:
                   - "minecraft:give {player} minecraft:cookie 16"
                   - "minecraft:give {player} minecraft:snowball 32"
-                festive_boost:
-                    probability: 1
-                    commands:
-                        - "minecraft:xp add {player} 500 points"
-                        - "broadcast {player} 的圣诞钟声响起，祝大家节日快乐！"
+            festive_boost:
+                probability: 1
+                commands:
+                    - "minecraft:xp add {player} 500 points"
+                    - "broadcast {player} 的圣诞钟声响起，祝大家节日快乐！"
 
     neko_anniversary_3rd:
         name: "NekoServer 3周年庆"
@@ -146,10 +150,10 @@ events:
             startDate: "2025-12-31T00:00:00Z"
             endDate: "2026-01-07T23:59:59Z"
         rewards:
-            bal500:
+            bal1000:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 500"
+                  - "essentials:eco give {player} 1000"
             anniversary_tokens:
                 probability: 1
                 commands:
@@ -215,6 +219,10 @@ events:
             startDate: "2026-02-14T00:00:00Z"
             endDate: "2026-02-14T23:59:59Z"
         rewards:
+            balance520:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 520"
             heart_box:
                 probability: 1
                 commands:
@@ -250,6 +258,10 @@ events:
             startDate: "2026-09-15T00:00:00Z"
             endDate: "2026-09-17T23:59:59Z"
         rewards:
+            balance668:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 668"
             moon_box:
                 probability: 1
                 commands:
@@ -265,6 +277,10 @@ events:
             startDate: "2026-10-30T00:00:00Z"
             endDate: "2026-11-01T23:59:59Z"
         rewards:
+            balance300:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 300"
             spooky_box:
                 probability: 1
                 commands:
