@@ -206,14 +206,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("ngame").setExecutor(this);
             getCommand("ngame").setTabCompleter(this);
         }
-        if (getCommand("cardbattle") != null) {
-            getCommand("cardbattle").setExecutor(this);
-            getCommand("cardbattle").setTabCompleter(this);
-        }
-        if (getCommand("blackjack") != null) {
-            getCommand("blackjack").setExecutor(this);
-            getCommand("blackjack").setTabCompleter(this);
-        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -261,12 +253,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleSkill(sender, args);
             case "ngame":
                 return handleNekoGame(sender, args);
-            case "cardbattle":
-            case "cb":
-                return handleCardBattle(sender, args);
-            case "blackjack":
-            case "bj":
-                return handleBlackjack(sender, args);
             default:
                 return false;
         }
@@ -1833,22 +1819,6 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 break;
         }
         return true;
-    }
-
-    private boolean handleCardBattle(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(messages.format(sender, "common.only_player"));
-            return true;
-        }
-        return handleCardBattleSubcommand((Player) sender, args);
-    }
-
-    private boolean handleBlackjack(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(messages.format(sender, "common.only_player"));
-            return true;
-        }
-        return handleBlackjackSubcommand((Player) sender, args);
     }
 
     private boolean handleNekoHelp(CommandSender sender) {
