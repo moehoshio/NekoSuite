@@ -1,0 +1,52 @@
+# NekoSuite Fishing Contest Configuration
+# 釣魚大賽 - 遊戲配置
+
+storage:
+  data_dir: userdata
+
+game:
+  # 是否啟用此遊戲模式
+  enabled: true
+  # 比賽時長 (秒)
+  contest_duration: 600
+  # 最少參與人數
+  min_players: 1
+  # 最多參與人數
+  max_players: 20
+  # 自動開始比賽
+  auto_start: false
+  # 自動開始間隔 (秒)
+  auto_start_interval: 3600
+
+# 計分配置
+scoring:
+  # 默認魚類分數
+  default_points: 10
+  # 體型加成倍率 (隨機1.0到此值)
+  size_multiplier: 1.5
+  # 稀有魚類加成倍率
+  rarity_multiplier: 2.0
+  # 各魚類基礎分數
+  fish:
+    COD: 10
+    SALMON: 15
+    TROPICAL_FISH: 25
+    PUFFERFISH: 30
+
+# 獎勵配置
+rewards:
+  # 第一名獎勵
+  first_place:
+    - "minecraft:give {player} minecraft:diamond 10"
+    - "minecraft:give {player} minecraft:golden_apple 5"
+  # 第二名獎勵
+  second_place:
+    - "minecraft:give {player} minecraft:diamond 5"
+    - "minecraft:give {player} minecraft:golden_apple 3"
+  # 第三名獎勵
+  third_place:
+    - "minecraft:give {player} minecraft:diamond 3"
+    - "minecraft:give {player} minecraft:golden_apple 1"
+  # 參與獎勵
+  participation:
+    - "minecraft:give {player} minecraft:iron_ingot 5"

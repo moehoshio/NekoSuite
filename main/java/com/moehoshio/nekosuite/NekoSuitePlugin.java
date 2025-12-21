@@ -58,6 +58,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private SkillManager skillManager;
     private AnnouncementManager announcementManager;
     private JoinQuitManager joinQuitManager;
+    private RandomTeleportGameManager randomTeleportGameManager;
+    private SurvivalArenaManager survivalArenaManager;
+    private FishingContestManager fishingContestManager;
 
     @Override
     public void onEnable() {
@@ -77,6 +80,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("artifact_rewards_config.yml", false);
         saveResource("skill_config.yml", false);
         saveResource("join_quit_config.yml", false);
+        saveResource("random_teleport_config.yml", false);
+        saveResource("survival_arena_config.yml", false);
+        saveResource("fishing_contest_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -192,6 +198,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("skill").setExecutor(this);
             getCommand("skill").setTabCompleter(this);
         }
+        if (getCommand("rtpgame") != null) {
+            getCommand("rtpgame").setExecutor(this);
+            getCommand("rtpgame").setTabCompleter(this);
+        }
+        if (getCommand("arena") != null) {
+            getCommand("arena").setExecutor(this);
+            getCommand("arena").setTabCompleter(this);
+        }
+        if (getCommand("fishing") != null) {
+            getCommand("fishing").setExecutor(this);
+            getCommand("fishing").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -237,6 +255,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleTeleportAdmin(sender, args);
             case "skill":
                 return handleSkill(sender, args);
+            case "rtpgame":
+                return handleRandomTeleportGame(sender, args);
+            case "arena":
+                return handleSurvivalArena(sender, args);
+            case "fishing":
+                return handleFishingContest(sender, args);
             default:
                 return false;
         }
@@ -1093,6 +1117,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
                 break;
+            case "rtpgame":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("menu", "start", "status", "end"), args[0]);
+                }
+                break;
+            case "arena":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("menu", "start", "status", "end"), args[0]);
+                }
+                break;
+            case "fishing":
+                if (args.length == 1) {
+                    return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[0]);
+                }
+                break;
             default:
                 break;
         }
@@ -1158,6 +1197,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         skillManager = new SkillManager(this, messages, new File(getDataFolder(), "skill_config.yml"));
         announcementManager = new AnnouncementManager(this, messages, menuLayout);
         joinQuitManager = new JoinQuitManager(this, messages, buyManager);
+        randomTeleportGameManager = new RandomTeleportGameManager(this, messages, new File(getDataFolder(), "random_teleport_config.yml"), menuLayout);
+        survivalArenaManager = new SurvivalArenaManager(this, messages, new File(getDataFolder(), "survival_arena_config.yml"), menuLayout);
+        fishingContestManager = new FishingContestManager(this, messages, new File(getDataFolder(), "fishing_contest_config.yml"), menuLayout);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1561,6 +1603,113 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
 
         sender.sendMessage(messages.format(sender, "skill.usage"));
+        return true;
+    }
+
+    private boolean handleRandomTeleportGame(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length == 0) {
+            randomTeleportGameManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                randomTeleportGameManager.openMenu(player);
+                break;
+            case "start":
+                randomTeleportGameManager.startGame(player);
+                break;
+            case "status":
+                randomTeleportGameManager.showStatus(player);
+                break;
+            case "end":
+            case "stop":
+                randomTeleportGameManager.endGame(player);
+                break;
+            default:
+                randomTeleportGameManager.openMenu(player);
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleSurvivalArena(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length == 0) {
+            survivalArenaManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                survivalArenaManager.openMenu(player);
+                break;
+            case "start":
+                survivalArenaManager.startGame(player);
+                break;
+            case "status":
+                survivalArenaManager.showStatus(player);
+                break;
+            case "end":
+            case "stop":
+                survivalArenaManager.endGame(player);
+                break;
+            default:
+                survivalArenaManager.openMenu(player);
+                break;
+        }
+        return true;
+    }
+
+    private boolean handleFishingContest(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        if (args.length == 0) {
+            fishingContestManager.openMenu(player);
+            return true;
+        }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                fishingContestManager.openMenu(player);
+                break;
+            case "start":
+                fishingContestManager.startContest(player);
+                break;
+            case "join":
+                fishingContestManager.joinContest(player);
+                break;
+            case "status":
+                fishingContestManager.showStatus(player);
+                break;
+            case "leaderboard":
+            case "top":
+                fishingContestManager.showLeaderboard(player);
+                break;
+            case "end":
+            case "stop":
+                if (player.hasPermission("nekosuite.fishing.admin")) {
+                    fishingContestManager.endContest();
+                } else {
+                    sender.sendMessage(messages.format(sender, "common.no_permission"));
+                }
+                break;
+            default:
+                fishingContestManager.openMenu(player);
+                break;
+        }
         return true;
     }
 
@@ -2437,6 +2586,65 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         if (joinQuitManager != null) {
             joinQuitManager.onPlayerQuit(player);
         }
+        if (randomTeleportGameManager != null) {
+            randomTeleportGameManager.onPlayerQuit(player);
+        }
+        if (survivalArenaManager != null) {
+            survivalArenaManager.onPlayerQuit(player);
+        }
+    }
+
+    @EventHandler
+    public void onEntityDeath(org.bukkit.event.entity.EntityDeathEvent event) {
+        if (survivalArenaManager == null) {
+            return;
+        }
+        org.bukkit.entity.Entity entity = event.getEntity();
+        Player killer = event.getEntity().getKiller();
+        if (killer != null) {
+            survivalArenaManager.onMobKill(killer, entity);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
+        if (survivalArenaManager == null) {
+            return;
+        }
+        Player player = event.getEntity();
+        survivalArenaManager.onPlayerDeath(player);
+    }
+
+    @EventHandler
+    public void onPlayerFish(org.bukkit.event.player.PlayerFishEvent event) {
+        if (fishingContestManager == null || !fishingContestManager.isContestActive()) {
+            return;
+        }
+        if (event.getState() == org.bukkit.event.player.PlayerFishEvent.State.CAUGHT_FISH) {
+            org.bukkit.entity.Entity caught = event.getCaught();
+            if (caught instanceof org.bukkit.entity.Item) {
+                org.bukkit.entity.Item itemEntity = (org.bukkit.entity.Item) caught;
+                ItemStack caughtItem = itemEntity.getItemStack();
+                fishingContestManager.onFishCatch(event.getPlayer(), caughtItem);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerMove(org.bukkit.event.player.PlayerMoveEvent event) {
+        if (randomTeleportGameManager == null) {
+            return;
+        }
+        // Only check if the player actually moved to a different block
+        if (event.getTo() == null) {
+            return;
+        }
+        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
+            && event.getFrom().getBlockY() == event.getTo().getBlockY()
+            && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+            return;
+        }
+        randomTeleportGameManager.checkPlayerLocation(event.getPlayer());
     }
 
     @EventHandler
@@ -2744,6 +2952,36 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             ItemStack clicked = event.getCurrentItem();
             AnnouncementManager.AnnouncementMenuHolder annHolder = (AnnouncementManager.AnnouncementMenuHolder) holder;
             announcementManager.handleMenuClick(player, clicked, annHolder.getPage());
+            return;
+        }
+        if (holder instanceof RandomTeleportGameManager.RTPGameMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            RandomTeleportGameManager.RTPGameMenuHolder rtpHolder = (RandomTeleportGameManager.RTPGameMenuHolder) holder;
+            randomTeleportGameManager.handleMenuClick(player, clicked, rtpHolder);
+            return;
+        }
+        if (holder instanceof SurvivalArenaManager.ArenaMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            SurvivalArenaManager.ArenaMenuHolder arenaHolder = (SurvivalArenaManager.ArenaMenuHolder) holder;
+            survivalArenaManager.handleMenuClick(player, clicked, arenaHolder);
+            return;
+        }
+        if (holder instanceof FishingContestManager.FishingMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            FishingContestManager.FishingMenuHolder fishingHolder = (FishingContestManager.FishingMenuHolder) holder;
+            fishingContestManager.handleMenuClick(player, clicked, fishingHolder);
             return;
         }
     }
