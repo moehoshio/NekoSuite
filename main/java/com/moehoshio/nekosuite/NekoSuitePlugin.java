@@ -2555,10 +2555,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("rewards", String.join(", ", rewards));
                     player.sendMessage(messages.format(player, "event.reward", map));
+                    openEventMenu(player); // Refresh menu state after participation
                 } catch (EventException e) {
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("reason", e.getMessage());
                     player.sendMessage(messages.format(player, "event.failure", map));
+                    openEventMenu(player); // Refresh to show updated availability/cooldown
                 }
                 return;
             }
