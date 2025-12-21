@@ -4,9 +4,8 @@ storage:
 
 events:
     daily_login:
-        name: "每日登錄獎勵"
-        description: "每天登錄遊戲即可獲得獎勵"
-        type: "daily_reward"
+        name: "每日登录奖励"
+        description: "每天登录游戏即可获得奖励"
         enabled: true
         auto_claim: true
         limit_modes:
@@ -17,42 +16,18 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance100:
+            balance50:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 100"
+                  - "essentials:eco give {player} 50"
             exp50:
                 probability: 1
                 commands:
                   - "minecraft:xp add {player} 50 points"
 
-    daily_checkin:
-        name: "每日簽到"
-        description: "每日簽到可獲得連續獎勵"
-        type: "check_in"
-        enabled: true
-        auto_claim: false
-        limit_modes:
-            count: 1
-            time: "1d"
-            refresh_at_time: "06:00"
-        duration:
-            startDate: "2025-01-01T00:00:00Z"
-            endDate: "2099-12-31T23:59:59Z"
-        rewards:
-            balance200:
-                probability: 1
-                commands:
-                  - "essentials:eco give {player} 200"
-            diamond:
-                probability: 1
-                amount: 1
-                name: "minecraft:diamond"
-
     sunday_special:
-        name: "週日特別活動"
-        description: "每週日的特別獎勵"
-        type: "daily_reward"
+        name: "周日特别奖励"
+        description: "每周日的特别奖励"
         enabled: true
         auto_claim: true
         limit_modes:
@@ -64,32 +39,31 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance1000:
+            balance100:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 1000"
-            exp500:
+                  - "essentials:eco give {player} 100"
+            exp200:
                 probability: 1
                 commands:
-                  - "minecraft:xp add {player} 500 points"
+                  - "minecraft:xp add {player} 200 points"
             netherite:
                 probability: 1
                 amount: 1
                 name: "minecraft:netherite_ingot"
 
     new_year_2026:
-        name: "2026新年活動"
-        description: "新年特別活動，僅在新年期間可用"
-        type: "holiday"
+        name: "2026新年活动"
+        description: "新年特别活动，仅在新年期间可用"
         enabled: true
         auto_claim: false
         limit_modes:
-            count: 3
+            count: 1
             time: "1d"
             refresh_at_time: "00:00"
         duration:
             startDate: "2026-01-01T00:00:00Z"
-            endDate: "2026-01-07T23:59:59Z"
+            endDate: "2026-01-03T23:59:59Z"
         rewards:
             balance2026:
                 probability: 1
@@ -103,15 +77,14 @@ events:
                 probability: 1
                 amount: 3
                 name: "minecraft:enchanted_golden_apple"
-            broadcast:
-                probability: 1
-                commands:
-                  - "broadcast 恭喜 {player} 獲得新年特別獎勵！"
+                broadcast:
+                    probability: 1
+                    commands:
+                        - "broadcast 恭喜 {player} 获得新年特别奖励！"
 
     monthly_reward:
-        name: "月度獎勵"
-        description: "每月1號的特別獎勵"
-        type: "daily_reward"
+        name: "月度奖励"
+        description: "每月1号的特别奖励"
         enabled: true
         auto_claim: true
         limit_modes:
@@ -123,23 +96,22 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance5000:
+            balance500:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 5000"
-            exp1000:
+                  - "essentials:eco give {player} 500"
+            exp500:
                 probability: 1
                 commands:
-                  - "minecraft:xp add {player} 1000 points"
+                  - "minecraft:xp add {player} 500 points"
             diamond_block:
                 probability: 1
-                amount: 5
+                amount: 1
                 name: "minecraft:diamond_block"
 
     christmas_2025:
-        name: "聖誕節限定"
-        description: "平安夜到聖誕節的節慶獎勵"
-        type: "holiday"
+        name: "圣诞节限定"
+        description: "平安夜到圣诞节的节庆奖励"
         enabled: true
         auto_claim: false
         limit_modes:
@@ -153,18 +125,17 @@ events:
             santa_pouch:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:cookie 16"
-                  - "give {player} minecraft:snowball 32"
-            festive_boost:
-                probability: 1
-                commands:
-                  - "minecraft:xp add {player} 500 points"
-                  - "broadcast {player} 的聖誕鐘聲響起，祝大家節日快樂！"
+                  - "minecraft:give {player} minecraft:cookie 16"
+                  - "minecraft:give {player} minecraft:snowball 32"
+                festive_boost:
+                    probability: 1
+                    commands:
+                        - "minecraft:xp add {player} 500 points"
+                        - "broadcast {player} 的圣诞钟声响起，祝大家节日快乐！"
 
     neko_anniversary_3rd:
-        name: "NekoServer 3週年慶"
-        description: "慶祝伺服器三週年的限定活動"
-        type: "holiday"
+        name: "NekoServer 3周年庆"
+        description: "庆祝服务器三周年的限定活动"
         enabled: false
         auto_claim: false
         limit_modes:
@@ -172,14 +143,18 @@ events:
             time: "1d"
             refresh_at_time: "00:00"
         duration:
-            startDate: "2026-03-01T00:00:00Z"
-            endDate: "2026-03-07T23:59:59Z"
+            startDate: "2025-12-31T00:00:00Z"
+            endDate: "2026-01-07T23:59:59Z"
         rewards:
+            bal500:
+                probability: 1
+                commands:
+                  - "essentials:eco give {player} 500"
             anniversary_tokens:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:firework_rocket 8"
-                  - "give {player} minecraft:cake 1"
+                  - "minecraft:give {player} minecraft:firework_rocket 8"
+                  - "minecraft:give {player} minecraft:cake 1"
             xp_boost:
                 probability: 1
                 commands:
@@ -187,12 +162,11 @@ events:
             shout_out:
                 probability: 1
                 commands:
-                  - "broadcast 感謝 {player} 陪伴NekoServer三週年！"
+                    - "broadcast 感谢 {player} 陪伴NekoServer三周年！"
 
     weekend_fun_run:
-        name: "周末小遊戲"
-        description: "短時間的輕量活動，伺服器人多就開"
-        type: "custom"
+        name: "周末小游戏"
+        description: "短时间的轻量活动，服务器人多就开"
         enabled: false
         auto_claim: false
         limit_modes:
@@ -206,13 +180,12 @@ events:
             speed_box:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:potion{Potion:swiftness} 1"
-                  - "give {player} minecraft:golden_apple 2"
+                  - "minecraft:give {player} minecraft:potion{Potion:swiftness} 1"
+                  - "minecraft:give {player} minecraft:golden_apple 2"
 
     fishing_frenzy:
-        name: "釣魚瘋狂夜"
-        description: "限定時間釣魚獎勵倍增"
-        type: "custom"
+        name: "钓鱼疯狂夜"
+        description: "限定时间钓鱼奖励倍增"
         enabled: false
         auto_claim: false
         limit_modes:
@@ -226,13 +199,12 @@ events:
             fisher_pack:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:enchanted_book{StoredEnchantments:[{id:luck_of_the_sea,lvl:3s}]} 1"
+                  - "minecraft:give {player} minecraft:enchanted_book{StoredEnchantments:[{id:luck_of_the_sea,lvl:3s}]} 1"
                   - "minecraft:xp add {player} 300 points"
 
     valentines_day:
-        name: "情人節預備"
-        description: "情人節活動預留，未開放"
-        type: "holiday"
+        name: "情人节预备"
+        description: "情人节活动预留，未开放"
         enabled: false
         auto_claim: false
         limit_modes:
@@ -246,13 +218,12 @@ events:
             heart_box:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:red_dye 8"
-                  - "give {player} minecraft:pink_dye 8"
+                  - "minecraft:give {player} minecraft:red_dye 8"
+                  - "minecraft:give {player} minecraft:pink_dye 8"
 
     lunar_new_year:
-        name: "農曆新年預備"
-        description: "新春紅包與煙火，未開放"
-        type: "holiday"
+        name: "农历新年预备"
+        description: "新春红包与烟火，未开放"
         enabled: false
         auto_claim: false
         limit_modes:
@@ -267,11 +238,11 @@ events:
                 probability: 1
                 commands:
                   - "essentials:eco give {player} 888"
-                  - "give {player} minecraft:firework_star 4"
+                  - "minecraft:give {player} minecraft:firework_star 4"
 
     mid_autumn:
-        name: "中秋預備"
-        description: "月餅與賞月，未開放"
+        name: "中秋预备"
+        description: "月饼与赏月，未开放"
         type: "holiday"
         enabled: false
         auto_claim: false
@@ -282,11 +253,11 @@ events:
             moon_box:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:cookie 12"
+                  - "minecraft:give {player} minecraft:cookie 12"
 
     halloween:
-        name: "萬聖節預備"
-        description: "Trick or Treat，未開放"
+        name: "万圣节预备"
+        description: "Trick or Treat，未开放"
         type: "holiday"
         enabled: false
         auto_claim: false
@@ -297,24 +268,23 @@ events:
             spooky_box:
                 probability: 1
                 commands:
-                  - "give {player} minecraft:carved_pumpkin 2"
-                  - "give {player} minecraft:candle 8"
+                  - "minecraft:give {player} minecraft:carved_pumpkin 2"
+                  - "minecraft:give {player} minecraft:candle 8"
 
-    test_unlimited:
-        name: "測試活動"
-        description: "用於測試的無限制活動"
-        type: "custom"
-        enabled: false
-        auto_claim: true
-        duration:
-            startDate: "2025-01-01T00:00:00Z"
-            endDate: "2099-12-31T23:59:59Z"
-        rewards:
-            balance1:
-                probability: 1
-                commands:
-                  - "essentials:eco give {player} 1"
-            exp1:
-                probability: 1
-                commands:
-                  - "minecraft:xp add {player} 1 points"
+    # test_unlimited:
+    #     name: "测试活动"
+    #     description: "用于测试的无限制活动"
+    #     enabled: false
+    #     auto_claim: true
+    #     duration:
+    #         startDate: "2025-01-01T00:00:00Z"
+    #         endDate: "2099-12-31T23:59:59Z"
+    #     rewards:
+    #         balance1:
+    #             probability: 1
+    #             commands:
+    #               - "essentials:eco give {player} 1"
+    #         exp1:
+    #             probability: 1
+    #             commands:
+    #               - "minecraft:xp add {player} 1 points"

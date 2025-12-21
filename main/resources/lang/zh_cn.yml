@@ -1121,7 +1121,7 @@ navigation:
 
 # 玩家加入/离开系统
 join_quit:
-  welcome_message: "&a欢迎回来，&6{player}&a！"
+  welcome_message: "&7 玩家 &6{player} &7欢迎回来！"
 
 # 游戏页
 games:

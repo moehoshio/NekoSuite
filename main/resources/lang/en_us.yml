@@ -1121,7 +1121,7 @@ navigation:
 
 # Join/Quit system
 join_quit:
-  welcome_message: "&aWelcome back, &6{player}&a!"
+  welcome_message: "&aWelcome &f{player} &ato the server! Enjoy your stay!"
 
 # Games page
 games:

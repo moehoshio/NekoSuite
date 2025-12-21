@@ -18,7 +18,7 @@ exchanges:
     cost: 300000
     limit_total: 1
     commands:
-      - "artifact_rewards CloudspringAzureBlade"
+      - "artifact give {player} CloudspringAzureBlade"
     material: "DIAMOND_SWORD"
   - id: "bal100"
     display: "100 金幣"

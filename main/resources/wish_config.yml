@@ -109,19 +109,21 @@ pools:
             purified_water_canteen:
                 probability: 12.0
                 display_model: 5400
+                commands:
+                    - "minecraft:give {player} toughasnails:purified_water_canteen 1"
             p_point:
                 probability: 12.0
                 amount: 5
                 display_model: 5100
                 commands:
-                    - "scoreboard players add {player} p_point {amount}"
+                    - "minecraft:give {player} touhou_little_maid:power_point {amount}"
             minecraft:netherite_scrap:
                 probability: 5.0
             potion_power:
                 probability: 5.0
                 display_material: "minecraft:potion"
                 commands:
-                    - "minecraft:effect give {player} strength 180 1"
+                    - 'minecraft:give {player} minecraft:potion{CustomPotionEffects:[{Id:5,Duration:3600,Amplifier:2}],display:{Name:"{\"text\":\"力量药水\"}"}} 1'
             goety:recallfocus:
                 probability: 2.0
                 display_model: 5202
@@ -129,9 +131,13 @@ pools:
                 probability: 0.246
                 display_material: "minecraft:golden_chestplate"
                 enchanted: true
+                commands:
+                    - "artifact give {player} KirinOverlordBlazingArmor"
         guarantee_items:
             KirinOverlordBlazingArmor:
                 probability: 1
+                commands:
+                    - "artifact give {player} KirinOverlordBlazingArmor"
 
     # 星光如梦
     StarryMirage:
@@ -168,46 +174,58 @@ pools:
             minecraft:phantom_membrane:
                 probability: 16.0
                 amount: 3
-            mysteryCardPack:
+            buddycards:mystery_pack:
                 probability: 16.0
                 amount: 3
                 display_model: 5300
             minecraft:diamond:
                 probability: 16.0
                 amount: 3
-            focusBag:
+            goety:focusbag:
                 probability: 5.0
                 display_model: 5203
             minecraft:nether_star:
                 probability: 2.0
-            iceologyfocus:
+            goety:iceologyfocus:
                 probability: 1.0
                 display_model: 5201
-            launchfocus:
+            goety:launchfocus:
                 probability: 1.0
                 display_model: 5200
-            star_amulet:
+            goety:star_amulet:
                 probability: 1.0
                 display_model: 5204
             CelestineBreezeHelm:
                 probability: 0.246
                 display_material: "minecraft:diamond_helmet"
                 enchanted: true
+                commands:
+                    - "artifact give {player} CelestineBreezeHelm"
             SkywhisperBoots:
                 probability: 0.246
                 display_material: "minecraft:diamond_boots"
                 enchanted: true
+                commands:
+                    - "artifact give {player} SkywhisperBoots"
             CloudspringAzureBlade:
                 probability: 0.246
                 display_material: "minecraft:diamond_sword"
                 enchanted: true
+                commands:
+                    - "artifact give {player} CloudspringAzureBlade"
         guarantee_items:
             CelestineBreezeHelm:
                 probability: 1
+                commands:
+                    - "artifact give {player} CelestineBreezeHelm"
             SkywhisperBoots:
                 probability: 1
+                commands:
+                    - "artifact give {player} SkywhisperBoots"
             CloudspringAzureBlade:
                 probability: 1
+                commands:
+                    - "artifact give {player} CloudspringAzureBlade"
 
     # 红玫的誓约 (情人节)
     OathOfTheRedRose:
@@ -239,7 +257,7 @@ pools:
             minecraft:quartz:
                 probability: 10.0
                 amount: 5
-            flower_pie:
+            lightmeals:flower_pie:
                 probability: 10.0
                 amount: 3
                 display_material: "minecraft:pumpkin_pie"
@@ -253,24 +271,28 @@ pools:
             minecraft:quartz_block:
                 probability: 10.0
                 amount: 10
-            pink_cherry_sapling:
+            biomesoplenty:pink_cherry_sapling:
                 probability: 5.0
                 display_model: 5500
-            amethyst_chimes:
+            chimes:amethyst_chimes:
                 probability: 3.0
                 display_material: "minecraft:amethyst_shard"
             potion_revive:
                 probability: 3.0
                 display_material: "minecraft:potion"
                 commands:
-                    - "minecraft:effect give {player} instant_health 1 1"
+                    - 'minecraft:give {player} minecraft:potion{CustomPotionEffects:[{Id:10,Duration:3600,Amplifier:1}],display:{Name:"{\"text\":\"再生药水\"}"}} 1'
             UnrivaledCrimsonFeatherBow:
                 probability: 0.246
                 display_material: "minecraft:bow"
                 enchanted: true
+                commands:
+                    - "artifact give {player} UnrivaledCrimsonFeatherBow"
         guarantee_items:
             UnrivaledCrimsonFeatherBow:
                 probability: 1
+                commands:
+                    - "artifact give {player} UnrivaledCrimsonFeatherBow"
 
     # 微光之愿 (每日)
     GlimmeringPrayer:
@@ -364,12 +386,10 @@ pools:
                 display_material: "minecraft:experience_bottle"
                 commands:
                     - "minecraft:xp add {player} {amount} points"
-            ppoint:
+            touhou_little_maid:power_point:
                 probability: 10.0
                 amount: 5
                 display_model: 5100
-                commands:
-                    - "scoreboard players add {player} p_point {amount}"
             op_equip:
                 probability: 0.01
                 display_material: "minecraft:diamond_chestplate"
@@ -377,52 +397,98 @@ pools:
                 subList:
                     CloudspringAzureBlade:
                         probability: 1
+                        commands:
+                            - "artifact give {player} CloudspringAzureBlade"
                     UnrivaledCrimsonFeatherBow:
                         probability: 1
+                        commands:
+                            - "artifact give {player} UnrivaledCrimsonFeatherBow"
                     KirinOverlordBlazingArmor:
                         probability: 1
+                        commands:
+                            - "artifact give {player} KirinOverlordBlazingArmor"
             potions:
                 probability: 20.0
                 display_material: "minecraft:potion"
                 subList:
                     minecraft:speed:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:speed 3600 2"
                     minecraft:haste:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:haste 3600 2"
                     minecraft:strength:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:strength 3600 2"
                     minecraft:instant_health:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:instant_health 1 1"
                     minecraft:jump_boost:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:jump_boost 3600 2"
                     minecraft:regeneration:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:regeneration 3600 2"
                     minecraft:resistance:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:resistance 3600 2"
                     minecraft:fire_resistance:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:fire_resistance 3600 1"
                     minecraft:water_breathing:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:water_breathing 3600 1"
                     minecraft:invisibility:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:invisibility 3600 1"
                     minecraft:night_vision:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:night_vision 3600 1"
                     minecraft:health_boost:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:health_boost 3600 2"
                     minecraft:absorption:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:absorption 3600 2"
                     minecraft:saturation:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:saturation 1 1"
                     minecraft:glowing:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:glowing 3600 1"
                     minecraft:levitation:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:levitation 200 1"
                     minecraft:luck:
                         probability: 1
+                        commands:
+                            - "minecraft:effect give {player} minecraft:luck 3600 1"
         guarantee_items:
             CloudspringAzureBlade:
                 probability: 1
+                commands:
+                    - "artifact give {player} CloudspringAzureBlade"
             UnrivaledCrimsonFeatherBow:
                 probability: 1
+                commands:
+                    - "artifact give {player} UnrivaledCrimsonFeatherBow"
             KirinOverlordBlazingArmor:
                 probability: 1
+                commands:
+                    - "artifact give {player} KirinOverlordBlazingArmor"

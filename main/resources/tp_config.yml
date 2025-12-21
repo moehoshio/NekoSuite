@@ -9,7 +9,7 @@ storage:
 tp:
   # Cost to teleport (0 = free)
   # 傳送費用 (0 = 免費)
-  cost: 0
+  cost: 5
   
   # Request timeout in seconds
   # 請求超時時間 (秒)
