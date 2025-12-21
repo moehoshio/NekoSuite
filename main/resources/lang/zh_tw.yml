@@ -268,6 +268,11 @@ tab:
     select_player: "<選擇玩家>"
     list: "<顯示物品列表>"
     do_give: "<按下 Enter 發放>"
+  skill:
+    select_action: "<選擇操作>"
+    select_skill: "<選擇技能>"
+    show_info: "<顯示技能詳情>"
+    show_list: "<顯示技能列表>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [郵件ID]"
@@ -1179,10 +1184,3 @@ skill:
     teleport: "傳送"
     shield: "護盾"
     poison: "毒素"
-
-tab:
-  skill:
-    select_action: "<選擇操作>"
-    select_skill: "<選擇技能>"
-    show_info: "<顯示技能詳情>"
-    show_list: "<顯示技能列表>"

@@ -451,6 +451,11 @@ tab:
     select_player: "<Select player>"
     list: "<Show item list>"
     do_give: "<Press Enter to give>"
+  skill:
+    select_action: "<Select action>"
+    select_skill: "<Select skill>"
+    show_info: "<Show skill details>"
+    show_list: "<Show skill list>"
 
 mail:
   usage: "&7Usage: &f/mail &6<menu|list|claim|delete> [mailId]"
@@ -1116,10 +1121,3 @@ skill:
     teleport: "Teleport"
     shield: "Shield"
     poison: "Poison"
-
-tab:
-  skill:
-    select_action: "<Select action>"
-    select_skill: "<Select skill>"
-    show_info: "<Show skill details>"
-    show_list: "<Show skill list>"
