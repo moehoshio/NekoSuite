@@ -417,6 +417,8 @@ public class TeleportManager {
         requester.sendMessage(messages.format(requester, "tp.no_outgoing_request"));
         return false;
 
+    }
+
     /**
      * Directly teleport a player to a location (with optional cost).
      */
@@ -451,7 +453,6 @@ public class TeleportManager {
         map.put("z", String.format("%.1f", target.getZ()));
         player.sendMessage(messages.format(player, "tp.coord_success", map));
         return true;
-    }
     }
 
     /**
