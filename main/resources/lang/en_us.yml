@@ -34,6 +34,11 @@ event:
     closed: "Event is not open"
     limit: "Participation limit reached"
     wrong_day: "This event is not available today"
+  status:
+    available: "&a✔ Available"
+    unavailable: "&c✖ Claimed"
+    refresh_in: "&7Resets in: &e{time}"
+    click_participate: "&eClick to participate"
   names:
     daily_login: "Daily Login Reward"
     daily_checkin: "Daily Check-In"
@@ -969,6 +974,7 @@ announcement:
   prev_page: "&7◀ Previous"
   next_page: "&7Next ▶"
   page_info: "&7Page: &f{page}/{total_pages}"
+  click_to_execute: "&eClick to execute"
   # Example announcements (configured in announcement_config.yml)
   sample:
     title: "&6Welcome to the server!"
@@ -981,6 +987,10 @@ navigation:
   title: "&#ff9933✦ Main Menu"
   player_info: "&7Player: &f{player}"
   balance_info: "&7Balance: &6{balance}"
+  health_info: "&c❤ Health: &f{health}/{max_health}"
+  exp_info: "&a✦ Level: &f{level} &7(&6{exp} &7XP)"
+  stored_exp_info: "&b⚡ Stored XP: &f{stored}"
+  playtime_info: "&e⏱ Playtime: &f{hours}h {minutes}m"
   announcement_button: "&6✦ Announcements"
   announcement_lore: "&7View server announcements"
   wish_button: "&e✦ Wish"

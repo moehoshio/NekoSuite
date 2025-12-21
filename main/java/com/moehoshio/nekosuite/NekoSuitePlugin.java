@@ -1583,7 +1583,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         MenuLayout.NavigationLayout layout = menuLayout.getNavigationLayout();
         Inventory inv = Bukkit.createInventory(new NavigationMenuHolder(), layout.getSize(), messages.format(player, layout.getTitleKey()));
         
-        // Add player head with balance info at player_head_slot
+        // Add player head with detailed info at player_head_slot
         final int headSlot = layout.getPlayerHeadSlot();
         ItemStack playerHead = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
         org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) playerHead.getItemMeta();
@@ -1593,6 +1593,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             skullMeta.setDisplayName(messages.format(player, "navigation.player_info", placeholders));
             
             List<String> lore = new ArrayList<String>();
+            
             // Add balance info if economy is available
             if (economy != null) {
                 double balance = economy.getBalance(player);
@@ -1600,6 +1601,40 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 balancePlaceholders.put("balance", String.format("%.2f", balance));
                 lore.add(messages.format(player, "navigation.balance_info", balancePlaceholders));
             }
+            
+            // Add health info
+            Map<String, String> healthPlaceholders = new HashMap<String, String>();
+            healthPlaceholders.put("health", String.format("%.1f", player.getHealth()));
+            healthPlaceholders.put("max_health", String.format("%.1f", player.getMaxHealth()));
+            lore.add(messages.format(player, "navigation.health_info", healthPlaceholders));
+            
+            // Add experience level info
+            Map<String, String> expPlaceholders = new HashMap<String, String>();
+            expPlaceholders.put("level", String.valueOf(player.getLevel()));
+            expPlaceholders.put("exp", String.valueOf(player.getTotalExperience()));
+            lore.add(messages.format(player, "navigation.exp_info", expPlaceholders));
+            
+            // Add stored exp if expManager is available
+            if (expManager != null) {
+                long storedExp = expManager.getStored(player.getName());
+                Map<String, String> storedExpPlaceholders = new HashMap<String, String>();
+                storedExpPlaceholders.put("stored", String.valueOf(storedExp));
+                lore.add(messages.format(player, "navigation.stored_exp_info", storedExpPlaceholders));
+            }
+            
+            // Add playtime info (if available via Statistic)
+            try {
+                int playTicks = player.getStatistic(org.bukkit.Statistic.PLAY_ONE_MINUTE);
+                long playMinutes = playTicks / 1200; // 1200 ticks = 1 minute (20 ticks/sec * 60 sec/min)
+                long playHours = playMinutes / 60;
+                Map<String, String> playtimePlaceholders = new HashMap<String, String>();
+                playtimePlaceholders.put("hours", String.valueOf(playHours));
+                playtimePlaceholders.put("minutes", String.valueOf(playMinutes % 60));
+                lore.add(messages.format(player, "navigation.playtime_info", playtimePlaceholders));
+            } catch (Exception ignored) {
+                // Statistic not available
+            }
+            
             skullMeta.setLore(lore);
             
             // Set placeholder first (PLAYER_HEAD without owner shows Steve)
@@ -2329,12 +2364,31 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             if (slotIndex >= layout.getItemSlots().size()) {
                 break;
             }
-            ItemStack stack = new ItemStack(org.bukkit.Material.PAPER);
+            org.bukkit.Material material = availability.isCanParticipate() 
+                    ? org.bukkit.Material.LIME_DYE 
+                    : org.bukkit.Material.GRAY_DYE;
+            ItemStack stack = new ItemStack(material);
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ChatColor.AQUA + availability.getDisplayName());
+                if (availability.isCanParticipate()) {
+                    meta.setDisplayName(ChatColor.GREEN + availability.getDisplayName());
+                } else {
+                    meta.setDisplayName(ChatColor.GRAY + availability.getDisplayName());
+                }
                 List<String> lore = new ArrayList<String>();
                 lore.add(ChatColor.GRAY + "ID: " + availability.getId());
+                
+                if (availability.isCanParticipate()) {
+                    lore.add(messages.format(player, "event.status.available"));
+                    lore.add(messages.format(player, "event.status.click_participate"));
+                } else {
+                    lore.add(messages.format(player, "event.status.unavailable"));
+                    if (availability.getRefreshTimeMillis() > 0) {
+                        Map<String, String> placeholders = new HashMap<String, String>();
+                        placeholders.put("time", availability.getFormattedRefreshTime());
+                        lore.add(messages.format(player, "event.status.refresh_in", placeholders));
+                    }
+                }
                 meta.setLore(lore);
                 stack.setItemMeta(meta);
             }
@@ -3777,9 +3831,37 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 }
                 boolean can = canParticipate(def, data, now);
                 String displayName = def.getDisplayName(messages, player);
-                result.add(new EventAvailability(def.getId(), displayName, can));
+                long refreshTime = getRefreshTimeRemaining(def, data, now);
+                result.add(new EventAvailability(def.getId(), displayName, can, refreshTime));
             }
             return result;
+        }
+
+        /**
+         * Calculate remaining time until event refresh for a player.
+         * Returns 0 if no limit or can participate, otherwise returns milliseconds until refresh.
+         */
+        private long getRefreshTimeRemaining(EventDefinition def, YamlConfiguration data, long nowMillis) {
+            EventLimit limit = def.getLimit();
+            if (limit == null || limit.getCount() <= 0 || limit.getWindowMillis() <= 0) {
+                return 0L;
+            }
+            
+            String base = "event.limits." + def.getId();
+            long windowStart = data.getLong(base + ".windowStart", 0L);
+            int used = data.getInt(base + ".count", 0);
+            
+            // If window has passed or not used up limit, no wait needed
+            if (nowMillis - windowStart >= limit.getWindowMillis()) {
+                return 0L;
+            }
+            if (used < limit.getCount()) {
+                return 0L;
+            }
+            
+            // Calculate remaining time
+            long elapsed = nowMillis - windowStart;
+            return limit.getWindowMillis() - elapsed;
         }
 
         List<String> participate(Player player, String eventId) throws EventException {
@@ -4296,11 +4378,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private final String id;
         private final String displayName;
         private final boolean canParticipate;
+        private final long refreshTimeMillis; // milliseconds until refresh, 0 if no limit
 
-        EventAvailability(String id, String displayName, boolean canParticipate) {
+        EventAvailability(String id, String displayName, boolean canParticipate, long refreshTimeMillis) {
             this.id = id;
             this.displayName = displayName;
             this.canParticipate = canParticipate;
+            this.refreshTimeMillis = refreshTimeMillis;
         }
 
         String getId() {
@@ -4313,6 +4397,33 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
         boolean isCanParticipate() {
             return canParticipate;
+        }
+
+        long getRefreshTimeMillis() {
+            return refreshTimeMillis;
+        }
+
+        /**
+         * Get formatted refresh time string.
+         */
+        String getFormattedRefreshTime() {
+            if (refreshTimeMillis <= 0) {
+                return "";
+            }
+            long seconds = refreshTimeMillis / 1000;
+            long minutes = seconds / 60;
+            long hours = minutes / 60;
+            long days = hours / 24;
+
+            if (days > 0) {
+                return String.format("%dd %dh", days, hours % 24);
+            } else if (hours > 0) {
+                return String.format("%dh %dm", hours, minutes % 60);
+            } else if (minutes > 0) {
+                return String.format("%dm %ds", minutes, seconds % 60);
+            } else {
+                return String.format("%ds", seconds);
+            }
         }
     }
 

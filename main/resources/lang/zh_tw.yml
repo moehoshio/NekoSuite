@@ -34,6 +34,11 @@ event:
     closed: "活動未開啟"
     limit: "已達到參與限制"
     wrong_day: "今天不是此活動的開放日"
+  status:
+    available: "&a✔ 可參與"
+    unavailable: "&c✖ 已領取"
+    refresh_in: "&7重置倒數: &e{time}"
+    click_participate: "&e點擊參與"
   names:
     daily_login: "每日登錄獎勵"
     daily_checkin: "每日簽到"
@@ -1032,6 +1037,7 @@ announcement:
   prev_page: "&7◀ 上一頁"
   next_page: "&7下一頁 ▶"
   page_info: "&7頁數: &f{page}/{total_pages}"
+  click_to_execute: "&e點擊執行"
   # Example announcements (configured in announcement_config.yml)
   sample:
     title: "&6歡迎來到伺服器！"
@@ -1044,6 +1050,10 @@ navigation:
   title: "&#ff9933✦ 主選單"
   player_info: "&7玩家: &f{player}"
   balance_info: "&7餘額: &6{balance}"
+  health_info: "&c❤ 生命: &f{health}/{max_health}"
+  exp_info: "&a✦ 等級: &f{level} &7(&6{exp} &7經驗)"
+  stored_exp_info: "&b⚡ 銀行經驗: &f{stored}"
+  playtime_info: "&e⏱ 遊玩時間: &f{hours}小時 {minutes}分"
   announcement_button: "&6✦ 公告"
   announcement_lore: "&7查看伺服器公告"
   wish_button: "&e✦ 祈願"

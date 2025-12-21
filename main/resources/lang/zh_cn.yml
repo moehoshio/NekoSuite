@@ -34,6 +34,11 @@ event:
     closed: "活动未开放"
     limit: "参与次数已达上限"
     wrong_day: "今天不是此活动的开放日"
+  status:
+    available: "&a✔ 可参与"
+    unavailable: "&c✖ 已领取"
+    refresh_in: "&7重置倒计时: &e{time}"
+    click_participate: "&e点击参与"
   names:
     daily_login: "每日登录奖励"
     daily_checkin: "每日签到"
@@ -969,6 +974,7 @@ announcement:
   prev_page: "&7◀ 上一页"
   next_page: "&7下一页 ▶"
   page_info: "&7页数: &f{page}/{total_pages}"
+  click_to_execute: "&e点击执行"
   # Example announcements (configured in announcement_config.yml)
   sample:
     title: "&6欢迎来到服务器！"
@@ -981,6 +987,10 @@ navigation:
   title: "&#ff9933✦ 主菜单"
   player_info: "&7玩家: &f{player}"
   balance_info: "&7余额: &6{balance}"
+  health_info: "&c❤ 生命: &f{health}/{max_health}"
+  exp_info: "&a✦ 等级: &f{level} &7(&6{exp} &7经验)"
+  stored_exp_info: "&b⚡ 银行经验: &f{stored}"
+  playtime_info: "&e⏱ 游玩时间: &f{hours}小时 {minutes}分"
   announcement_button: "&6✦ 公告"
   announcement_lore: "&7查看服务器公告"
   wish_button: "&e✦ 祈愿"

@@ -205,13 +205,19 @@ public class AnnouncementManager {
             
             // Get content from language file using content_key
             List<String> content = messages.getList(player, ann.getContentKey());
+            List<String> lore = new ArrayList<String>();
             if (content != null && !content.isEmpty()) {
-                List<String> lore = new ArrayList<String>();
                 for (String line : content) {
                     lore.add(messages.colorize(line));
                 }
-                meta.setLore(lore);
             }
+            // Add command indicator and announcement ID for click handling
+            if (ann.hasCommands()) {
+                lore.add("");
+                lore.add(messages.format(player, "announcement.click_to_execute"));
+            }
+            lore.add(ChatColor.DARK_GRAY + "ANN_ID:" + ann.getId());
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;
@@ -247,7 +253,7 @@ public class AnnouncementManager {
                 return true;
             }
         }
-        // Check for navigation
+        // Check for navigation or announcement click
         if (clicked.hasItemMeta() && clicked.getItemMeta().hasLore()) {
             List<String> lore = clicked.getItemMeta().getLore();
             if (lore != null) {
@@ -261,10 +267,43 @@ public class AnnouncementManager {
                         } catch (NumberFormatException ignored) {
                         }
                     }
+                    // Check for announcement click with commands
+                    if (line != null && line.contains("ANN_ID:")) {
+                        String annId = line.substring(line.indexOf("ANN_ID:") + 7).trim();
+                        executeAnnouncementCommands(player, annId);
+                        return true;
+                    }
                 }
             }
         }
         return true;
+    }
+
+    /**
+     * Execute commands associated with an announcement.
+     */
+    private void executeAnnouncementCommands(Player player, String announcementId) {
+        Announcement ann = null;
+        for (Announcement a : announcements) {
+            if (a.getId().equals(announcementId)) {
+                ann = a;
+                break;
+            }
+        }
+        if (ann == null || !ann.hasCommands()) {
+            return;
+        }
+        for (String command : ann.getCommands()) {
+            if (command == null || command.trim().isEmpty()) {
+                continue;
+            }
+            String cmd = command.replace("{player}", player.getName())
+                    .replace("%player%", player.getName());
+            if (cmd.startsWith("/")) {
+                cmd = cmd.substring(1);
+            }
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+        }
     }
 
     /**
@@ -278,8 +317,9 @@ public class AnnouncementManager {
         private final int priority;
         private final boolean enabled;
         private final long timestamp;
+        private final List<String> commands;
 
-        Announcement(String id, String titleKey, String contentKey, Material material, int priority, boolean enabled, long timestamp) {
+        Announcement(String id, String titleKey, String contentKey, Material material, int priority, boolean enabled, long timestamp, List<String> commands) {
             this.id = id;
             this.titleKey = titleKey;
             this.contentKey = contentKey;
@@ -287,6 +327,7 @@ public class AnnouncementManager {
             this.priority = priority;
             this.enabled = enabled;
             this.timestamp = timestamp;
+            this.commands = commands == null ? new ArrayList<String>() : commands;
         }
 
         static Announcement fromSection(String id, ConfigurationSection section) {
@@ -299,7 +340,8 @@ public class AnnouncementManager {
             int priority = section.getInt("priority", 0);
             boolean enabled = section.getBoolean("enabled", true);
             long timestamp = section.getLong("timestamp", System.currentTimeMillis());
-            return new Announcement(id, titleKey, contentKey, material, priority, enabled, timestamp);
+            List<String> commands = section.getStringList("commands");
+            return new Announcement(id, titleKey, contentKey, material, priority, enabled, timestamp, commands);
         }
 
         public String getId() {
@@ -328,6 +370,14 @@ public class AnnouncementManager {
 
         public long getTimestamp() {
             return timestamp;
+        }
+
+        public List<String> getCommands() {
+            return commands;
+        }
+
+        public boolean hasCommands() {
+            return commands != null && !commands.isEmpty();
         }
     }
 
