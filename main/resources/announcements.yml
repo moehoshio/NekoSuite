@@ -1,0 +1,8 @@
+announcements:
+  welcome:
+    title_key: announcement.sample.title
+    content_key: announcement.sample.content
+    material: BOOK
+    priority: 100
+    enabled: true
+    timestamp: 1766297990037

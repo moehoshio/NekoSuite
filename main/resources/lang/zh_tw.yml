@@ -34,6 +34,11 @@ event:
     closed: "活動未開啟"
     limit: "已達到參與限制"
     wrong_day: "今天不是此活動的開放日"
+  status:
+    available: "&a✔ 可參與"
+    unavailable: "&c✖ 已領取"
+    refresh_in: "&7重置倒數: &e{time}"
+    click_participate: "&e點擊參與"
   names:
     daily_login: "每日登錄獎勵"
     daily_checkin: "每日簽到"
@@ -268,6 +273,11 @@ tab:
     select_player: "<選擇玩家>"
     list: "<顯示物品列表>"
     do_give: "<按下 Enter 發放>"
+  skill:
+    select_action: "<選擇操作>"
+    select_skill: "<選擇技能>"
+    show_info: "<顯示技能詳情>"
+    show_list: "<顯示技能列表>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [郵件ID]"
@@ -1020,9 +1030,32 @@ announce:
   prefix: "&6【公告】&f "
   success: "&a✔ &7公告已發送。"
 
+# 公告頁面
+announcement:
+  title: "&#ff9933✦ 公告"
+  no_announcements: "&7目前沒有公告。"
+  prev_page: "&7◀ 上一頁"
+  next_page: "&7下一頁 ▶"
+  page_info: "&7頁數: &f{page}/{total_pages}"
+  click_to_execute: "&e點擊執行"
+  # Example announcements (configured in announcement_config.yml)
+  sample:
+    title: "&6歡迎來到伺服器！"
+    content:
+      - "&7感謝您加入我們的伺服器。"
+      - "&7請查看 &f/help &7獲取更多信息。"
+
 # 導航頁
 navigation:
   title: "&#ff9933✦ 主選單"
+  player_info: "&7玩家: &f{player}"
+  balance_info: "&7餘額: &6{balance}"
+  health_info: "&c❤ 生命: &f{health}/{max_health}"
+  exp_info: "&a✦ 等級: &f{level} &7(&6{exp} &7經驗)"
+  stored_exp_info: "&b⚡ 銀行經驗: &f{stored}"
+  playtime_info: "&e⏱ 遊玩時間: &f{hours}小時 {minutes}分"
+  announcement_button: "&6✦ 公告"
+  announcement_lore: "&7查看伺服器公告"
   wish_button: "&e✦ 祈願"
   wish_lore: "&7進入祈願系統"
   event_button: "&b✦ 活動"
@@ -1037,6 +1070,10 @@ navigation:
   games_lore: "&7遊玩小遊戲"
   help_button: "&7? 幫助"
   help_lore: "&7查看幫助信息"
+
+# 玩家加入/離開系統
+join_quit:
+  welcome_message: "&a歡迎回來，&6{player}&a！"
 
 # 遊戲頁
 games:
@@ -1157,10 +1194,3 @@ skill:
     teleport: "傳送"
     shield: "護盾"
     poison: "毒素"
-
-tab:
-  skill:
-    select_action: "<選擇操作>"
-    select_skill: "<選擇技能>"
-    show_info: "<顯示技能詳情>"
-    show_list: "<顯示技能列表>"

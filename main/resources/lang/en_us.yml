@@ -34,6 +34,11 @@ event:
     closed: "Event is not open"
     limit: "Participation limit reached"
     wrong_day: "This event is not available today"
+  status:
+    available: "&a✔ Available"
+    unavailable: "&c✖ Claimed"
+    refresh_in: "&7Resets in: &e{time}"
+    click_participate: "&eClick to participate"
   names:
     daily_login: "Daily Login Reward"
     daily_checkin: "Daily Check-In"
@@ -451,6 +456,11 @@ tab:
     select_player: "<Select player>"
     list: "<Show item list>"
     do_give: "<Press Enter to give>"
+  skill:
+    select_action: "<Select action>"
+    select_skill: "<Select skill>"
+    show_info: "<Show skill details>"
+    show_list: "<Show skill list>"
 
 mail:
   usage: "&7Usage: &f/mail &6<menu|list|claim|delete> [mailId]"
@@ -957,9 +967,32 @@ announce:
   prefix: "&6[Announcement] &f"
   success: "&a✔ &7Announcement sent."
 
+# Announcement page
+announcement:
+  title: "&#ff9933✦ Announcements"
+  no_announcements: "&7No announcements at this time."
+  prev_page: "&7◀ Previous"
+  next_page: "&7Next ▶"
+  page_info: "&7Page: &f{page}/{total_pages}"
+  click_to_execute: "&eClick to execute"
+  # Example announcements (configured in announcement_config.yml)
+  sample:
+    title: "&6Welcome to the server!"
+    content:
+      - "&7Thank you for joining our server."
+      - "&7Please check &f/help &7for more information."
+
 # Navigation page
 navigation:
   title: "&#ff9933✦ Main Menu"
+  player_info: "&7Player: &f{player}"
+  balance_info: "&7Balance: &6{balance}"
+  health_info: "&c❤ Health: &f{health}/{max_health}"
+  exp_info: "&a✦ Level: &f{level} &7(&6{exp} &7XP)"
+  stored_exp_info: "&b⚡ Stored XP: &f{stored}"
+  playtime_info: "&e⏱ Playtime: &f{hours}h {minutes}m"
+  announcement_button: "&6✦ Announcements"
+  announcement_lore: "&7View server announcements"
   wish_button: "&e✦ Wish"
   wish_lore: "&7Enter the wish system"
   event_button: "&b✦ Events"
@@ -974,6 +1007,10 @@ navigation:
   games_lore: "&7Play mini-games"
   help_button: "&7? Help"
   help_lore: "&7View help information"
+
+# Join/Quit system
+join_quit:
+  welcome_message: "&aWelcome back, &6{player}&a!"
 
 # Games page
 games:
@@ -1094,10 +1131,3 @@ skill:
     teleport: "Teleport"
     shield: "Shield"
     poison: "Poison"
-
-tab:
-  skill:
-    select_action: "<Select action>"
-    select_skill: "<Select skill>"
-    show_info: "<Show skill details>"
-    show_list: "<Show skill list>"

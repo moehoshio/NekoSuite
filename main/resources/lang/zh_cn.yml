@@ -34,6 +34,11 @@ event:
     closed: "活动未开放"
     limit: "参与次数已达上限"
     wrong_day: "今天不是此活动的开放日"
+  status:
+    available: "&a✔ 可参与"
+    unavailable: "&c✖ 已领取"
+    refresh_in: "&7重置倒计时: &e{time}"
+    click_participate: "&e点击参与"
   names:
     daily_login: "每日登录奖励"
     daily_checkin: "每日签到"
@@ -451,6 +456,11 @@ tab:
     select_player: "<选择玩家>"
     list: "<显示物品列表>"
     do_give: "<按下 Enter 发放>"
+  skill:
+    select_action: "<选择操作>"
+    select_skill: "<选择技能>"
+    show_info: "<显示技能详情>"
+    show_list: "<显示技能列表>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [邮件ID]"
@@ -957,9 +967,32 @@ announce:
   prefix: "&6【公告】&f "
   success: "&a✔ &7公告已发送。"
 
+# 公告页面
+announcement:
+  title: "&#ff9933✦ 公告"
+  no_announcements: "&7目前没有公告。"
+  prev_page: "&7◀ 上一页"
+  next_page: "&7下一页 ▶"
+  page_info: "&7页数: &f{page}/{total_pages}"
+  click_to_execute: "&e点击执行"
+  # Example announcements (configured in announcement_config.yml)
+  sample:
+    title: "&6欢迎来到服务器！"
+    content:
+      - "&7感谢您加入我们的服务器。"
+      - "&7请查看 &f/help &7获取更多信息。"
+
 # 导航页
 navigation:
   title: "&#ff9933✦ 主菜单"
+  player_info: "&7玩家: &f{player}"
+  balance_info: "&7余额: &6{balance}"
+  health_info: "&c❤ 生命: &f{health}/{max_health}"
+  exp_info: "&a✦ 等级: &f{level} &7(&6{exp} &7经验)"
+  stored_exp_info: "&b⚡ 银行经验: &f{stored}"
+  playtime_info: "&e⏱ 游玩时间: &f{hours}小时 {minutes}分"
+  announcement_button: "&6✦ 公告"
+  announcement_lore: "&7查看服务器公告"
   wish_button: "&e✦ 祈愿"
   wish_lore: "&7进入祈愿系统"
   event_button: "&b✦ 活动"
@@ -974,6 +1007,10 @@ navigation:
   games_lore: "&7游玩小游戏"
   help_button: "&7? 帮助"
   help_lore: "&7查看帮助信息"
+
+# 玩家加入/离开系统
+join_quit:
+  welcome_message: "&a欢迎回来，&6{player}&a！"
 
 # 游戏页
 games:
@@ -1094,10 +1131,3 @@ skill:
     teleport: "传送"
     shield: "护盾"
     poison: "毒素"
-
-tab:
-  skill:
-    select_action: "<选择操作>"
-    select_skill: "<选择技能>"
-    show_info: "<显示技能详情>"
-    show_list: "<显示技能列表>"
