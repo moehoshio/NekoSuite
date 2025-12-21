@@ -108,36 +108,48 @@ navigation:
 
 # Games menu configuration
 games:
-  size: 27
+  size: 45
   title_key: "games.title"
-  close_slot: 26
+  close_slot: 44
   items:
     rtp:
-      slot: 11
+      slot: 10
       material: ENDER_PEARL
       name_key: "games.rtp.title"
       lore_key: "games.rtp.lore"
       action: "OPEN_RTP"
     arena:
-      slot: 12
+      slot: 11
       material: IRON_SWORD
       name_key: "games.arena.title"
       lore_key: "games.arena.lore"
       action: "OPEN_ARENA"
     sgame:
-      slot: 13
+      slot: 12
       material: MAP
       name_key: "games.sgame.title"
       lore_key: "games.sgame.lore"
       action: "OPEN_SGAME"
     fishing:
-      slot: 14
+      slot: 13
       material: FISHING_ROD
       name_key: "games.fishing.title"
       lore_key: "games.fishing.lore"
       action: "OPEN_FISHING"
+    cardbattle:
+      slot: 14
+      material: PAPER
+      name_key: "games.cardbattle.title"
+      lore_key: "games.cardbattle.lore"
+      action: "OPEN_CARDBATTLE"
+    blackjack:
+      slot: 15
+      material: GOLD_NUGGET
+      name_key: "games.blackjack.title"
+      lore_key: "games.blackjack.lore"
+      action: "OPEN_BLACKJACK"
     back:
-      slot: 18
+      slot: 36
       material: ARROW
       name_key: "help.back_button"
       lore_key: "help.back_lore"

@@ -79,7 +79,7 @@ commands:
     permission: nekosuite.skill
   ngame:
     description: 小遊戲系統
-    usage: /ngame <rtp|arena|fishing> [子命令]
+    usage: /ngame <rtp|arena|fishing|cardbattle|blackjack> [子命令]
     permission: nekosuite.game
     aliases:
       - nekogame

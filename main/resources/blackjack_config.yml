@@ -1,0 +1,23 @@
+# Blackjack Game Configuration
+# 21點遊戲配置
+
+game:
+  enabled: true
+  min_bet: 10
+  max_bet: 1000
+  blackjack_multiplier: 1.5  # Pays 3:2 (1.5x bet + original bet)
+  bet_options:
+    - 10
+    - 25
+    - 50
+    - 100
+    - 250
+    - 500
+    - 1000
+
+# Reward commands executed when player wins
+# {player} - player name
+# {amount} - win amount (profit, not including original bet)
+rewards:
+  win_commands:
+    - "eco give {player} {amount}"
