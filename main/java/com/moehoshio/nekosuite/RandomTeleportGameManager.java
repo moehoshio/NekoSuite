@@ -269,21 +269,43 @@ public class RandomTeleportGameManager {
         return min + random.nextInt(max - min + 1);
     }
 
+    /**
+     * Remove permissions from player during the game.
+     * 
+     * NOTE: This implementation tracks which permissions should be removed for restoration
+     * but actual permission removal requires integration with Vault or a similar permission
+     * management plugin. Administrators can alternatively use the TeleportManager's lock
+     * feature (/ntpadmin lock) to prevent teleportation during game sessions.
+     * 
+     * For full permission control, integrate with Vault's Permission API:
+     * <pre>
+     * Permission perms = getServer().getServicesManager().getRegistration(Permission.class).getProvider();
+     * perms.playerRemove(player, permission);
+     * </pre>
+     */
     private void removePlayerPermissions(Player player, GameSession session) {
         // Store original permissions that will be removed
         for (String perm : permissionsToRemove) {
             if (player.hasPermission(perm)) {
                 session.addRemovedPermission(perm);
-                // Note: In a real implementation, you would use Vault or similar
-                // to actually remove the permission. For now, we track them.
+                // To implement actual permission removal, integrate with Vault:
+                // permission.playerRemove(player, perm);
             }
         }
     }
 
+    /**
+     * Restore permissions to player after the game ends.
+     * 
+     * NOTE: This implementation clears the tracking list. Actual permission restoration
+     * requires integration with Vault or a similar permission management plugin.
+     * See removePlayerPermissions() for integration notes.
+     */
     private void restorePlayerPermissions(Player player, GameSession session) {
-        // Restore permissions that were removed
-        // Note: In a real implementation, you would use Vault or similar
-        // to restore the permissions
+        // To implement actual permission restoration, integrate with Vault:
+        // for (String perm : session.getRemovedPermissions()) {
+        //     permission.playerAdd(player, perm);
+        // }
         session.getRemovedPermissions().clear();
     }
 

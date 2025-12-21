@@ -252,9 +252,9 @@ public class FishingContestManager {
             }
         });
 
-        // Broadcast results
-        Bukkit.broadcastMessage(messages.format("fishing.contest_ended"));
-        Bukkit.broadcastMessage(messages.format("fishing.results_header"));
+        // Broadcast results - use null for server-wide messages
+        Bukkit.broadcastMessage(messages.format((org.bukkit.command.CommandSender) null, "fishing.contest_ended"));
+        Bukkit.broadcastMessage(messages.format((org.bukkit.command.CommandSender) null, "fishing.results_header"));
 
         int rank = 1;
         for (PlayerScore score : rankings) {
@@ -263,7 +263,7 @@ public class FishingContestManager {
             map.put("player", score.getPlayerName());
             map.put("score", String.valueOf(score.getScore()));
             map.put("catches", String.valueOf(score.getCatches()));
-            Bukkit.broadcastMessage(messages.format("fishing.results_entry", map));
+            Bukkit.broadcastMessage(messages.format((org.bukkit.command.CommandSender) null, "fishing.results_entry", map));
 
             // Grant rewards
             Player player = Bukkit.getPlayer(score.getPlayerName());
@@ -382,7 +382,7 @@ public class FishingContestManager {
                 if (remaining == 300 || remaining == 60 || remaining == 30 || remaining == 10) {
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("time", formatTime(remaining));
-                    Bukkit.broadcastMessage(messages.format("fishing.time_warning", map));
+                    Bukkit.broadcastMessage(messages.format((org.bukkit.command.CommandSender) null, "fishing.time_warning", map));
                 }
 
                 // Check timeout

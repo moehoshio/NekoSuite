@@ -410,8 +410,10 @@ public class SurvivalArenaManager {
         // Return last config for higher waves
         if (!waveConfigs.isEmpty()) {
             WaveConfig last = waveConfigs.get(waveConfigs.size() - 1);
-            // Scale mob count for higher waves
+            // Scale mob count for higher waves with a maximum cap to prevent performance issues
             int scaledCount = last.getMobCount() + (wave - last.getWaveNumber()) * 2;
+            int maxMobCount = 100; // Maximum mobs per wave to prevent lag
+            scaledCount = Math.min(scaledCount, maxMobCount);
             return new WaveConfig(wave, scaledCount, last.getMobTypes());
         }
         return new WaveConfig(wave, 5, new EntityType[]{EntityType.ZOMBIE});
