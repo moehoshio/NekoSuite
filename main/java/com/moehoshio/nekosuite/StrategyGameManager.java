@@ -930,7 +930,7 @@ public class StrategyGameManager {
         safeSet(inv, 16, skillItem);
 
         // Use item button (slot 19) - allows using potions during battle
-        boolean hasUsableItems = session.hasItem("small_potion") || session.hasItem("large_potion") || session.hasItem("healing_potion");
+        boolean hasUsableItems = session.hasItem("small_potion") || session.hasItem("large_potion") || session.hasItem("magic_potion");
         List<String> itemLore = new ArrayList<String>();
         itemLore.add(messages.format(player, "menu.sgame.use_item_lore"));
         if (session.hasItem("small_potion")) {
@@ -1671,29 +1671,22 @@ public class StrategyGameManager {
             return;
         }
         
+        // Get item config to use the correct effect values
+        ShopItem shopItem = findShopItem(itemId);
         Map<String, String> map = new HashMap<String, String>();
         
-        if ("small_potion".equals(itemId)) {
+        if ("small_potion".equals(itemId) || "large_potion".equals(itemId)) {
             session.removeItem(itemId, 1);
-            int healAmount = 25;
+            int healAmount = shopItem != null ? shopItem.getEffectValue() : (itemId.equals("small_potion") ? 25 : 50);
             int oldHealth = session.getHealth();
             session.addHealth(healAmount);
             int actualHeal = session.getHealth() - oldHealth;
             map.put("heal", String.valueOf(actualHeal));
-            map.put("item", messages.format(player, "menu.sgame.small_potion_name"));
-            player.sendMessage(messages.format(player, "sgame.used_heal_item", map));
-        } else if ("large_potion".equals(itemId)) {
-            session.removeItem(itemId, 1);
-            int healAmount = 50;
-            int oldHealth = session.getHealth();
-            session.addHealth(healAmount);
-            int actualHeal = session.getHealth() - oldHealth;
-            map.put("heal", String.valueOf(actualHeal));
-            map.put("item", messages.format(player, "menu.sgame.large_potion_name"));
+            map.put("item", messages.format(player, "menu.sgame." + itemId.replace("_", "_") + "_name"));
             player.sendMessage(messages.format(player, "sgame.used_heal_item", map));
         } else if ("magic_potion".equals(itemId)) {
             session.removeItem(itemId, 1);
-            int manaRestore = 15;
+            int manaRestore = shopItem != null ? shopItem.getEffectValue() : 15;
             int oldMagic = session.getMagic();
             session.addMagic(manaRestore);
             int actualRestore = session.getMagic() - oldMagic;
