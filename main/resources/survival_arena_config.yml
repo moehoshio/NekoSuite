@@ -1,0 +1,126 @@
+# NekoSuite Survival Arena Configuration
+# 生存競技場 - 遊戲配置
+
+storage:
+  data_dir: userdata
+
+game:
+  # 是否啟用此遊戲模式
+  enabled: true
+  # 波次之間的冷卻時間 (秒)
+  wave_cooldown: 10
+  # 最大波次數
+  max_waves: 10
+  # 擊殺基礎分數
+  base_score: 10
+  # 每波完成的額外分數乘數
+  wave_score_multiplier: 5
+  # 每波怪物生命值增加倍率
+  health_multiplier: 1.2
+  # 每波怪物傷害增加倍率
+  damage_multiplier: 1.1
+  # 怪物生成距離 (最小)
+  spawn_radius: 10
+  # 競技場半徑
+  arena_radius: 20
+
+# 波次配置
+waves:
+  wave1:
+    wave: 1
+    count: 5
+    mobs:
+      - ZOMBIE
+  wave2:
+    wave: 2
+    count: 7
+    mobs:
+      - ZOMBIE
+      - SKELETON
+  wave3:
+    wave: 3
+    count: 10
+    mobs:
+      - ZOMBIE
+      - SKELETON
+      - SPIDER
+  wave4:
+    wave: 4
+    count: 12
+    mobs:
+      - ZOMBIE
+      - SKELETON
+      - SPIDER
+      - CREEPER
+  wave5:
+    wave: 5
+    count: 15
+    mobs:
+      - ZOMBIE
+      - SKELETON
+      - SPIDER
+      - CREEPER
+      - WITCH
+  wave6:
+    wave: 6
+    count: 18
+    mobs:
+      - ZOMBIE
+      - SKELETON
+      - SPIDER
+      - WITCH
+      - PHANTOM
+  wave7:
+    wave: 7
+    count: 22
+    mobs:
+      - ZOMBIE
+      - SKELETON
+      - SPIDER
+      - WITCH
+      - PHANTOM
+      - BLAZE
+  wave8:
+    wave: 8
+    count: 25
+    mobs:
+      - SKELETON
+      - SPIDER
+      - WITCH
+      - PHANTOM
+      - BLAZE
+      - VINDICATOR
+  wave9:
+    wave: 9
+    count: 30
+    mobs:
+      - WITCH
+      - PHANTOM
+      - BLAZE
+      - VINDICATOR
+      - RAVAGER
+  wave10:
+    wave: 10
+    count: 35
+    mobs:
+      - WITHER_SKELETON
+      - WITCH
+      - PHANTOM
+      - BLAZE
+      - VINDICATOR
+      - EVOKER
+
+# 競技場位置配置
+arenas:
+  default:
+    world: world
+    x: 0
+    y: 64
+    z: 0
+
+# 獎勵配置
+rewards:
+  # 完成遊戲時執行的指令
+  commands:
+    - "minecraft:give {player} minecraft:iron_ingot {score}"
+    - "minecraft:give {player} minecraft:gold_ingot {kills}"

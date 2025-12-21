@@ -77,3 +77,9 @@ commands:
     description: 技能系統
     usage: /skill [list|info <技能ID>]
     permission: nekosuite.skill
+  ngame:
+    description: 小遊戲系統
+    usage: /ngame <rtp|arena|fishing> [子命令]
+    permission: nekosuite.game
+    aliases:
+      - nekogame

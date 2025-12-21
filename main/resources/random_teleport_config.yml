@@ -1,0 +1,39 @@
+# NekoSuite Random Teleport Game Configuration
+# 隨機傳送挑戰 - 遊戲配置
+
+storage:
+  data_dir: userdata
+
+game:
+  # 是否啟用此遊戲模式
+  enabled: true
+  # 默認時間限制 (秒)
+  default_time_limit: 300
+  # 到達目標的判定半徑 (方塊)
+  target_radius: 5
+  # 起始位置與目標的最小距離
+  min_distance: 500
+  # 起始位置與目標的最大距離
+  max_distance: 2000
+  # 世界邊界限制
+  world_border_min: -10000
+  world_border_max: 10000
+  # 默認世界
+  default_world: world
+  # 遊戲期間暫時移除的權限列表
+  permissions_to_remove:
+    - "essentials.fly"
+    - "essentials.tp"
+    - "essentials.tpa"
+    - "essentials.tphere"
+    - "essentials.home"
+    - "essentials.spawn"
+    - "essentials.warp"
+    - "nekosuite.tp"
+
+# 獎勵配置
+rewards:
+  # 成功完成時執行的指令
+  commands:
+    - "minecraft:give {player} minecraft:diamond 3"
+    - "minecraft:give {player} minecraft:gold_ingot 10"
