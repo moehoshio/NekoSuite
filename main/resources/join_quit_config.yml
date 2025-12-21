@@ -1,0 +1,54 @@
+# Join/Quit Actions Configuration
+# This file controls actions that are executed when players join or leave the server.
+
+# Enable/disable the join/quit action system
+enabled: true
+
+# Storage directory for player data
+storage:
+  data_dir: "userdata"
+
+# Actions to execute when a player joins the server
+join_actions:
+  # Check buy permission expiry - built-in action
+  - type: "check_buy_expiry"
+    enabled: true
+    # Delay in ticks before executing (20 ticks = 1 second)
+    delay: 20
+
+  # Send welcome message
+  - type: "message"
+    enabled: true
+    delay: 40
+    # Message key from language file
+    message_key: "join_quit.welcome_message"
+
+  # Run custom command
+  # - type: "command"
+  #   enabled: false
+  #   delay: 0
+  #   command: "say {player} has joined the server!"
+
+  # Grant temporary permission on join
+  # - type: "permission_add"
+  #   enabled: false
+  #   permission: "example.permission"
+  #   world: "*"
+
+# Actions to execute when a player leaves the server
+quit_actions:
+  # Example: Log quit time
+  # - type: "log_quit"
+  #   enabled: true
+
+  # Example: Run custom command on quit
+  # - type: "command"
+  #   enabled: false
+  #   command: "say {player} has left the server!"
+
+# Built-in action types:
+# - check_buy_expiry: Checks and removes expired buy permissions/groups
+# - message: Sends a localized message to the player
+# - command: Runs a command (use {player} placeholder for player name)
+# - permission_add: Grants a permission to the player
+# - permission_remove: Removes a permission from the player

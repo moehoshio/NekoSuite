@@ -41,12 +41,28 @@ strategy_game:
   end_game_slot: 22
   close_slot: 26
 
+# Announcement menu configuration
+announcement:
+  size: 54
+  title_key: "announcement.title"
+  content_slots: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44]
+  prev_slot: 45
+  next_slot: 53
+  close_slot: 49
+
 # Navigation menu (main menu) configuration
 navigation:
   size: 27
   title_key: "navigation.title"
+  player_head_slot: 0
   close_slot: 26
   items:
+    announcement:
+      slot: 4
+      material: PAPER
+      name_key: "navigation.announcement_button"
+      lore_key: "navigation.announcement_lore"
+      action: "OPEN_ANNOUNCEMENT"
     wish:
       slot: 10
       material: NETHER_STAR

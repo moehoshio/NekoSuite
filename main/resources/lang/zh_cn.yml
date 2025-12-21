@@ -957,9 +957,27 @@ announce:
   prefix: "&6【公告】&f "
   success: "&a✔ &7公告已发送。"
 
+# 公告页面
+announcement:
+  title: "&#ff9933✦ 公告"
+  no_announcements: "&7目前没有公告。"
+  prev_page: "&7◀ 上一页"
+  next_page: "&7下一页 ▶"
+  page_info: "&7页数: &f{page}/{total_pages}"
+  # Example announcements (configured in announcement_config.yml)
+  sample:
+    title: "&6欢迎来到服务器！"
+    content:
+      - "&7感谢您加入我们的服务器。"
+      - "&7请查看 &f/help &7获取更多信息。"
+
 # 导航页
 navigation:
   title: "&#ff9933✦ 主菜单"
+  player_info: "&7玩家: &f{player}"
+  balance_info: "&7余额: &6{balance}"
+  announcement_button: "&6✦ 公告"
+  announcement_lore: "&7查看服务器公告"
   wish_button: "&e✦ 祈愿"
   wish_lore: "&7进入祈愿系统"
   event_button: "&b✦ 活动"
@@ -974,6 +992,10 @@ navigation:
   games_lore: "&7游玩小游戏"
   help_button: "&7? 帮助"
   help_lore: "&7查看帮助信息"
+
+# 玩家加入/离开系统
+join_quit:
+  welcome_message: "&a欢迎回来，&6{player}&a！"
 
 # 游戏页
 games:

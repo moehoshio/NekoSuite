@@ -27,6 +27,7 @@ public class MenuLayout {
     private final NavigationLayout navigationLayout;
     private final HelpLayout helpLayout;
     private final GamesLayout gamesLayout;
+    private final AnnouncementLayout announcementLayout;
 
     public MenuLayout(JavaPlugin plugin) {
         File file = new File(plugin.getDataFolder(), "menu_layout.yml");
@@ -43,6 +44,7 @@ public class MenuLayout {
         this.navigationLayout = new NavigationLayout(config.getConfigurationSection("navigation"));
         this.helpLayout = new HelpLayout(config.getConfigurationSection("help"));
         this.gamesLayout = new GamesLayout(config.getConfigurationSection("games"));
+        this.announcementLayout = new AnnouncementLayout(config.getConfigurationSection("announcement"));
     }
 
     public WishLayout getWishLayout() {
@@ -79,6 +81,10 @@ public class MenuLayout {
 
     public GamesLayout getGamesLayout() {
         return gamesLayout;
+    }
+
+    public AnnouncementLayout getAnnouncementLayout() {
+        return announcementLayout;
     }
 
     public static class WishLayout {
@@ -303,12 +309,14 @@ public class MenuLayout {
         private final int size;
         private final String titleKey;
         private final int closeSlot;
+        private final int playerHeadSlot;
         private final Map<String, MenuItem> items;
 
         NavigationLayout(ConfigurationSection section) {
             this.size = section != null ? section.getInt("size", 27) : 27;
             this.titleKey = section != null ? section.getString("title_key", "navigation.title") : "navigation.title";
             this.closeSlot = section != null ? section.getInt("close_slot", 26) : 26;
+            this.playerHeadSlot = section != null ? section.getInt("player_head_slot", 0) : 0;
             this.items = new HashMap<String, MenuItem>();
             if (section != null) {
                 ConfigurationSection itemsSection = section.getConfigurationSection("items");
@@ -333,6 +341,10 @@ public class MenuLayout {
 
         public int getCloseSlot() {
             return closeSlot;
+        }
+
+        public int getPlayerHeadSlot() {
+            return playerHeadSlot;
         }
 
         public Map<String, MenuItem> getItems() {
@@ -510,6 +522,51 @@ public class MenuLayout {
 
         public Map<String, MenuItem> getItems() {
             return Collections.unmodifiableMap(items);
+        }
+    }
+
+    /**
+     * Announcement menu layout configuration.
+     */
+    public static class AnnouncementLayout {
+        private final int size;
+        private final String titleKey;
+        private final List<Integer> contentSlots;
+        private final int prevSlot;
+        private final int nextSlot;
+        private final int closeSlot;
+
+        AnnouncementLayout(ConfigurationSection section) {
+            this.size = section != null ? section.getInt("size", 54) : 54;
+            this.titleKey = section != null ? section.getString("title_key", "announcement.title") : "announcement.title";
+            this.contentSlots = safeIntList(section, "content_slots", defaultRange(0, 44));
+            this.prevSlot = section != null ? section.getInt("prev_slot", 45) : 45;
+            this.nextSlot = section != null ? section.getInt("next_slot", 53) : 53;
+            this.closeSlot = section != null ? section.getInt("close_slot", 49) : 49;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public String getTitleKey() {
+            return titleKey;
+        }
+
+        public List<Integer> getContentSlots() {
+            return contentSlots;
+        }
+
+        public int getPrevSlot() {
+            return prevSlot;
+        }
+
+        public int getNextSlot() {
+            return nextSlot;
+        }
+
+        public int getCloseSlot() {
+            return closeSlot;
         }
     }
 }

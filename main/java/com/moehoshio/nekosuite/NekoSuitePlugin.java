@@ -56,6 +56,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private ArtifactRewardsManager artifactRewardsManager;
     private TeleportManager teleportManager;
     private SkillManager skillManager;
+    private AnnouncementManager announcementManager;
+    private JoinQuitManager joinQuitManager;
 
     @Override
     public void onEnable() {
@@ -74,6 +76,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("strategy_game_config.yml", false);
         saveResource("artifact_rewards_config.yml", false);
         saveResource("skill_config.yml", false);
+        saveResource("join_quit_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -1153,6 +1156,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         artifactRewardsManager = new ArtifactRewardsManager(this, messages, new File(getDataFolder(), "artifact_rewards_config.yml"));
         teleportManager = new TeleportManager(this, messages, new File(getDataFolder(), "tp_config.yml"), economy);
         skillManager = new SkillManager(this, messages, new File(getDataFolder(), "skill_config.yml"));
+        announcementManager = new AnnouncementManager(this, messages, menuLayout);
+        joinQuitManager = new JoinQuitManager(this, messages, buyManager);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1578,6 +1583,55 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         MenuLayout.NavigationLayout layout = menuLayout.getNavigationLayout();
         Inventory inv = Bukkit.createInventory(new NavigationMenuHolder(), layout.getSize(), messages.format(player, layout.getTitleKey()));
         
+        // Add player head with balance info at player_head_slot
+        final int headSlot = layout.getPlayerHeadSlot();
+        ItemStack playerHead = new ItemStack(org.bukkit.Material.PLAYER_HEAD);
+        org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) playerHead.getItemMeta();
+        if (skullMeta != null) {
+            Map<String, String> placeholders = new HashMap<String, String>();
+            placeholders.put("player", player.getName());
+            skullMeta.setDisplayName(messages.format(player, "navigation.player_info", placeholders));
+            
+            List<String> lore = new ArrayList<String>();
+            // Add balance info if economy is available
+            if (economy != null) {
+                double balance = economy.getBalance(player);
+                Map<String, String> balancePlaceholders = new HashMap<String, String>();
+                balancePlaceholders.put("balance", String.format("%.2f", balance));
+                lore.add(messages.format(player, "navigation.balance_info", balancePlaceholders));
+            }
+            skullMeta.setLore(lore);
+            
+            // Set placeholder first (PLAYER_HEAD without owner shows Steve)
+            playerHead.setItemMeta(skullMeta);
+        }
+        inv.setItem(headSlot, playerHead);
+        
+        // Asynchronously load player skull texture
+        final Player targetPlayer = player;
+        final Inventory finalInv = inv;
+        Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+            @Override
+            public void run() {
+                final org.bukkit.inventory.meta.SkullMeta asyncMeta = (org.bukkit.inventory.meta.SkullMeta) finalInv.getItem(headSlot).getItemMeta();
+                if (asyncMeta != null) {
+                    asyncMeta.setOwningPlayer(targetPlayer);
+                    // Update on main thread
+                    Bukkit.getScheduler().runTask(NekoSuitePlugin.this, new Runnable() {
+                        @Override
+                        public void run() {
+                            if (targetPlayer.isOnline() && targetPlayer.getOpenInventory().getTopInventory().getHolder() instanceof NavigationMenuHolder) {
+                                ItemStack headItem = finalInv.getItem(headSlot);
+                                if (headItem != null) {
+                                    headItem.setItemMeta(asyncMeta);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
         // Render items from config
         for (MenuLayout.MenuItem item : layout.getItems().values()) {
             org.bukkit.Material material = org.bukkit.Material.STONE;
@@ -1871,6 +1925,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     return true;
                 case "OPEN_LANGUAGE":
                     openLanguageMenu(player);
+                    return true;
+                case "OPEN_ANNOUNCEMENT":
+                    announcementManager.openMenu(player);
                     return true;
                 default:
                     break;
@@ -2317,6 +2374,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     }
 
     @EventHandler
+    public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        if (joinQuitManager != null) {
+            joinQuitManager.onPlayerQuit(player);
+        }
+    }
+
+    @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getInventory() == null) {
             return;
@@ -2613,20 +2678,34 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             return;
         }
+        if (holder instanceof AnnouncementManager.AnnouncementMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            AnnouncementManager.AnnouncementMenuHolder annHolder = (AnnouncementManager.AnnouncementMenuHolder) holder;
+            announcementManager.handleMenuClick(player, clicked, annHolder.getPage());
+            return;
+        }
     }
 
     @EventHandler
     public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
-        if (buyManager != null) {
-            buyManager.check(event.getPlayer());
+        Player player = event.getPlayer();
+        
+        // Use JoinQuitManager for configurable join actions
+        if (joinQuitManager != null) {
+            joinQuitManager.onPlayerJoin(player);
         }
+        
         if (mailManager != null) {
             // Delay notification slightly to allow player to fully join
-            final Player player = event.getPlayer();
+            final Player playerFinal = player;
             Bukkit.getScheduler().runTaskLater(this, new Runnable() {
                 public void run() {
-                    if (player.isOnline()) {
-                        mailManager.notifyUnreadMail(player);
+                    if (playerFinal.isOnline()) {
+                        mailManager.notifyUnreadMail(playerFinal);
                     }
                 }
             }, 40L); // 2 seconds delay

@@ -1020,9 +1020,27 @@ announce:
   prefix: "&6【公告】&f "
   success: "&a✔ &7公告已發送。"
 
+# 公告頁面
+announcement:
+  title: "&#ff9933✦ 公告"
+  no_announcements: "&7目前沒有公告。"
+  prev_page: "&7◀ 上一頁"
+  next_page: "&7下一頁 ▶"
+  page_info: "&7頁數: &f{page}/{total_pages}"
+  # Example announcements (configured in announcement_config.yml)
+  sample:
+    title: "&6歡迎來到伺服器！"
+    content:
+      - "&7感謝您加入我們的伺服器。"
+      - "&7請查看 &f/help &7獲取更多信息。"
+
 # 導航頁
 navigation:
   title: "&#ff9933✦ 主選單"
+  player_info: "&7玩家: &f{player}"
+  balance_info: "&7餘額: &6{balance}"
+  announcement_button: "&6✦ 公告"
+  announcement_lore: "&7查看伺服器公告"
   wish_button: "&e✦ 祈願"
   wish_lore: "&7進入祈願系統"
   event_button: "&b✦ 活動"
@@ -1037,6 +1055,10 @@ navigation:
   games_lore: "&7遊玩小遊戲"
   help_button: "&7? 幫助"
   help_lore: "&7查看幫助信息"
+
+# 玩家加入/離開系統
+join_quit:
+  welcome_message: "&a歡迎回來，&6{player}&a！"
 
 # 遊戲頁
 games:
