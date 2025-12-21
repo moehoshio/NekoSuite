@@ -836,7 +836,7 @@ public class CardBattleManager {
         Player p1 = Bukkit.getPlayer(session.getPlayer1Name());
         if (p1 != null && p1.isOnline()) {
             Map<String, String> map = new HashMap<String, String>();
-            map.put("card", card.getName());
+            map.put("card", resolveI18n(p1, card.getName()));
             map.put("value", String.valueOf(value));
             p1.sendMessage(messages.format(p1, "cardbattle.ai_played", map));
         }
