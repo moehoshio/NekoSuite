@@ -706,6 +706,17 @@ public class BlackjackManager {
             safeSet(inv, slots[i], betItem);
         }
 
+        // PvP button
+        ItemStack pvpItem = createItem(Material.PLAYER_HEAD,
+            messages.format(player, "menu.blackjack.pvp_button"),
+            new String[]{
+                messages.format(player, "menu.blackjack.pvp_lore"),
+                "",
+                messages.format(player, "menu.blackjack.pvp_invite_button"),
+                messages.format(player, "menu.blackjack.pvp_invite_lore")
+            });
+        safeSet(inv, 22, pvpItem);
+
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),

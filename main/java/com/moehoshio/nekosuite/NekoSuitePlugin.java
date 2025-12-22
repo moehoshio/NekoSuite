@@ -1814,6 +1814,19 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             case "double":
                 blackjackManager.doubleDown(player);
                 break;
+            case "pvp":
+                if (args.length > 1) {
+                    blackjackManager.invitePvP(player, args[1]);
+                } else {
+                    player.sendMessage(messages.format(player, "blackjack.usage"));
+                }
+                break;
+            case "accept":
+                blackjackManager.acceptPvP(player);
+                break;
+            case "decline":
+                blackjackManager.declinePvP(player);
+                break;
             default:
                 blackjackManager.openMenu(player);
                 break;

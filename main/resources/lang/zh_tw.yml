@@ -828,7 +828,7 @@ menu:
     click_to_play: "&a點擊打出此卡"
     wait_your_turn: "&c等待你的回合"
     not_enough_mana_lore: "&c法力不足"
-    shift_click_to_discard: "&e Shift+點擊棄置手牌"
+    shift_click_to_discard: "&eShift+點擊棄置手牌"
     end_turn_button: "&e結束回合"
     end_turn_lore: "&7結束你的回合"
     surrender_button: "&c投降"
