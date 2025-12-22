@@ -68,6 +68,9 @@ public class CardBattleManager {
     // PvP pending invitations (inviter -> target)
     private final Map<String, String> pendingInvitations = new HashMap<String, String>();
 
+    // Callback for opening games menu (set by plugin)
+    private java.util.function.Consumer<Player> openGamesMenuCallback;
+
     public CardBattleManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout menuLayout) {
         this.plugin = plugin;
         this.messages = messages;
@@ -80,6 +83,13 @@ public class CardBattleManager {
             plugin.getLogger().warning("無法創建數據目錄: " + storageDir.getAbsolutePath());
         }
         loadConfig(config);
+    }
+
+    /**
+     * Set callback for opening games menu.
+     */
+    public void setOpenGamesMenuCallback(java.util.function.Consumer<Player> callback) {
+        this.openGamesMenuCallback = callback;
     }
 
     private void loadConfig(YamlConfiguration config) {
@@ -408,6 +418,11 @@ public class CardBattleManager {
             }
         }
 
+        // Save session for PvE games
+        if (session.isPvE()) {
+            saveSession(session);
+        }
+
         openBattleMenu(player, session);
     }
 
@@ -433,9 +448,53 @@ public class CardBattleManager {
     }
 
     /**
+     * Discard a card from hand.
+     */
+    public void discardCard(Player player, int handIndex) {
+        BattleSession session = activeSessions.get(player.getName());
+        if (session == null || session.isEnded()) {
+            player.sendMessage(messages.format(player, "cardbattle.no_active_game"));
+            return;
+        }
+
+        boolean isPlayer1 = player.getName().equals(session.getPlayer1Name());
+        if (!session.isPlayerTurn(isPlayer1)) {
+            player.sendMessage(messages.format(player, "cardbattle.not_your_turn"));
+            return;
+        }
+
+        List<String> hand = isPlayer1 ? session.getPlayer1Hand() : session.getPlayer2Hand();
+        if (handIndex < 0 || handIndex >= hand.size()) {
+            player.sendMessage(messages.format(player, "cardbattle.invalid_card"));
+            return;
+        }
+
+        String cardId = hand.get(handIndex);
+        CardDefinition card = cards.get(cardId);
+        String cardName = card != null ? resolveI18n(player, card.getName()) : cardId;
+
+        // Remove card from hand
+        hand.remove(handIndex);
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("card", cardName);
+        player.sendMessage(messages.format(player, "cardbattle.card_discarded", map));
+
+        // Refresh menu
+        openBattleMenu(player, session);
+    }
+
+    /**
      * Handle menu clicks.
      */
     public void handleMenuClick(Player player, ItemStack clicked, CardBattleMenuHolder holder) {
+        handleMenuClick(player, clicked, holder, false);
+    }
+
+    /**
+     * Handle menu clicks with shift-click support.
+     */
+    public void handleMenuClick(Player player, ItemStack clicked, CardBattleMenuHolder holder, boolean isShiftClick) {
         if (clicked == null || clicked.getType() == Material.AIR) {
             return;
         }
@@ -456,7 +515,10 @@ public class CardBattleManager {
                 handleSelectAIClick(player, id);
                 break;
             case BATTLE:
-                handleBattleClick(player, id);
+                handleBattleClick(player, id, isShiftClick);
+                break;
+            case PVP_SELECT_PLAYER:
+                handlePvPSelectMenuClick(player, id);
                 break;
         }
     }
@@ -486,20 +548,106 @@ public class CardBattleManager {
             });
         safeSet(inv, 11, pveItem);
 
-        // PvP button
+        // PvP button - opens player selection menu
         ItemStack pvpItem = createItem(Material.PLAYER_HEAD,
             messages.format(player, "menu.cardbattle.pvp_button"),
             new String[]{
                 messages.format(player, "menu.cardbattle.pvp_lore"),
-                "ID:pvp"
+                messages.format(player, "menu.cardbattle.click_to_select_player"),
+                "ID:pvp_menu"
             });
         safeSet(inv, 15, pvpItem);
+
+        // Resume game button (only if saved game exists)
+        if (hasSavedSession(player.getName())) {
+            ItemStack resumeItem = createItem(Material.WRITABLE_BOOK,
+                messages.format(player, "menu.cardbattle.resume_button"),
+                new String[]{
+                    messages.format(player, "menu.cardbattle.resume_lore"),
+                    "ID:resume"
+                });
+            safeSet(inv, 13, resumeItem);
+        }
+
+        // Back to games button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.cardbattle.back_to_games"),
+            new String[]{
+                messages.format(player, "menu.cardbattle.back_to_games_lore"),
+                "ID:back_games"
+            });
+        safeSet(inv, 18, backItem);
 
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),
             new String[]{"ID:close"});
         safeSet(inv, 26, closeItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Open PvP player selection menu with online players' heads.
+     */
+    public void openPvPPlayerSelectMenu(Player player) {
+        String title = messages.format(player, "menu.cardbattle.pvp_select_title");
+        Inventory inv = Bukkit.createInventory(new CardBattleMenuHolder(MenuType.PVP_SELECT_PLAYER), 54, title);
+
+        // Info item
+        ItemStack infoItem = createItem(Material.BOOK,
+            messages.format(player, "menu.cardbattle.pvp_select_info"),
+            new String[]{
+                messages.format(player, "menu.cardbattle.pvp_select_desc")
+            });
+        safeSet(inv, 4, infoItem);
+
+        // Get online players and display their heads
+        int slot = 10;
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (slot > 43) break;
+            if (onlinePlayer.getName().equals(player.getName())) continue; // Skip self
+            if (activeSessions.containsKey(onlinePlayer.getName())) {
+                continue; // Skip players already in a game
+            }
+
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", onlinePlayer.getName());
+
+            ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+            ItemMeta meta = skull.getItemMeta();
+            if (meta instanceof org.bukkit.inventory.meta.SkullMeta) {
+                ((org.bukkit.inventory.meta.SkullMeta) meta).setOwningPlayer(onlinePlayer);
+            }
+            if (meta != null) {
+                meta.setDisplayName(messages.colorize("&e" + onlinePlayer.getName()));
+                List<String> lore = new ArrayList<String>();
+                lore.add(messages.format(player, "menu.cardbattle.pvp_click_to_invite", map));
+                lore.add("ID:invite_" + onlinePlayer.getName());
+                meta.setLore(lore);
+                skull.setItemMeta(meta);
+            }
+            safeSet(inv, slot, skull);
+            slot++;
+            if (slot == 17) slot = 19; // Skip edges
+            if (slot == 26) slot = 28;
+            if (slot == 35) slot = 37;
+        }
+
+        // Back button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.cardbattle.back"),
+            new String[]{
+                messages.format(player, "menu.cardbattle.back_lore"),
+                "ID:back"
+            });
+        safeSet(inv, 45, backItem);
+
+        // Close button
+        ItemStack closeItem = createItem(Material.BARRIER,
+            messages.format(player, "menu.close"),
+            new String[]{"ID:close"});
+        safeSet(inv, 53, closeItem);
 
         player.openInventory(inv);
     }
@@ -624,6 +772,9 @@ public class CardBattleManager {
                 lore.add(messages.format(player, "menu.cardbattle.wait_your_turn"));
             } else {
                 lore.add(messages.format(player, "menu.cardbattle.not_enough_mana_lore"));
+            }
+            if (isMyTurn) {
+                lore.add(messages.format(player, "menu.cardbattle.shift_click_to_discard"));
             }
             lore.add("ID:play_" + i);
 
@@ -889,6 +1040,11 @@ public class CardBattleManager {
         if (!session.isPvE()) {
             activeSessions.remove(session.getPlayer2Name());
         }
+
+        // Clear saved session file
+        if (session.isPvE()) {
+            clearSessionFile(session.getPlayer1Name());
+        }
     }
 
     private void grantRewards(Player player) {
@@ -913,9 +1069,34 @@ public class CardBattleManager {
                 player.closeInventory();
                 player.sendMessage(messages.format(player, "cardbattle.pvp_usage"));
                 break;
+            case "pvp_menu":
+                openPvPPlayerSelectMenu(player);
+                break;
+            case "resume":
+                player.closeInventory();
+                resumeGame(player);
+                break;
+            case "back_games":
+                player.closeInventory();
+                if (openGamesMenuCallback != null) {
+                    openGamesMenuCallback.accept(player);
+                }
+                break;
             case "close":
                 player.closeInventory();
                 break;
+        }
+    }
+
+    private void handlePvPSelectMenuClick(Player player, String id) {
+        if (id.startsWith("invite_")) {
+            String targetName = id.substring(7);
+            player.closeInventory();
+            invitePvP(player, targetName);
+        } else if ("back".equals(id)) {
+            openMainMenu(player);
+        } else if ("close".equals(id)) {
+            player.closeInventory();
         }
     }
 
@@ -932,11 +1113,15 @@ public class CardBattleManager {
         }
     }
 
-    private void handleBattleClick(Player player, String id) {
+    private void handleBattleClick(Player player, String id, boolean isShiftClick) {
         if (id.startsWith("play_")) {
             try {
                 int index = Integer.parseInt(id.substring(5));
-                playCard(player, index);
+                if (isShiftClick) {
+                    discardCard(player, index);
+                } else {
+                    playCard(player, index);
+                }
             } catch (NumberFormatException ignored) {
             }
         } else if ("end_turn".equals(id)) {
@@ -1034,10 +1219,144 @@ public class CardBattleManager {
         return new AIOpponent("default", "menu.cardbattle.default_ai", "", startingHealth, "normal");
     }
 
+    // ============ Session Persistence ============
+
+    /**
+     * Save a PvE game session for later resumption.
+     */
+    private void saveSession(BattleSession session) {
+        if (session == null || !session.isPvE()) {
+            return; // Only save PvE sessions
+        }
+
+        File file = new File(storageDir, session.getPlayer1Name() + ".yml");
+        YamlConfiguration data;
+        if (file.exists()) {
+            data = YamlConfiguration.loadConfiguration(file);
+        } else {
+            data = new YamlConfiguration();
+        }
+
+        data.set("cardbattle.active", !session.isEnded());
+        data.set("cardbattle.ai_opponent", session.getAiOpponent().getId());
+        data.set("cardbattle.player_health", session.getPlayer1Health());
+        data.set("cardbattle.ai_health", session.getPlayer2Health());
+        data.set("cardbattle.player_mana", session.getPlayer1Mana());
+        data.set("cardbattle.ai_mana", session.getPlayer2Mana());
+        data.set("cardbattle.player_hand", session.getPlayer1Hand());
+        data.set("cardbattle.ai_hand", session.getPlayer2Hand());
+        data.set("cardbattle.player_turn", session.isPlayer1Turn());
+        data.set("cardbattle.turn_count", session.getTurnCount());
+
+        try {
+            data.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("無法保存卡牌對決遊戲會話: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Load a saved PvE game session.
+     */
+    private BattleSession loadSession(String playerName) {
+        File file = new File(storageDir, playerName + ".yml");
+        if (!file.exists()) {
+            return null;
+        }
+
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        if (!data.contains("cardbattle.active")) {
+            return null;
+        }
+        if (!data.getBoolean("cardbattle.active", false)) {
+            return null;
+        }
+
+        String aiId = data.getString("cardbattle.ai_opponent", "default");
+        AIOpponent ai = aiOpponents.get(aiId);
+        if (ai == null) {
+            ai = getDefaultAI();
+        }
+
+        BattleSession session = new BattleSession(playerName, null, ai, startingHealth, startingMana);
+        session.setPlayer1Health(data.getInt("cardbattle.player_health", startingHealth));
+        session.setPlayer2Health(data.getInt("cardbattle.ai_health", ai.getHealth()));
+        session.setPlayer1Mana(data.getInt("cardbattle.player_mana", startingMana));
+        session.setPlayer2Mana(data.getInt("cardbattle.ai_mana", startingMana));
+        session.setPlayer1Turn(data.getBoolean("cardbattle.player_turn", true));
+
+        List<String> playerHand = data.getStringList("cardbattle.player_hand");
+        List<String> aiHand = data.getStringList("cardbattle.ai_hand");
+        session.getPlayer1Hand().addAll(playerHand);
+        session.getPlayer2Hand().addAll(aiHand);
+
+        // Restore turn count
+        int turnCount = data.getInt("cardbattle.turn_count", 1);
+        while (session.getTurnCount() < turnCount) {
+            session.incrementTurnCount();
+        }
+
+        return session;
+    }
+
+    /**
+     * Clear saved session file.
+     */
+    private void clearSessionFile(String playerName) {
+        File file = new File(storageDir, playerName + ".yml");
+        if (file.exists()) {
+            YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+            data.set("cardbattle", null);
+            try {
+                data.save(file);
+            } catch (IOException e) {
+                plugin.getLogger().warning("無法清除卡牌對決遊戲會話: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Check if a player has a saved game session.
+     */
+    public boolean hasSavedSession(String playerName) {
+        File file = new File(storageDir, playerName + ".yml");
+        if (!file.exists()) {
+            return false;
+        }
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        return data.getBoolean("cardbattle.active", false);
+    }
+
+    /**
+     * Resume a saved game for a player.
+     */
+    public void resumeGame(Player player) {
+        if (!enabled) {
+            player.sendMessage(messages.format(player, "cardbattle.disabled"));
+            return;
+        }
+
+        String playerName = player.getName();
+        if (activeSessions.containsKey(playerName)) {
+            player.sendMessage(messages.format(player, "cardbattle.already_in_game"));
+            return;
+        }
+
+        BattleSession session = loadSession(playerName);
+        if (session == null) {
+            player.sendMessage(messages.format(player, "cardbattle.no_saved_game"));
+            return;
+        }
+
+        activeSessions.put(playerName, session);
+        player.sendMessage(messages.format(player, "cardbattle.game_resumed"));
+        openBattleMenu(player, session);
+    }
+
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, SELECT_AI, BATTLE
+        MAIN, SELECT_AI, BATTLE, PVP_SELECT_PLAYER
     }
 
     public static class CardBattleMenuHolder implements InventoryHolder {

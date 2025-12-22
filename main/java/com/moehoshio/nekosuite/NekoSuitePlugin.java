@@ -1421,6 +1421,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         fishingContestManager = new FishingContestManager(this, messages, new File(getDataFolder(), "fishing_contest_config.yml"), menuLayout);
         cardBattleManager = new CardBattleManager(this, messages, new File(getDataFolder(), "card_battle_config.yml"), menuLayout);
         blackjackManager = new BlackjackManager(this, messages, new File(getDataFolder(), "blackjack_config.yml"), menuLayout);
+        
+        // Set callbacks for opening games menu from game managers
+        cardBattleManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        blackjackManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        randomTeleportGameManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        survivalArenaManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        fishingContestManager.setOpenGamesMenuCallback(this::openGamesMenu);
     }
 
     private boolean handleReload(CommandSender sender) {
@@ -1813,6 +1820,19 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 break;
             case "double":
                 blackjackManager.doubleDown(player);
+                break;
+            case "pvp":
+                if (args.length > 1) {
+                    blackjackManager.invitePvP(player, args[1]);
+                } else {
+                    player.sendMessage(messages.format(player, "blackjack.usage"));
+                }
+                break;
+            case "accept":
+                blackjackManager.acceptPvP(player);
+                break;
+            case "decline":
+                blackjackManager.declinePvP(player);
                 break;
             default:
                 blackjackManager.openMenu(player);
@@ -3572,7 +3592,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             ItemStack clicked = event.getCurrentItem();
             CardBattleManager.CardBattleMenuHolder cbHolder = (CardBattleManager.CardBattleMenuHolder) holder;
-            cardBattleManager.handleMenuClick(player, clicked, cbHolder);
+            boolean isShiftClick = event.isShiftClick();
+            cardBattleManager.handleMenuClick(player, clicked, cbHolder, isShiftClick);
             return;
         }
         if (holder instanceof BlackjackManager.BlackjackMenuHolder) {
