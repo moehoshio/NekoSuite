@@ -818,6 +818,8 @@ menu:
     ai_difficulty: "&7難度: {difficulty}"
     click_to_battle: "&e點擊開始對戰"
     default_ai: "&c未知對手"
+    resume_button: "&b✦ 繼續遊戲"
+    resume_lore: "&7繼續上次保存的遊戲進度"
     battle_title: "&#ffcc00✦ 卡牌對決"
     your_status: "&a你的狀態"
     health_lore: "&c❤ 生命: {health}/{max_health} {hp_bar}"
@@ -1620,7 +1622,9 @@ cardbattle:
   card_played: "&7使用了 &6{card}&7！"
   ai_played: "&c敵人使用了 &6{card}&7！"
   pvp_usage: "&7用法: &f/cardbattle pvp <玩家名> &7邀請對戰"
-  usage: "&7用法: &f/cardbattle &6<menu|pve|pvp <玩家>|accept|decline|surrender>"
+  usage: "&7用法: &f/cardbattle &6<menu|pve|pvp <玩家>|accept|decline|surrender|resume>"
+  no_saved_game: "&e⚠ &7您沒有已保存的遊戲進度。"
+  game_resumed: "&a✔ &7已恢復保存的遊戲進度！"
   # Card definitions
   cards:
     slash:

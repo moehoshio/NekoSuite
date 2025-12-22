@@ -418,6 +418,11 @@ public class CardBattleManager {
             }
         }
 
+        // Save session for PvE games
+        if (session.isPvE()) {
+            saveSession(session);
+        }
+
         openBattleMenu(player, session);
     }
 
@@ -552,6 +557,17 @@ public class CardBattleManager {
                 "ID:pvp_menu"
             });
         safeSet(inv, 15, pvpItem);
+
+        // Resume game button (only if saved game exists)
+        if (hasSavedSession(player.getName())) {
+            ItemStack resumeItem = createItem(Material.WRITABLE_BOOK,
+                messages.format(player, "menu.cardbattle.resume_button"),
+                new String[]{
+                    messages.format(player, "menu.cardbattle.resume_lore"),
+                    "ID:resume"
+                });
+            safeSet(inv, 13, resumeItem);
+        }
 
         // Back to games button
         ItemStack backItem = createItem(Material.ARROW,
@@ -1024,6 +1040,11 @@ public class CardBattleManager {
         if (!session.isPvE()) {
             activeSessions.remove(session.getPlayer2Name());
         }
+
+        // Clear saved session file
+        if (session.isPvE()) {
+            clearSessionFile(session.getPlayer1Name());
+        }
     }
 
     private void grantRewards(Player player) {
@@ -1050,6 +1071,10 @@ public class CardBattleManager {
                 break;
             case "pvp_menu":
                 openPvPPlayerSelectMenu(player);
+                break;
+            case "resume":
+                player.closeInventory();
+                resumeGame(player);
                 break;
             case "back_games":
                 player.closeInventory();
@@ -1192,6 +1217,140 @@ public class CardBattleManager {
             return aiOpponents.values().iterator().next();
         }
         return new AIOpponent("default", "menu.cardbattle.default_ai", "", startingHealth, "normal");
+    }
+
+    // ============ Session Persistence ============
+
+    /**
+     * Save a PvE game session for later resumption.
+     */
+    private void saveSession(BattleSession session) {
+        if (session == null || !session.isPvE()) {
+            return; // Only save PvE sessions
+        }
+
+        File file = new File(storageDir, session.getPlayer1Name() + ".yml");
+        YamlConfiguration data;
+        if (file.exists()) {
+            data = YamlConfiguration.loadConfiguration(file);
+        } else {
+            data = new YamlConfiguration();
+        }
+
+        data.set("cardbattle.active", !session.isEnded());
+        data.set("cardbattle.ai_opponent", session.getAiOpponent().getId());
+        data.set("cardbattle.player_health", session.getPlayer1Health());
+        data.set("cardbattle.ai_health", session.getPlayer2Health());
+        data.set("cardbattle.player_mana", session.getPlayer1Mana());
+        data.set("cardbattle.ai_mana", session.getPlayer2Mana());
+        data.set("cardbattle.player_hand", session.getPlayer1Hand());
+        data.set("cardbattle.ai_hand", session.getPlayer2Hand());
+        data.set("cardbattle.player_turn", session.isPlayer1Turn());
+        data.set("cardbattle.turn_count", session.getTurnCount());
+
+        try {
+            data.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().warning("無法保存卡牌對決遊戲會話: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Load a saved PvE game session.
+     */
+    private BattleSession loadSession(String playerName) {
+        File file = new File(storageDir, playerName + ".yml");
+        if (!file.exists()) {
+            return null;
+        }
+
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        if (!data.contains("cardbattle.active")) {
+            return null;
+        }
+        if (!data.getBoolean("cardbattle.active", false)) {
+            return null;
+        }
+
+        String aiId = data.getString("cardbattle.ai_opponent", "default");
+        AIOpponent ai = aiOpponents.get(aiId);
+        if (ai == null) {
+            ai = getDefaultAI();
+        }
+
+        BattleSession session = new BattleSession(playerName, null, ai, startingHealth, startingMana);
+        session.setPlayer1Health(data.getInt("cardbattle.player_health", startingHealth));
+        session.setPlayer2Health(data.getInt("cardbattle.ai_health", ai.getHealth()));
+        session.setPlayer1Mana(data.getInt("cardbattle.player_mana", startingMana));
+        session.setPlayer2Mana(data.getInt("cardbattle.ai_mana", startingMana));
+        session.setPlayer1Turn(data.getBoolean("cardbattle.player_turn", true));
+
+        List<String> playerHand = data.getStringList("cardbattle.player_hand");
+        List<String> aiHand = data.getStringList("cardbattle.ai_hand");
+        session.getPlayer1Hand().addAll(playerHand);
+        session.getPlayer2Hand().addAll(aiHand);
+
+        // Restore turn count
+        int turnCount = data.getInt("cardbattle.turn_count", 1);
+        while (session.getTurnCount() < turnCount) {
+            session.incrementTurnCount();
+        }
+
+        return session;
+    }
+
+    /**
+     * Clear saved session file.
+     */
+    private void clearSessionFile(String playerName) {
+        File file = new File(storageDir, playerName + ".yml");
+        if (file.exists()) {
+            YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+            data.set("cardbattle", null);
+            try {
+                data.save(file);
+            } catch (IOException e) {
+                plugin.getLogger().warning("無法清除卡牌對決遊戲會話: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Check if a player has a saved game session.
+     */
+    public boolean hasSavedSession(String playerName) {
+        File file = new File(storageDir, playerName + ".yml");
+        if (!file.exists()) {
+            return false;
+        }
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        return data.getBoolean("cardbattle.active", false);
+    }
+
+    /**
+     * Resume a saved game for a player.
+     */
+    public void resumeGame(Player player) {
+        if (!enabled) {
+            player.sendMessage(messages.format(player, "cardbattle.disabled"));
+            return;
+        }
+
+        String playerName = player.getName();
+        if (activeSessions.containsKey(playerName)) {
+            player.sendMessage(messages.format(player, "cardbattle.already_in_game"));
+            return;
+        }
+
+        BattleSession session = loadSession(playerName);
+        if (session == null) {
+            player.sendMessage(messages.format(player, "cardbattle.no_saved_game"));
+            return;
+        }
+
+        activeSessions.put(playerName, session);
+        player.sendMessage(messages.format(player, "cardbattle.game_resumed"));
+        openBattleMenu(player, session);
     }
 
     // ============ Inner Classes ============
