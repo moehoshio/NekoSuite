@@ -1421,6 +1421,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         fishingContestManager = new FishingContestManager(this, messages, new File(getDataFolder(), "fishing_contest_config.yml"), menuLayout);
         cardBattleManager = new CardBattleManager(this, messages, new File(getDataFolder(), "card_battle_config.yml"), menuLayout);
         blackjackManager = new BlackjackManager(this, messages, new File(getDataFolder(), "blackjack_config.yml"), menuLayout);
+        
+        // Set callbacks for opening games menu from game managers
+        cardBattleManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        blackjackManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        randomTeleportGameManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        survivalArenaManager.setOpenGamesMenuCallback(this::openGamesMenu);
+        fishingContestManager.setOpenGamesMenuCallback(this::openGamesMenu);
     }
 
     private boolean handleReload(CommandSender sender) {

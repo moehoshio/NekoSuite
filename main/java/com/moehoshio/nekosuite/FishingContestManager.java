@@ -70,6 +70,9 @@ public class FishingContestManager {
     // Player scores in current contest
     private final Map<String, PlayerScore> playerScores = new HashMap<String, PlayerScore>();
 
+    // Callback for opening games menu (set by plugin)
+    private java.util.function.Consumer<Player> openGamesMenuCallback;
+
     public FishingContestManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout menuLayout) {
         this.plugin = plugin;
         this.messages = messages;
@@ -124,6 +127,13 @@ public class FishingContestManager {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    /**
+     * Set callback for opening games menu.
+     */
+    public void setOpenGamesMenuCallback(java.util.function.Consumer<Player> callback) {
+        this.openGamesMenuCallback = callback;
     }
 
     // ============ Public API ============
@@ -533,6 +543,15 @@ public class FishingContestManager {
             });
         safeSet(inv, 15, rewardsItem);
 
+        // Back to games button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.fishing.back_to_games"),
+            new String[]{
+                messages.format(player, "menu.fishing.back_to_games_lore"),
+                "ID:back_games"
+            });
+        safeSet(inv, 18, backItem);
+
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),
@@ -628,6 +647,12 @@ public class FishingContestManager {
             case "leaderboard":
                 player.closeInventory();
                 showLeaderboard(player);
+                break;
+            case "back_games":
+                player.closeInventory();
+                if (openGamesMenuCallback != null) {
+                    openGamesMenuCallback.accept(player);
+                }
                 break;
             case "close":
                 player.closeInventory();

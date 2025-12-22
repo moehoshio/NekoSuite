@@ -68,6 +68,9 @@ public class CardBattleManager {
     // PvP pending invitations (inviter -> target)
     private final Map<String, String> pendingInvitations = new HashMap<String, String>();
 
+    // Callback for opening games menu (set by plugin)
+    private java.util.function.Consumer<Player> openGamesMenuCallback;
+
     public CardBattleManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout menuLayout) {
         this.plugin = plugin;
         this.messages = messages;
@@ -80,6 +83,13 @@ public class CardBattleManager {
             plugin.getLogger().warning("無法創建數據目錄: " + storageDir.getAbsolutePath());
         }
         loadConfig(config);
+    }
+
+    /**
+     * Set callback for opening games menu.
+     */
+    public void setOpenGamesMenuCallback(java.util.function.Consumer<Player> callback) {
+        this.openGamesMenuCallback = callback;
     }
 
     private void loadConfig(YamlConfiguration config) {
@@ -502,6 +512,9 @@ public class CardBattleManager {
             case BATTLE:
                 handleBattleClick(player, id, isShiftClick);
                 break;
+            case PVP_SELECT_PLAYER:
+                handlePvPSelectMenuClick(player, id);
+                break;
         }
     }
 
@@ -530,20 +543,95 @@ public class CardBattleManager {
             });
         safeSet(inv, 11, pveItem);
 
-        // PvP button
+        // PvP button - opens player selection menu
         ItemStack pvpItem = createItem(Material.PLAYER_HEAD,
             messages.format(player, "menu.cardbattle.pvp_button"),
             new String[]{
                 messages.format(player, "menu.cardbattle.pvp_lore"),
-                "ID:pvp"
+                messages.format(player, "menu.cardbattle.click_to_select_player"),
+                "ID:pvp_menu"
             });
         safeSet(inv, 15, pvpItem);
+
+        // Back to games button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.cardbattle.back_to_games"),
+            new String[]{
+                messages.format(player, "menu.cardbattle.back_to_games_lore"),
+                "ID:back_games"
+            });
+        safeSet(inv, 18, backItem);
 
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),
             new String[]{"ID:close"});
         safeSet(inv, 26, closeItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Open PvP player selection menu with online players' heads.
+     */
+    public void openPvPPlayerSelectMenu(Player player) {
+        String title = messages.format(player, "menu.cardbattle.pvp_select_title");
+        Inventory inv = Bukkit.createInventory(new CardBattleMenuHolder(MenuType.PVP_SELECT_PLAYER), 54, title);
+
+        // Info item
+        ItemStack infoItem = createItem(Material.BOOK,
+            messages.format(player, "menu.cardbattle.pvp_select_info"),
+            new String[]{
+                messages.format(player, "menu.cardbattle.pvp_select_desc")
+            });
+        safeSet(inv, 4, infoItem);
+
+        // Get online players and display their heads
+        int slot = 10;
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (slot > 43) break;
+            if (onlinePlayer.getName().equals(player.getName())) continue; // Skip self
+            if (activeSessions.containsKey(onlinePlayer.getName())) {
+                continue; // Skip players already in a game
+            }
+
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", onlinePlayer.getName());
+
+            ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+            ItemMeta meta = skull.getItemMeta();
+            if (meta instanceof org.bukkit.inventory.meta.SkullMeta) {
+                ((org.bukkit.inventory.meta.SkullMeta) meta).setOwningPlayer(onlinePlayer);
+            }
+            if (meta != null) {
+                meta.setDisplayName(messages.colorize("&e" + onlinePlayer.getName()));
+                List<String> lore = new ArrayList<String>();
+                lore.add(messages.format(player, "menu.cardbattle.pvp_click_to_invite", map));
+                lore.add("ID:invite_" + onlinePlayer.getName());
+                meta.setLore(lore);
+                skull.setItemMeta(meta);
+            }
+            safeSet(inv, slot, skull);
+            slot++;
+            if (slot == 17) slot = 19; // Skip edges
+            if (slot == 26) slot = 28;
+            if (slot == 35) slot = 37;
+        }
+
+        // Back button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.cardbattle.back"),
+            new String[]{
+                messages.format(player, "menu.cardbattle.back_lore"),
+                "ID:back"
+            });
+        safeSet(inv, 45, backItem);
+
+        // Close button
+        ItemStack closeItem = createItem(Material.BARRIER,
+            messages.format(player, "menu.close"),
+            new String[]{"ID:close"});
+        safeSet(inv, 53, closeItem);
 
         player.openInventory(inv);
     }
@@ -960,9 +1048,30 @@ public class CardBattleManager {
                 player.closeInventory();
                 player.sendMessage(messages.format(player, "cardbattle.pvp_usage"));
                 break;
+            case "pvp_menu":
+                openPvPPlayerSelectMenu(player);
+                break;
+            case "back_games":
+                player.closeInventory();
+                if (openGamesMenuCallback != null) {
+                    openGamesMenuCallback.accept(player);
+                }
+                break;
             case "close":
                 player.closeInventory();
                 break;
+        }
+    }
+
+    private void handlePvPSelectMenuClick(Player player, String id) {
+        if (id.startsWith("invite_")) {
+            String targetName = id.substring(7);
+            player.closeInventory();
+            invitePvP(player, targetName);
+        } else if ("back".equals(id)) {
+            openMainMenu(player);
+        } else if ("close".equals(id)) {
+            player.closeInventory();
         }
     }
 
@@ -1088,7 +1197,7 @@ public class CardBattleManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        MAIN, SELECT_AI, BATTLE
+        MAIN, SELECT_AI, BATTLE, PVP_SELECT_PLAYER
     }
 
     public static class CardBattleMenuHolder implements InventoryHolder {

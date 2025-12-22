@@ -63,6 +63,9 @@ public class RandomTeleportGameManager {
     // Active game sessions
     private final Map<String, GameSession> activeSessions = new HashMap<String, GameSession>();
 
+    // Callback for opening games menu (set by plugin)
+    private java.util.function.Consumer<Player> openGamesMenuCallback;
+
     public RandomTeleportGameManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout menuLayout) {
         this.plugin = plugin;
         this.messages = messages;
@@ -92,6 +95,13 @@ public class RandomTeleportGameManager {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    /**
+     * Set callback for opening games menu.
+     */
+    public void setOpenGamesMenuCallback(java.util.function.Consumer<Player> callback) {
+        this.openGamesMenuCallback = callback;
     }
 
     // ============ Public API ============
@@ -426,6 +436,15 @@ public class RandomTeleportGameManager {
             });
         safeSet(inv, 13, startItem);
 
+        // Back to games button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.rtpgame.back_to_games"),
+            new String[]{
+                messages.format(player, "menu.rtpgame.back_to_games_lore"),
+                "ID:back_games"
+            });
+        safeSet(inv, 18, backItem);
+
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),
@@ -506,6 +525,12 @@ public class RandomTeleportGameManager {
             case "end_game":
                 player.closeInventory();
                 endGame(player);
+                break;
+            case "back_games":
+                player.closeInventory();
+                if (openGamesMenuCallback != null) {
+                    openGamesMenuCallback.accept(player);
+                }
                 break;
             case "close":
                 player.closeInventory();

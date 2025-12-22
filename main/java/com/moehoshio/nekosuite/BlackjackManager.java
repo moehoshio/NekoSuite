@@ -54,6 +54,9 @@ public class BlackjackManager {
     private final Map<String, PvPBlackjackSession> pvpSessions = new HashMap<String, PvPBlackjackSession>();
     private final Map<String, String> pvpInvitations = new HashMap<String, String>(); // target -> inviter
 
+    // Callback for opening games menu (set by plugin)
+    private java.util.function.Consumer<Player> openGamesMenuCallback;
+
     // Card values for display
     private static final String[] CARD_SUITS = {"♠", "♥", "♦", "♣"};
     private static final String[] CARD_RANKS = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
@@ -64,6 +67,13 @@ public class BlackjackManager {
         this.configFile = configFile;
         this.menuLayout = menuLayout;
         loadConfig();
+    }
+
+    /**
+     * Set callback for opening games menu.
+     */
+    public void setOpenGamesMenuCallback(java.util.function.Consumer<Player> callback) {
+        this.openGamesMenuCallback = callback;
     }
 
     private void loadConfig() {
@@ -655,6 +665,9 @@ public class BlackjackManager {
             case PVP_GAME:
                 handlePvPGameMenuClick(player, id);
                 break;
+            case PVP_SELECT_PLAYER:
+                handlePvPSelectMenuClick(player, id);
+                break;
         }
     }
 
@@ -706,22 +719,96 @@ public class BlackjackManager {
             safeSet(inv, slots[i], betItem);
         }
 
-        // PvP button
+        // PvP button - opens player selection menu
         ItemStack pvpItem = createItem(Material.PLAYER_HEAD,
             messages.format(player, "menu.blackjack.pvp_button"),
             new String[]{
                 messages.format(player, "menu.blackjack.pvp_lore"),
                 "",
-                messages.format(player, "menu.blackjack.pvp_invite_button"),
-                messages.format(player, "menu.blackjack.pvp_invite_lore")
+                messages.format(player, "menu.blackjack.click_to_select_player"),
+                "ID:pvp_menu"
             });
         safeSet(inv, 22, pvpItem);
+
+        // Back to games button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.blackjack.back_to_games"),
+            new String[]{
+                messages.format(player, "menu.blackjack.back_to_games_lore"),
+                "ID:back_games"
+            });
+        safeSet(inv, 18, backItem);
 
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),
             new String[]{"ID:close"});
         safeSet(inv, 26, closeItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Open PvP player selection menu with online players' heads.
+     */
+    public void openPvPPlayerSelectMenu(Player player) {
+        String title = messages.format(player, "menu.blackjack.pvp_select_title");
+        Inventory inv = Bukkit.createInventory(new BlackjackMenuHolder(MenuType.PVP_SELECT_PLAYER), 54, title);
+
+        // Info item
+        ItemStack infoItem = createItem(Material.BOOK,
+            messages.format(player, "menu.blackjack.pvp_select_info"),
+            new String[]{
+                messages.format(player, "menu.blackjack.pvp_select_desc")
+            });
+        safeSet(inv, 4, infoItem);
+
+        // Get online players and display their heads (async for skull meta)
+        int slot = 10;
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (slot > 43) break;
+            if (onlinePlayer.getName().equals(player.getName())) continue; // Skip self
+            if (activeSessions.containsKey(onlinePlayer.getName()) || pvpSessions.containsKey(onlinePlayer.getName())) {
+                continue; // Skip players already in a game
+            }
+
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", onlinePlayer.getName());
+
+            ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+            ItemMeta meta = skull.getItemMeta();
+            if (meta instanceof org.bukkit.inventory.meta.SkullMeta) {
+                ((org.bukkit.inventory.meta.SkullMeta) meta).setOwningPlayer(onlinePlayer);
+            }
+            if (meta != null) {
+                meta.setDisplayName(messages.colorize("&e" + onlinePlayer.getName()));
+                List<String> lore = new ArrayList<String>();
+                lore.add(messages.format(player, "menu.blackjack.pvp_click_to_invite", map));
+                lore.add("ID:invite_" + onlinePlayer.getName());
+                meta.setLore(lore);
+                skull.setItemMeta(meta);
+            }
+            safeSet(inv, slot, skull);
+            slot++;
+            if (slot == 17) slot = 19; // Skip edges
+            if (slot == 26) slot = 28;
+            if (slot == 35) slot = 37;
+        }
+
+        // Back button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.blackjack.back"),
+            new String[]{
+                messages.format(player, "menu.blackjack.back_lore"),
+                "ID:back"
+            });
+        safeSet(inv, 45, backItem);
+
+        // Close button
+        ItemStack closeItem = createItem(Material.BARRIER,
+            messages.format(player, "menu.close"),
+            new String[]{"ID:close"});
+        safeSet(inv, 53, closeItem);
 
         player.openInventory(inv);
     }
@@ -1054,6 +1141,26 @@ public class BlackjackManager {
                 startGame(player, bet);
             } catch (NumberFormatException ignored) {
             }
+        } else if ("pvp_menu".equals(id)) {
+            openPvPPlayerSelectMenu(player);
+        } else if ("back_games".equals(id)) {
+            player.closeInventory();
+            // Notify plugin to open games menu (handled via callback pattern)
+            if (openGamesMenuCallback != null) {
+                openGamesMenuCallback.accept(player);
+            }
+        } else if ("close".equals(id)) {
+            player.closeInventory();
+        }
+    }
+
+    private void handlePvPSelectMenuClick(Player player, String id) {
+        if (id.startsWith("invite_")) {
+            String targetName = id.substring(7);
+            player.closeInventory();
+            invitePvP(player, targetName);
+        } else if ("back".equals(id)) {
+            openBetMenu(player);
         } else if ("close".equals(id)) {
             player.closeInventory();
         }
@@ -1158,7 +1265,7 @@ public class BlackjackManager {
     // ============ Inner Classes ============
 
     public enum MenuType {
-        BET, GAME, RESULT, PVP_GAME
+        BET, GAME, RESULT, PVP_GAME, PVP_SELECT_PLAYER
     }
 
     public static class BlackjackMenuHolder implements InventoryHolder {

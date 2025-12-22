@@ -69,6 +69,9 @@ public class SurvivalArenaManager {
     // Arena locations (configured spawn points)
     private final Map<String, Location> arenaLocations = new HashMap<String, Location>();
 
+    // Callback for opening games menu (set by plugin)
+    private java.util.function.Consumer<Player> openGamesMenuCallback;
+
     public SurvivalArenaManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout menuLayout) {
         this.plugin = plugin;
         this.messages = messages;
@@ -139,6 +142,13 @@ public class SurvivalArenaManager {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    /**
+     * Set callback for opening games menu.
+     */
+    public void setOpenGamesMenuCallback(java.util.function.Consumer<Player> callback) {
+        this.openGamesMenuCallback = callback;
     }
 
     // ============ Public API ============
@@ -556,6 +566,15 @@ public class SurvivalArenaManager {
             });
         safeSet(inv, 13, startItem);
 
+        // Back to games button
+        ItemStack backItem = createItem(Material.ARROW,
+            messages.format(player, "menu.arena.back_to_games"),
+            new String[]{
+                messages.format(player, "menu.arena.back_to_games_lore"),
+                "ID:back_games"
+            });
+        safeSet(inv, 18, backItem);
+
         // Close button
         ItemStack closeItem = createItem(Material.BARRIER,
             messages.format(player, "menu.close"),
@@ -626,6 +645,12 @@ public class SurvivalArenaManager {
             case "end_game":
                 player.closeInventory();
                 endGame(player);
+                break;
+            case "back_games":
+                player.closeInventory();
+                if (openGamesMenuCallback != null) {
+                    openGamesMenuCallback.accept(player);
+                }
                 break;
             case "close":
                 player.closeInventory();
