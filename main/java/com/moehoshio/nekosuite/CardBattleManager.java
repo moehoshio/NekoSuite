@@ -433,9 +433,53 @@ public class CardBattleManager {
     }
 
     /**
+     * Discard a card from hand.
+     */
+    public void discardCard(Player player, int handIndex) {
+        BattleSession session = activeSessions.get(player.getName());
+        if (session == null || session.isEnded()) {
+            player.sendMessage(messages.format(player, "cardbattle.no_active_game"));
+            return;
+        }
+
+        boolean isPlayer1 = player.getName().equals(session.getPlayer1Name());
+        if (!session.isPlayerTurn(isPlayer1)) {
+            player.sendMessage(messages.format(player, "cardbattle.not_your_turn"));
+            return;
+        }
+
+        List<String> hand = isPlayer1 ? session.getPlayer1Hand() : session.getPlayer2Hand();
+        if (handIndex < 0 || handIndex >= hand.size()) {
+            player.sendMessage(messages.format(player, "cardbattle.invalid_card"));
+            return;
+        }
+
+        String cardId = hand.get(handIndex);
+        CardDefinition card = cards.get(cardId);
+        String cardName = card != null ? resolveI18n(player, card.getName()) : cardId;
+
+        // Remove card from hand
+        hand.remove(handIndex);
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("card", cardName);
+        player.sendMessage(messages.format(player, "cardbattle.card_discarded", map));
+
+        // Refresh menu
+        openBattleMenu(player, session);
+    }
+
+    /**
      * Handle menu clicks.
      */
     public void handleMenuClick(Player player, ItemStack clicked, CardBattleMenuHolder holder) {
+        handleMenuClick(player, clicked, holder, false);
+    }
+
+    /**
+     * Handle menu clicks with shift-click support.
+     */
+    public void handleMenuClick(Player player, ItemStack clicked, CardBattleMenuHolder holder, boolean isShiftClick) {
         if (clicked == null || clicked.getType() == Material.AIR) {
             return;
         }
@@ -456,7 +500,7 @@ public class CardBattleManager {
                 handleSelectAIClick(player, id);
                 break;
             case BATTLE:
-                handleBattleClick(player, id);
+                handleBattleClick(player, id, isShiftClick);
                 break;
         }
     }
@@ -624,6 +668,9 @@ public class CardBattleManager {
                 lore.add(messages.format(player, "menu.cardbattle.wait_your_turn"));
             } else {
                 lore.add(messages.format(player, "menu.cardbattle.not_enough_mana_lore"));
+            }
+            if (isMyTurn) {
+                lore.add(messages.format(player, "menu.cardbattle.shift_click_to_discard"));
             }
             lore.add("ID:play_" + i);
 
@@ -932,11 +979,15 @@ public class CardBattleManager {
         }
     }
 
-    private void handleBattleClick(Player player, String id) {
+    private void handleBattleClick(Player player, String id, boolean isShiftClick) {
         if (id.startsWith("play_")) {
             try {
                 int index = Integer.parseInt(id.substring(5));
-                playCard(player, index);
+                if (isShiftClick) {
+                    discardCard(player, index);
+                } else {
+                    playCard(player, index);
+                }
             } catch (NumberFormatException ignored) {
             }
         } else if ("end_turn".equals(id)) {

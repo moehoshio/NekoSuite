@@ -423,9 +423,23 @@ public class SurvivalArenaManager {
                     }
                 }
 
-                // Remove dead mobs from session
+                // Remove dead mobs from session and award points
+                // (Mobs killed by environment like sunlight are counted as successful kills)
                 for (UUID deadId : deadMobs) {
                     session.removeMob(deadId);
+                    int points = calculateKillScore(session.getCurrentWave());
+                    session.addScore(points);
+                    session.incrementKills();
+                }
+
+                // Notify player of environmental kills if any
+                if (!deadMobs.isEmpty() && player.isOnline()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    int totalPoints = deadMobs.size() * calculateKillScore(session.getCurrentWave());
+                    map.put("points", String.valueOf(totalPoints));
+                    map.put("total", String.valueOf(session.getScore()));
+                    map.put("count", String.valueOf(deadMobs.size()));
+                    player.sendMessage(messages.format(player, "arena.mob_died_environment", map));
                 }
 
                 // Check if wave is complete

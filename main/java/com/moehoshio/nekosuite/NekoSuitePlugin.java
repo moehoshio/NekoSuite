@@ -3572,7 +3572,8 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             ItemStack clicked = event.getCurrentItem();
             CardBattleManager.CardBattleMenuHolder cbHolder = (CardBattleManager.CardBattleMenuHolder) holder;
-            cardBattleManager.handleMenuClick(player, clicked, cbHolder);
+            boolean isShiftClick = event.isShiftClick();
+            cardBattleManager.handleMenuClick(player, clicked, cbHolder, isShiftClick);
             return;
         }
         if (holder instanceof BlackjackManager.BlackjackMenuHolder) {

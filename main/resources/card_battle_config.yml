@@ -10,8 +10,8 @@ game:
   starting_hand_size: 5
   max_hand_size: 7
   draw_per_turn: 1
-  starting_mana: 3
-  mana_per_turn: 1
+  starting_mana: 5
+  mana_per_turn: 2
   max_mana: 10
   turn_time_limit: 60
 
