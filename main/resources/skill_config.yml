@@ -306,6 +306,29 @@ skills:
       sound: ENTITY_BLAZE_SHOOT
       particle: FLAME
 
+  # ========== 垂直五芒星儀式 ==========
+  vertical_pentagram:
+    name: "&c✦ 垂直烈焰五芒星"
+    description: "在空中繪製一個垂直的火焰五芒星，視覺效果更震撼"
+    type: pentagram_vertical
+    trigger: sneak_right_click
+    lore_requirement: "&c✦ 魔法五芒星"
+    permission: ""
+    cooldown: 25
+    effects:
+      # 五芒星大小 (方塊)
+      size: 3.0
+      # 總傷害 (分散在移動路徑上)
+      damage: 12.0
+      # 向前移動距離 (方塊)
+      move_distance: 12
+      # 繪製每條線的間隔 (ticks)
+      draw_delay: 5
+      # 火焰持續時間 (ticks)
+      fire_duration: 80
+      sound: ENTITY_BLAZE_SHOOT
+      particle: FLAME
+
 # 可以添加更多自定義技能...
 # 支持的技能類型 (type):
 #   - lightning: 閃電類技能 (範圍)
@@ -320,7 +343,8 @@ skills:
 #   - lightning_bolt: 方向性閃電 (向前方發射)
 #   - fireball: 火球技能 (向前方發射，擊中爆炸)
 #   - ice_beam: 冰霜射線 (向前方發射)
-#   - pentagram: 五芒星儀式 (繪製五芒星後向前移動)
+#   - pentagram: 五芒星儀式 (水平繪製五芒星後向前移動)
+#   - pentagram_vertical: 垂直五芒星 (垂直繪製五芒星後向前發射)
 
 # 支持的觸發方式 (trigger):
 #   - right_click: 右鍵點擊

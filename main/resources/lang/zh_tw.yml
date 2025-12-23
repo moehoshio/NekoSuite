@@ -1475,6 +1475,7 @@ skill:
     fireball: "火球"
     ice_beam: "冰霜射線"
     pentagram: "五芒星儀式"
+    pentagram_vertical: "垂直五芒星"
 
 # 小遊戲系統
 ngame:

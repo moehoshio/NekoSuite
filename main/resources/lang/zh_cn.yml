@@ -1389,6 +1389,7 @@ skill:
     fireball: "火球"
     ice_beam: "冰霜射线"
     pentagram: "五芒星仪式"
+    pentagram_vertical: "垂直五芒星"
 
 # 卡牌对决游戏
 cardbattle:

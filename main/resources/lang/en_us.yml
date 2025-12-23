@@ -1389,6 +1389,7 @@ skill:
     fireball: "Fireball"
     ice_beam: "Ice Beam"
     pentagram: "Pentagram Ritual"
+    pentagram_vertical: "Vertical Pentagram"
 
 # Card Battle Game
 cardbattle:
