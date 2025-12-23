@@ -1388,6 +1388,7 @@ skill:
     lightning_bolt: "雷霆射线"
     fireball: "火球"
     ice_beam: "冰霜射线"
+    pentagram: "五芒星仪式"
 
 # 卡牌对决游戏
 cardbattle:

@@ -291,6 +291,10 @@ public class SkillManager implements Listener {
             case "ice_beam":
                 executeIceBeam(player, effects);
                 break;
+            // Special ritual skills
+            case "pentagram":
+                executePentagram(player, effects);
+                break;
             default:
                 plugin.getLogger().warning("Unknown skill type: " + type);
                 break;
@@ -691,6 +695,135 @@ public class SkillManager implements Listener {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Pentagram - Draws a fire pentagram like a spell incantation, then moves forward
+     * The pentagram is drawn line by line with delay, creating a ritual-like effect
+     */
+    private void executePentagram(Player player, Map<String, Object> effects) {
+        Location center = player.getLocation().add(0, 1.5, 0);
+        double size = getDoubleEffect(effects, "size", 2.5);
+        double damage = getDoubleEffect(effects, "damage", 10.0);
+        int moveDistance = getIntEffect(effects, "move_distance", 8);
+        int drawDelayTicks = getIntEffect(effects, "draw_delay", 4); // Ticks between each line
+        int fireDuration = getIntEffect(effects, "fire_duration", 60);
+        
+        // Get the direction the player is facing (for forward movement)
+        Vector forward = player.getLocation().getDirection().normalize();
+        forward.setY(0); // Keep it horizontal
+        forward.normalize();
+        
+        // Calculate the 5 points of the pentagram
+        // A pentagram has vertices at angles: -90°, -90°+72°, -90°+144°, -90°+216°, -90°+288°
+        // But to draw it in one stroke: 0 -> 2 -> 4 -> 1 -> 3 -> 0 (every other vertex)
+        Location[] points = new Location[5];
+        for (int i = 0; i < 5; i++) {
+            double angle = Math.toRadians(-90 + i * 72); // Start from top
+            double x = Math.cos(angle) * size;
+            double z = Math.sin(angle) * size;
+            points[i] = center.clone().add(x, 0, z);
+        }
+        
+        // Drawing order for pentagram: 0 -> 2 -> 4 -> 1 -> 3 -> 0
+        int[] drawOrder = {0, 2, 4, 1, 3, 0};
+        
+        // Schedule the drawing of each line with delay
+        for (int lineNum = 0; lineNum < 5; lineNum++) {
+            final int fromIdx = drawOrder[lineNum];
+            final int toIdx = drawOrder[lineNum + 1];
+            final Location from = points[fromIdx];
+            final Location to = points[toIdx];
+            final int delay = lineNum * drawDelayTicks;
+            
+            plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    drawPentagramLine(from, to, effects);
+                }
+            }, delay);
+        }
+        
+        // After all lines are drawn, move the pentagram forward and damage enemies
+        final int totalDrawTime = 5 * drawDelayTicks;
+        final Location finalCenter = center.clone();
+        final Vector finalForward = forward.clone();
+        
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                // Move the pentagram forward step by step
+                for (int step = 0; step <= moveDistance; step++) {
+                    final int currentStep = step;
+                    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                        @Override
+                        public void run() {
+                            Location movingCenter = finalCenter.clone().add(finalForward.clone().multiply(currentStep));
+                            
+                            // Draw a quick pentagram at current position
+                            for (int i = 0; i < 5; i++) {
+                                double angle = Math.toRadians(-90 + i * 72);
+                                double x = Math.cos(angle) * size;
+                                double z = Math.sin(angle) * size;
+                                Location point = movingCenter.clone().add(x, 0, z);
+                                try {
+                                    point.getWorld().spawnParticle(Particle.FLAME, point, 2, 0.1, 0.1, 0.1, 0.01);
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                            
+                            // Damage entities at this position
+                            Collection<Entity> nearby = movingCenter.getWorld().getNearbyEntities(movingCenter, size + 1, 2, size + 1);
+                            for (Entity entity : nearby) {
+                                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                                    LivingEntity living = (LivingEntity) entity;
+                                    living.damage(damage / (moveDistance + 1), player);
+                                    living.setFireTicks(fireDuration);
+                                }
+                            }
+                            
+                            // Final explosion effect at the end
+                            if (currentStep == moveDistance) {
+                                try {
+                                    movingCenter.getWorld().spawnParticle(Particle.FLAME, movingCenter, 50, 1.5, 1, 1.5, 0.1);
+                                    movingCenter.getWorld().spawnParticle(Particle.SMOKE_LARGE, movingCenter, 20, 1, 0.5, 1, 0.05);
+                                    movingCenter.getWorld().playSound(movingCenter, Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.5f);
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                        }
+                    }, currentStep * 2); // Move every 2 ticks
+                }
+            }
+        }, totalDrawTime + 10); // Wait a bit after drawing before moving
+    }
+
+    /**
+     * Draw a line of particles between two points (for pentagram)
+     */
+    private void drawPentagramLine(Location from, Location to, Map<String, Object> effects) {
+        String particleName = (String) effects.get("particle");
+        if (particleName == null) {
+            particleName = "FLAME";
+        }
+        
+        Vector direction = to.toVector().subtract(from.toVector());
+        double distance = direction.length();
+        direction.normalize();
+        
+        int particleCount = (int) (distance * 4); // 4 particles per block
+        
+        try {
+            Particle particle = Particle.valueOf(particleName);
+            for (int i = 0; i <= particleCount; i++) {
+                double t = (double) i / particleCount;
+                Location particleLoc = from.clone().add(direction.clone().multiply(distance * t));
+                from.getWorld().spawnParticle(particle, particleLoc, 1, 0.05, 0.05, 0.05, 0);
+            }
+            // Play a mystical sound for each line
+            from.getWorld().playSound(from, Sound.BLOCK_FIRE_AMBIENT, 0.5f, 1.5f);
+        } catch (IllegalArgumentException ignored) {
         }
     }
 

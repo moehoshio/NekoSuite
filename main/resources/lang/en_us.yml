@@ -1388,6 +1388,7 @@ skill:
     lightning_bolt: "Lightning Bolt"
     fireball: "Fireball"
     ice_beam: "Ice Beam"
+    pentagram: "Pentagram Ritual"
 
 # Card Battle Game
 cardbattle:
