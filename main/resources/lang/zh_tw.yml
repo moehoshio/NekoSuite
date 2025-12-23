@@ -1471,6 +1471,9 @@ skill:
     teleport: "傳送"
     shield: "護盾"
     poison: "毒素"
+    lightning_bolt: "雷霆射線"
+    fireball: "火球"
+    ice_beam: "冰霜射線"
 
 # 小遊戲系統
 ngame:

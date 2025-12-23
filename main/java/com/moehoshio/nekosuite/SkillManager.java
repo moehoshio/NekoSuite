@@ -281,6 +281,16 @@ public class SkillManager implements Listener {
             case "poison":
                 executePoison(player, effects);
                 break;
+            // Directional skills
+            case "lightning_bolt":
+                executeLightningBolt(player, effects);
+                break;
+            case "fireball":
+                executeFireball(player, effects);
+                break;
+            case "ice_beam":
+                executeIceBeam(player, effects);
+                break;
             default:
                 plugin.getLogger().warning("Unknown skill type: " + type);
                 break;
@@ -523,6 +533,182 @@ public class SkillManager implements Listener {
                 LivingEntity living = (LivingEntity) entity;
                 living.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDuration, poisonAmplifier));
             }
+        }
+    }
+
+    // ========== Directional Skills ==========
+
+    /**
+     * Lightning Bolt - Fires a line of lightning strikes in front of the player
+     */
+    private void executeLightningBolt(Player player, Map<String, Object> effects) {
+        Location start = player.getEyeLocation();
+        Vector direction = start.getDirection().normalize();
+        int distance = getIntEffect(effects, "distance", 15);
+        int strikeCount = getIntEffect(effects, "strike_count", 3);
+        double damage = getDoubleEffect(effects, "damage", 6.0);
+        boolean setFire = getBooleanEffect(effects, "set_fire", false);
+        
+        // Cast lightning bolts in a line forward
+        for (int i = 1; i <= strikeCount; i++) {
+            double stepDistance = (double) distance / strikeCount * i;
+            Location strikeLocation = start.clone().add(direction.clone().multiply(stepDistance));
+            
+            // Strike lightning
+            if (setFire) {
+                player.getWorld().strikeLightning(strikeLocation);
+            } else {
+                player.getWorld().strikeLightningEffect(strikeLocation);
+            }
+            
+            // Damage entities at strike location
+            Collection<Entity> nearby = strikeLocation.getWorld().getNearbyEntities(strikeLocation, 2, 2, 2);
+            for (Entity entity : nearby) {
+                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                    ((LivingEntity) entity).damage(damage, player);
+                }
+            }
+        }
+        
+        // Spawn particle trail
+        spawnDirectionalParticles(start, direction, distance, effects);
+    }
+
+    /**
+     * Fireball - Launches a fireball projectile that explodes on impact
+     */
+    private void executeFireball(Player player, Map<String, Object> effects) {
+        Location start = player.getEyeLocation();
+        Vector direction = start.getDirection().normalize();
+        int distance = getIntEffect(effects, "distance", 20);
+        double damage = getDoubleEffect(effects, "damage", 8.0);
+        int explosionRadius = getIntEffect(effects, "explosion_radius", 3);
+        int fireDuration = getIntEffect(effects, "fire_duration", 60);
+        
+        // Find the target location - either hits a block or entity, or travels max distance
+        Location targetLocation = start.clone();
+        LivingEntity hitEntity = null;
+        
+        for (int i = 1; i <= distance; i++) {
+            Location check = start.clone().add(direction.clone().multiply(i));
+            Block block = check.getBlock();
+            
+            // Check if hit a solid block
+            if (block.getType().isSolid()) {
+                targetLocation = check.clone().subtract(direction.clone().multiply(0.5));
+                break;
+            }
+            
+            // Check if hit an entity
+            Collection<Entity> nearby = check.getWorld().getNearbyEntities(check, 1, 1, 1);
+            for (Entity entity : nearby) {
+                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                    hitEntity = (LivingEntity) entity;
+                    targetLocation = check;
+                    break;
+                }
+            }
+            
+            if (hitEntity != null) {
+                break;
+            }
+            
+            targetLocation = check;
+        }
+        
+        // Spawn particle trail from start to target
+        spawnDirectionalParticles(start, direction, (int) start.distance(targetLocation), effects);
+        
+        // Create explosion effect at target
+        try {
+            Particle explosionParticle = Particle.valueOf("FLAME");
+            targetLocation.getWorld().spawnParticle(explosionParticle, targetLocation, 30, 1, 1, 1, 0.1);
+            targetLocation.getWorld().spawnParticle(Particle.SMOKE_LARGE, targetLocation, 15, 0.5, 0.5, 0.5, 0.05);
+        } catch (IllegalArgumentException ignored) {
+        }
+        
+        // Damage and ignite entities in explosion radius
+        Collection<Entity> affectedEntities = targetLocation.getWorld().getNearbyEntities(targetLocation, explosionRadius, explosionRadius, explosionRadius);
+        for (Entity entity : affectedEntities) {
+            if (entity instanceof LivingEntity && !entity.equals(player)) {
+                LivingEntity living = (LivingEntity) entity;
+                living.damage(damage, player);
+                living.setFireTicks(fireDuration);
+            }
+        }
+    }
+
+    /**
+     * Ice Beam - Fires a beam of ice forward, freezing enemies in its path
+     */
+    private void executeIceBeam(Player player, Map<String, Object> effects) {
+        Location start = player.getEyeLocation();
+        Vector direction = start.getDirection().normalize();
+        int distance = getIntEffect(effects, "distance", 12);
+        double damage = getDoubleEffect(effects, "damage", 4.0);
+        int slownessLevel = getIntEffect(effects, "slowness_level", 3);
+        int slownessDuration = getIntEffect(effects, "slowness_duration", 100);
+        double beamWidth = getDoubleEffect(effects, "beam_width", 1.5);
+        
+        // Apply slowness effect
+        int slownessAmplifier = Math.max(0, slownessLevel - 1);
+        
+        // Track entities already affected to avoid duplicate damage
+        java.util.Set<UUID> affectedEntities = new java.util.HashSet<UUID>();
+        
+        // Travel along the beam path and affect entities
+        for (int i = 1; i <= distance; i++) {
+            Location check = start.clone().add(direction.clone().multiply(i));
+            
+            // Check if hit a solid block
+            if (check.getBlock().getType().isSolid()) {
+                break;
+            }
+            
+            // Spawn particles along the beam
+            try {
+                Particle iceParticle = Particle.valueOf("SNOWFLAKE");
+                check.getWorld().spawnParticle(iceParticle, check, 5, 0.3, 0.3, 0.3, 0);
+                check.getWorld().spawnParticle(Particle.SNOW_SHOVEL, check, 3, 0.2, 0.2, 0.2, 0);
+            } catch (IllegalArgumentException ignored) {
+            }
+            
+            // Damage and slow entities in beam path
+            Collection<Entity> nearby = check.getWorld().getNearbyEntities(check, beamWidth, beamWidth, beamWidth);
+            for (Entity entity : nearby) {
+                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                    LivingEntity living = (LivingEntity) entity;
+                    // Only affect each entity once per beam cast
+                    if (!affectedEntities.contains(living.getUniqueId())) {
+                        affectedEntities.add(living.getUniqueId());
+                        living.damage(damage, player);
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slownessDuration, slownessAmplifier));
+                        // Visual freeze effect - spawn extra ice particles around the entity
+                        try {
+                            check.getWorld().spawnParticle(Particle.SNOW_SHOVEL, living.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0);
+                        } catch (IllegalArgumentException ignored) {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Spawn particles in a directional line
+     */
+    private void spawnDirectionalParticles(Location start, Vector direction, int distance, Map<String, Object> effects) {
+        String particleName = (String) effects.get("particle");
+        if (particleName == null) {
+            return;
+        }
+        try {
+            Particle particle = Particle.valueOf(particleName);
+            for (int i = 1; i <= distance; i++) {
+                Location particleLoc = start.clone().add(direction.clone().multiply(i));
+                start.getWorld().spawnParticle(particle, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+            }
+        } catch (IllegalArgumentException ignored) {
         }
     }
 

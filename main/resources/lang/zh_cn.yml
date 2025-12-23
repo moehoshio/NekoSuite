@@ -1385,6 +1385,9 @@ skill:
     teleport: "传送"
     shield: "护盾"
     poison: "毒素"
+    lightning_bolt: "雷霆射线"
+    fireball: "火球"
+    ice_beam: "冰霜射线"
 
 # 卡牌对决游戏
 cardbattle:

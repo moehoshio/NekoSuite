@@ -1385,6 +1385,9 @@ skill:
     teleport: "Teleport"
     shield: "Shield"
     poison: "Poison"
+    lightning_bolt: "Lightning Bolt"
+    fireball: "Fireball"
+    ice_beam: "Ice Beam"
 
 # Card Battle Game
 cardbattle:
