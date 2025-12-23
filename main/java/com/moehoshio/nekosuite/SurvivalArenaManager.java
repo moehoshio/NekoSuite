@@ -18,6 +18,8 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -404,9 +406,11 @@ public class SurvivalArenaManager {
                 double newHealth = Math.min(baseHealth * healthScale, 2048);
                 living.setMaxHealth(newHealth);
                 living.setHealth(newHealth);
-                // Highlight arena mobs with glowing effect
+                // Highlight arena mobs with glowing effect (using both methods for maximum visibility)
                 if (highlightMobs) {
                     living.setGlowing(true);
+                    // Also apply glowing potion effect for extended duration (10 minutes = 12000 ticks)
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 12000, 0, false, false));
                 }
             }
 
