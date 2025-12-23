@@ -1420,7 +1420,7 @@ cardbattle:
   card_played: "&7使用了 &6{card}&7！"
   ai_played: "&c敌人使用了 &6{card}&7！"
   pvp_usage: "&7用法: &f/neko game cardbattle <玩家名> &7邀请对战"
-  usage: "&7用法: &f/neko game cardbattle &6<menu|pve|<玩家>|同意|拒绝|surrender|resume>"
+  usage: "&7用法: &f/neko game cardbattle &6<menu|pve|<玩家>|同意|拒绝|投降|恢复>"
   no_saved_game: "&e⚠ &7您没有已保存的游戏进度。"
   game_resumed: "&a✔ &7已恢复保存的游戏进度！"
   cards:

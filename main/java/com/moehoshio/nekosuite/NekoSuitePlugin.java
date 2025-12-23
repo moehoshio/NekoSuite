@@ -1306,7 +1306,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                             return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[2]);
                         }
                         if ("cardbattle".equals(gameType) || "cb".equals(gameType)) {
-                            List<String> options = new ArrayList<String>(Arrays.asList("menu", "pve", "accept", "decline", "surrender", "同意", "拒絕"));
+                            List<String> options = new ArrayList<String>(Arrays.asList("menu", "pve", "accept", "decline", "surrender", "resume", "同意", "拒絕", "投降", "恢復"));
                             // Add online players for invitation
                             for (Player p : Bukkit.getOnlinePlayers()) {
                                 if (!p.getName().equals(sender.getName())) {
@@ -1370,7 +1370,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                         return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[1]);
                     }
                     if ("cardbattle".equals(sub) || "cb".equals(sub)) {
-                        List<String> options = new ArrayList<String>(Arrays.asList("menu", "pve", "accept", "decline", "surrender", "同意", "拒絕"));
+                        List<String> options = new ArrayList<String>(Arrays.asList("menu", "pve", "accept", "decline", "surrender", "resume", "同意", "拒絕", "投降", "恢復"));
                         // Add online players for invitation
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             if (!p.getName().equals(sender.getName())) {
@@ -1824,7 +1824,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 cardBattleManager.declinePvP(player);
                 break;
             case "surrender":
+            case "投降":
                 cardBattleManager.surrender(player);
+                break;
+            case "resume":
+            case "恢復":
+            case "恢复":
+                cardBattleManager.resumeGame(player);
                 break;
             default:
                 // Treat unrecognized commands as player names for PvP invitation
