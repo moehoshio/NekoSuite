@@ -134,6 +134,26 @@ public class SkillManager implements Listener {
             return;
         }
         
+        // Debug: Log item info if player has debug permission
+        if (player.hasPermission("nekosuite.skill.debug")) {
+            plugin.getLogger().info("[SkillDebug] Player: " + player.getName() + ", Trigger: " + trigger);
+            plugin.getLogger().info("[SkillDebug] Item: " + item.getType().name());
+            for (int i = 0; i < lore.size(); i++) {
+                String loreLine = lore.get(i);
+                // Log with escaped special characters
+                String escaped = loreLine.replace(ChatColor.COLOR_CHAR, '&');
+                plugin.getLogger().info("[SkillDebug] Lore[" + i + "]: '" + escaped + "' (raw: '" + loreLine + "')");
+            }
+            
+            // Log all skill requirements for comparison
+            for (SkillDefinition skill : skills.values()) {
+                String req = skill.getLoreRequirement();
+                String translatedReq = translateColorCodes(req);
+                plugin.getLogger().info("[SkillDebug] Skill '" + skill.getId() + "' trigger: " + skill.getTrigger() + 
+                    ", req: '" + req + "' -> '" + translatedReq.replace(ChatColor.COLOR_CHAR, '&') + "'");
+            }
+        }
+        
         // Find matching skill
         SkillDefinition matchedSkill = null;
         for (SkillDefinition skill : skills.values()) {
@@ -200,9 +220,18 @@ public class SkillManager implements Listener {
         }
         // Translate color codes for comparison
         String coloredRequirement = translateColorCodes(requirement);
+        // Also strip all color codes for fallback comparison
+        String strippedRequirement = ChatColor.stripColor(coloredRequirement);
+        
         for (String line : itemLore) {
             String coloredLine = translateColorCodes(line);
+            // Try exact match with colors first
             if (coloredLine.contains(coloredRequirement)) {
+                return true;
+            }
+            // Fallback: try matching without color codes
+            String strippedLine = ChatColor.stripColor(coloredLine);
+            if (strippedLine.contains(strippedRequirement)) {
                 return true;
             }
         }
@@ -251,6 +280,23 @@ public class SkillManager implements Listener {
                 break;
             case "poison":
                 executePoison(player, effects);
+                break;
+            // Directional skills
+            case "lightning_bolt":
+                executeLightningBolt(player, effects);
+                break;
+            case "fireball":
+                executeFireball(player, effects);
+                break;
+            case "ice_beam":
+                executeIceBeam(player, effects);
+                break;
+            // Special ritual skills
+            case "pentagram":
+                executePentagram(player, effects);
+                break;
+            case "pentagram_vertical":
+                executePentagramVertical(player, effects);
                 break;
             default:
                 plugin.getLogger().warning("Unknown skill type: " + type);
@@ -494,6 +540,461 @@ public class SkillManager implements Listener {
                 LivingEntity living = (LivingEntity) entity;
                 living.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDuration, poisonAmplifier));
             }
+        }
+    }
+
+    // ========== Directional Skills ==========
+
+    /**
+     * Lightning Bolt - Fires a line of lightning strikes in front of the player
+     */
+    private void executeLightningBolt(Player player, Map<String, Object> effects) {
+        Location start = player.getEyeLocation();
+        Vector direction = start.getDirection().normalize();
+        int distance = getIntEffect(effects, "distance", 15);
+        int strikeCount = getIntEffect(effects, "strike_count", 3);
+        double damage = getDoubleEffect(effects, "damage", 6.0);
+        boolean setFire = getBooleanEffect(effects, "set_fire", false);
+        
+        // Cast lightning bolts in a line forward
+        for (int i = 1; i <= strikeCount; i++) {
+            double stepDistance = (double) distance / strikeCount * i;
+            Location strikeLocation = start.clone().add(direction.clone().multiply(stepDistance));
+            
+            // Strike lightning
+            if (setFire) {
+                player.getWorld().strikeLightning(strikeLocation);
+            } else {
+                player.getWorld().strikeLightningEffect(strikeLocation);
+            }
+            
+            // Damage entities at strike location
+            Collection<Entity> nearby = strikeLocation.getWorld().getNearbyEntities(strikeLocation, 2, 2, 2);
+            for (Entity entity : nearby) {
+                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                    ((LivingEntity) entity).damage(damage, player);
+                }
+            }
+        }
+        
+        // Spawn particle trail
+        spawnDirectionalParticles(start, direction, distance, effects);
+    }
+
+    /**
+     * Fireball - Launches a fireball projectile that explodes on impact
+     */
+    private void executeFireball(Player player, Map<String, Object> effects) {
+        Location start = player.getEyeLocation();
+        Vector direction = start.getDirection().normalize();
+        int distance = getIntEffect(effects, "distance", 20);
+        double damage = getDoubleEffect(effects, "damage", 8.0);
+        int explosionRadius = getIntEffect(effects, "explosion_radius", 3);
+        int fireDuration = getIntEffect(effects, "fire_duration", 60);
+        
+        // Find the target location - either hits a block or entity, or travels max distance
+        Location targetLocation = start.clone();
+        LivingEntity hitEntity = null;
+        
+        for (int i = 1; i <= distance; i++) {
+            Location check = start.clone().add(direction.clone().multiply(i));
+            Block block = check.getBlock();
+            
+            // Check if hit a solid block
+            if (block.getType().isSolid()) {
+                targetLocation = check.clone().subtract(direction.clone().multiply(0.5));
+                break;
+            }
+            
+            // Check if hit an entity
+            Collection<Entity> nearby = check.getWorld().getNearbyEntities(check, 1, 1, 1);
+            for (Entity entity : nearby) {
+                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                    hitEntity = (LivingEntity) entity;
+                    targetLocation = check;
+                    break;
+                }
+            }
+            
+            if (hitEntity != null) {
+                break;
+            }
+            
+            targetLocation = check;
+        }
+        
+        // Spawn particle trail from start to target
+        spawnDirectionalParticles(start, direction, (int) start.distance(targetLocation), effects);
+        
+        // Create explosion effect at target
+        try {
+            Particle explosionParticle = Particle.valueOf("FLAME");
+            targetLocation.getWorld().spawnParticle(explosionParticle, targetLocation, 30, 1, 1, 1, 0.1);
+            targetLocation.getWorld().spawnParticle(Particle.SMOKE_LARGE, targetLocation, 15, 0.5, 0.5, 0.5, 0.05);
+        } catch (IllegalArgumentException ignored) {
+        }
+        
+        // Damage and ignite entities in explosion radius
+        Collection<Entity> affectedEntities = targetLocation.getWorld().getNearbyEntities(targetLocation, explosionRadius, explosionRadius, explosionRadius);
+        for (Entity entity : affectedEntities) {
+            if (entity instanceof LivingEntity && !entity.equals(player)) {
+                LivingEntity living = (LivingEntity) entity;
+                living.damage(damage, player);
+                living.setFireTicks(fireDuration);
+            }
+        }
+    }
+
+    /**
+     * Ice Beam - Fires a beam of ice forward, freezing enemies in its path
+     */
+    private void executeIceBeam(Player player, Map<String, Object> effects) {
+        Location start = player.getEyeLocation();
+        Vector direction = start.getDirection().normalize();
+        int distance = getIntEffect(effects, "distance", 12);
+        double damage = getDoubleEffect(effects, "damage", 4.0);
+        int slownessLevel = getIntEffect(effects, "slowness_level", 3);
+        int slownessDuration = getIntEffect(effects, "slowness_duration", 100);
+        double beamWidth = getDoubleEffect(effects, "beam_width", 1.5);
+        
+        // Apply slowness effect
+        int slownessAmplifier = Math.max(0, slownessLevel - 1);
+        
+        // Track entities already affected to avoid duplicate damage
+        java.util.Set<UUID> affectedEntities = new java.util.HashSet<UUID>();
+        
+        // Travel along the beam path and affect entities
+        for (int i = 1; i <= distance; i++) {
+            Location check = start.clone().add(direction.clone().multiply(i));
+            
+            // Check if hit a solid block
+            if (check.getBlock().getType().isSolid()) {
+                break;
+            }
+            
+            // Spawn particles along the beam
+            try {
+                Particle iceParticle = Particle.valueOf("SNOWFLAKE");
+                check.getWorld().spawnParticle(iceParticle, check, 5, 0.3, 0.3, 0.3, 0);
+                check.getWorld().spawnParticle(Particle.SNOW_SHOVEL, check, 3, 0.2, 0.2, 0.2, 0);
+            } catch (IllegalArgumentException ignored) {
+            }
+            
+            // Damage and slow entities in beam path
+            Collection<Entity> nearby = check.getWorld().getNearbyEntities(check, beamWidth, beamWidth, beamWidth);
+            for (Entity entity : nearby) {
+                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                    LivingEntity living = (LivingEntity) entity;
+                    // Only affect each entity once per beam cast
+                    if (!affectedEntities.contains(living.getUniqueId())) {
+                        affectedEntities.add(living.getUniqueId());
+                        living.damage(damage, player);
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slownessDuration, slownessAmplifier));
+                        // Visual freeze effect - spawn extra ice particles around the entity
+                        try {
+                            check.getWorld().spawnParticle(Particle.SNOW_SHOVEL, living.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0);
+                        } catch (IllegalArgumentException ignored) {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Pentagram - Draws a fire pentagram like a spell incantation, then moves forward
+     * The pentagram is drawn line by line with delay, creating a ritual-like effect
+     */
+    private void executePentagram(Player player, Map<String, Object> effects) {
+        Location center = player.getLocation().add(0, 1.5, 0);
+        double size = getDoubleEffect(effects, "size", 2.5);
+        double damage = getDoubleEffect(effects, "damage", 10.0);
+        int moveDistance = getIntEffect(effects, "move_distance", 8);
+        int drawDelayTicks = getIntEffect(effects, "draw_delay", 4); // Ticks between each line
+        int fireDuration = getIntEffect(effects, "fire_duration", 60);
+        
+        // Get the direction the player is facing (for forward movement)
+        Vector forward = player.getLocation().getDirection().normalize();
+        forward.setY(0); // Keep it horizontal
+        forward.normalize();
+        
+        // Calculate the 5 points of the pentagram
+        // A pentagram has vertices at angles: -90°, -90°+72°, -90°+144°, -90°+216°, -90°+288°
+        // But to draw it in one stroke: 0 -> 2 -> 4 -> 1 -> 3 -> 0 (every other vertex)
+        Location[] points = new Location[5];
+        for (int i = 0; i < 5; i++) {
+            double angle = Math.toRadians(-90 + i * 72); // Start from top
+            double x = Math.cos(angle) * size;
+            double z = Math.sin(angle) * size;
+            points[i] = center.clone().add(x, 0, z);
+        }
+        
+        // Drawing order for pentagram: 0 -> 2 -> 4 -> 1 -> 3 -> 0
+        int[] drawOrder = {0, 2, 4, 1, 3, 0};
+        
+        // Schedule the drawing of each line with delay
+        for (int lineNum = 0; lineNum < 5; lineNum++) {
+            final int fromIdx = drawOrder[lineNum];
+            final int toIdx = drawOrder[lineNum + 1];
+            final Location from = points[fromIdx];
+            final Location to = points[toIdx];
+            final int delay = lineNum * drawDelayTicks;
+            
+            plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    drawPentagramLine(from, to, effects);
+                }
+            }, delay);
+        }
+        
+        // After all lines are drawn, move the pentagram forward and damage enemies
+        final int totalDrawTime = 5 * drawDelayTicks;
+        final Location finalCenter = center.clone();
+        final Vector finalForward = forward.clone();
+        
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                // Move the pentagram forward step by step
+                for (int step = 0; step <= moveDistance; step++) {
+                    final int currentStep = step;
+                    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                        @Override
+                        public void run() {
+                            Location movingCenter = finalCenter.clone().add(finalForward.clone().multiply(currentStep));
+                            
+                            // Draw a quick pentagram at current position
+                            for (int i = 0; i < 5; i++) {
+                                double angle = Math.toRadians(-90 + i * 72);
+                                double x = Math.cos(angle) * size;
+                                double z = Math.sin(angle) * size;
+                                Location point = movingCenter.clone().add(x, 0, z);
+                                try {
+                                    point.getWorld().spawnParticle(Particle.FLAME, point, 2, 0.1, 0.1, 0.1, 0.01);
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                            
+                            // Damage entities at this position
+                            Collection<Entity> nearby = movingCenter.getWorld().getNearbyEntities(movingCenter, size + 1, 2, size + 1);
+                            for (Entity entity : nearby) {
+                                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                                    LivingEntity living = (LivingEntity) entity;
+                                    living.damage(damage / (moveDistance + 1), player);
+                                    living.setFireTicks(fireDuration);
+                                }
+                            }
+                            
+                            // Final explosion effect at the end
+                            if (currentStep == moveDistance) {
+                                try {
+                                    movingCenter.getWorld().spawnParticle(Particle.FLAME, movingCenter, 50, 1.5, 1, 1.5, 0.1);
+                                    movingCenter.getWorld().spawnParticle(Particle.SMOKE_LARGE, movingCenter, 20, 1, 0.5, 1, 0.05);
+                                    movingCenter.getWorld().playSound(movingCenter, Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.5f);
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                        }
+                    }, currentStep * 2); // Move every 2 ticks
+                }
+            }
+        }, totalDrawTime + 10); // Wait a bit after drawing before moving
+    }
+
+    /**
+     * Draw a line of particles between two points (for pentagram)
+     */
+    private void drawPentagramLine(Location from, Location to, Map<String, Object> effects) {
+        String particleName = (String) effects.get("particle");
+        if (particleName == null) {
+            particleName = "FLAME";
+        }
+        
+        Vector direction = to.toVector().subtract(from.toVector());
+        double distance = direction.length();
+        direction.normalize();
+        
+        int particleCount = (int) (distance * 4); // 4 particles per block
+        
+        try {
+            Particle particle = Particle.valueOf(particleName);
+            for (int i = 0; i <= particleCount; i++) {
+                double t = (double) i / particleCount;
+                Location particleLoc = from.clone().add(direction.clone().multiply(distance * t));
+                from.getWorld().spawnParticle(particle, particleLoc, 1, 0.05, 0.05, 0.05, 0);
+            }
+            // Play a mystical sound for each line
+            from.getWorld().playSound(from, Sound.BLOCK_FIRE_AMBIENT, 0.5f, 1.5f);
+        } catch (IllegalArgumentException ignored) {
+        }
+    }
+
+    /**
+     * Vertical Pentagram - Draws a vertical fire pentagram facing the player's direction
+     * The pentagram is drawn line by line with delay, then moves forward
+     */
+    private void executePentagramVertical(Player player, Map<String, Object> effects) {
+        // Start position is in front of player, at eye height
+        Location start = player.getEyeLocation();
+        Vector forward = start.getDirection().normalize();
+        forward.setY(0); // Keep horizontal direction
+        forward.normalize();
+        
+        // Place the pentagram a bit in front of the player
+        Location center = start.clone().add(forward.clone().multiply(2));
+        
+        double size = getDoubleEffect(effects, "size", 2.5);
+        double damage = getDoubleEffect(effects, "damage", 10.0);
+        int moveDistance = getIntEffect(effects, "move_distance", 12);
+        int drawDelayTicks = getIntEffect(effects, "draw_delay", 4);
+        int fireDuration = getIntEffect(effects, "fire_duration", 60);
+        
+        // Calculate perpendicular vector (left/right)
+        Vector right = new Vector(-forward.getZ(), 0, forward.getX()).normalize();
+        Vector up = new Vector(0, 1, 0);
+        
+        // Calculate the 5 points of the vertical pentagram
+        // The pentagram is drawn in the vertical plane facing the player's direction
+        Location[] points = new Location[5];
+        for (int i = 0; i < 5; i++) {
+            double angle = Math.toRadians(-90 + i * 72); // Start from top
+            // X component goes along the right vector, Y component goes up
+            double xOffset = Math.cos(angle) * size;
+            double yOffset = Math.sin(angle) * size;
+            points[i] = center.clone().add(right.clone().multiply(xOffset)).add(up.clone().multiply(yOffset));
+        }
+        
+        // Drawing order for pentagram: 0 -> 2 -> 4 -> 1 -> 3 -> 0
+        int[] drawOrder = {0, 2, 4, 1, 3, 0};
+        
+        // Schedule the drawing of each line with delay
+        for (int lineNum = 0; lineNum < 5; lineNum++) {
+            final int fromIdx = drawOrder[lineNum];
+            final int toIdx = drawOrder[lineNum + 1];
+            final Location from = points[fromIdx];
+            final Location to = points[toIdx];
+            final int delay = lineNum * drawDelayTicks;
+            
+            plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    drawPentagramLine(from, to, effects);
+                }
+            }, delay);
+        }
+        
+        // After all lines are drawn, move the pentagram forward and damage enemies
+        final int totalDrawTime = 5 * drawDelayTicks;
+        final Location finalCenter = center.clone();
+        final Vector finalForward = forward.clone();
+        final Vector finalRight = right.clone();
+        
+        plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                // Play a powerful activation sound
+                finalCenter.getWorld().playSound(finalCenter, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f);
+                
+                // Move the pentagram forward step by step
+                for (int step = 0; step <= moveDistance; step++) {
+                    final int currentStep = step;
+                    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
+                        @Override
+                        public void run() {
+                            Location movingCenter = finalCenter.clone().add(finalForward.clone().multiply(currentStep));
+                            
+                            // Draw a vertical pentagram at current position
+                            for (int i = 0; i < 5; i++) {
+                                double angle = Math.toRadians(-90 + i * 72);
+                                double xOffset = Math.cos(angle) * size;
+                                double yOffset = Math.sin(angle) * size;
+                                Location point = movingCenter.clone()
+                                    .add(finalRight.clone().multiply(xOffset))
+                                    .add(0, yOffset, 0);
+                                try {
+                                    point.getWorld().spawnParticle(Particle.FLAME, point, 2, 0.1, 0.1, 0.1, 0.01);
+                                    // Add extra particles for more visual impact
+                                    point.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, point, 1, 0.05, 0.05, 0.05, 0);
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                            
+                            // Draw lines connecting the points for a more visible effect
+                            if (currentStep % 2 == 0) {
+                                int[] order = {0, 2, 4, 1, 3, 0};
+                                for (int line = 0; line < 5; line++) {
+                                    int fromIdx = order[line];
+                                    int toIdx = order[line + 1];
+                                    double fromAngle = Math.toRadians(-90 + fromIdx * 72);
+                                    double toAngle = Math.toRadians(-90 + toIdx * 72);
+                                    
+                                    for (double t = 0; t < 1; t += 0.2) {
+                                        double interpAngle = fromAngle + (toAngle - fromAngle) * t;
+                                        double xOffset = Math.cos(interpAngle) * size * (1 - t) + Math.cos(toAngle) * size * t;
+                                        double yOffset = Math.sin(interpAngle) * size * (1 - t) + Math.sin(toAngle) * size * t;
+                                        
+                                        // Simple linear interpolation between points
+                                        double fromX = Math.cos(fromAngle) * size;
+                                        double fromY = Math.sin(fromAngle) * size;
+                                        double toX = Math.cos(toAngle) * size;
+                                        double toY = Math.sin(toAngle) * size;
+                                        double interpX = fromX + (toX - fromX) * t;
+                                        double interpY = fromY + (toY - fromY) * t;
+                                        
+                                        Location linePoint = movingCenter.clone()
+                                            .add(finalRight.clone().multiply(interpX))
+                                            .add(0, interpY, 0);
+                                        try {
+                                            linePoint.getWorld().spawnParticle(Particle.FLAME, linePoint, 1, 0.02, 0.02, 0.02, 0);
+                                        } catch (IllegalArgumentException ignored) {
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Damage entities at this position
+                            Collection<Entity> nearby = movingCenter.getWorld().getNearbyEntities(movingCenter, size + 1, size + 1, size + 1);
+                            for (Entity entity : nearby) {
+                                if (entity instanceof LivingEntity && !entity.equals(player)) {
+                                    LivingEntity living = (LivingEntity) entity;
+                                    living.damage(damage / (moveDistance + 1), player);
+                                    living.setFireTicks(fireDuration);
+                                }
+                            }
+                            
+                            // Final explosion effect at the end
+                            if (currentStep == moveDistance) {
+                                try {
+                                    movingCenter.getWorld().spawnParticle(Particle.FLAME, movingCenter, 80, 2, 2, 2, 0.15);
+                                    movingCenter.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, movingCenter, 40, 1.5, 1.5, 1.5, 0.1);
+                                    movingCenter.getWorld().spawnParticle(Particle.SMOKE_LARGE, movingCenter, 30, 1.5, 1.5, 1.5, 0.05);
+                                    movingCenter.getWorld().playSound(movingCenter, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.8f);
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+                        }
+                    }, currentStep * 2); // Move every 2 ticks
+                }
+            }
+        }, totalDrawTime + 10); // Wait a bit after drawing before moving
+    }
+
+    /**
+     * Spawn particles in a directional line
+     */
+    private void spawnDirectionalParticles(Location start, Vector direction, int distance, Map<String, Object> effects) {
+        String particleName = (String) effects.get("particle");
+        if (particleName == null) {
+            return;
+        }
+        try {
+            Particle particle = Particle.valueOf(particleName);
+            for (int i = 1; i <= distance; i++) {
+                Location particleLoc = start.clone().add(direction.clone().multiply(i));
+                start.getWorld().spawnParticle(particle, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+            }
+        } catch (IllegalArgumentException ignored) {
         }
     }
 

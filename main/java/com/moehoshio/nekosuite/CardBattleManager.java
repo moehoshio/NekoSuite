@@ -409,10 +409,13 @@ public class CardBattleManager {
                 openBattleMenu(p1, session);
             }
         } else if (!session.isPvE()) {
-            // PvP - notify other player
+            // PvP - notify other player about turn end and that it's their turn
             String otherName = session.isPlayer1Turn() ? session.getPlayer1Name() : session.getPlayer2Name();
             Player other = Bukkit.getPlayer(otherName);
             if (other != null && other.isOnline()) {
+                Map<String, String> endTurnMap = new HashMap<String, String>();
+                endTurnMap.put("player", player.getName());
+                other.sendMessage(messages.format(other, "cardbattle.opponent_end_turn", endTurnMap));
                 other.sendMessage(messages.format(other, "cardbattle.your_turn"));
                 openBattleMenu(other, session);
             }
@@ -444,6 +447,18 @@ public class CardBattleManager {
         }
 
         player.sendMessage(messages.format(player, "cardbattle.surrendered"));
+        
+        // Notify opponent about surrender in PvP
+        if (!session.isPvE()) {
+            String opponentName = isPlayer1 ? session.getPlayer2Name() : session.getPlayer1Name();
+            Player opponent = Bukkit.getPlayer(opponentName);
+            if (opponent != null && opponent.isOnline()) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("player", player.getName());
+                opponent.sendMessage(messages.format(opponent, "cardbattle.opponent_surrendered", map));
+            }
+        }
+        
         endGame(session);
     }
 
@@ -854,6 +869,17 @@ public class CardBattleManager {
         map.put("card", resolveI18n(player, card.getName()));
         map.put("value", String.valueOf(value));
 
+        // Prepare opponent notification for PvP
+        Player opponent = null;
+        String opponentCardName = null;
+        if (!session.isPvE()) {
+            String opponentName = isPlayer1 ? session.getPlayer2Name() : session.getPlayer1Name();
+            opponent = Bukkit.getPlayer(opponentName);
+            if (opponent != null && opponent.isOnline()) {
+                opponentCardName = resolveI18n(opponent, card.getName());
+            }
+        }
+
         switch (type) {
             case "attack":
                 if (isPlayer1) {
@@ -862,6 +888,7 @@ public class CardBattleManager {
                     session.setPlayer1Health(session.getPlayer1Health() - value);
                 }
                 player.sendMessage(messages.format(player, "cardbattle.card_attack", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, value, "cardbattle.opponent_attack");
                 break;
             case "heal":
                 if (isPlayer1) {
@@ -870,6 +897,7 @@ public class CardBattleManager {
                     session.setPlayer2Health(Math.min(startingHealth, session.getPlayer2Health() + value));
                 }
                 player.sendMessage(messages.format(player, "cardbattle.card_heal", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, value, "cardbattle.opponent_heal");
                 break;
             case "defense":
                 // Defense could add temporary shield (simplified: heals half the value)
@@ -881,10 +909,12 @@ public class CardBattleManager {
                 }
                 map.put("value", String.valueOf(healAmount));
                 player.sendMessage(messages.format(player, "cardbattle.card_defense", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, healAmount, "cardbattle.opponent_defense");
                 break;
             case "draw":
                 drawCards(session, isPlayer1, value);
                 player.sendMessage(messages.format(player, "cardbattle.card_draw", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, value, "cardbattle.opponent_draw");
                 break;
             case "mana":
                 if (isPlayer1) {
@@ -893,6 +923,7 @@ public class CardBattleManager {
                     session.setPlayer2Mana(Math.min(maxMana, session.getPlayer2Mana() + value));
                 }
                 player.sendMessage(messages.format(player, "cardbattle.card_mana", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, value, "cardbattle.opponent_mana");
                 break;
             case "discard":
                 // Force opponent to discard cards
@@ -901,11 +932,27 @@ public class CardBattleManager {
                     oppHand.remove(random.nextInt(oppHand.size()));
                 }
                 player.sendMessage(messages.format(player, "cardbattle.card_discard", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, value, "cardbattle.opponent_discard");
                 break;
             default:
                 player.sendMessage(messages.format(player, "cardbattle.card_played", map));
+                notifyOpponent(opponent, player.getName(), opponentCardName, value, "cardbattle.opponent_played");
                 break;
         }
+    }
+
+    /**
+     * Notify opponent about a card played by the current player.
+     */
+    private void notifyOpponent(Player opponent, String playerName, String cardName, int value, String messageKey) {
+        if (opponent == null || !opponent.isOnline() || cardName == null) {
+            return;
+        }
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("player", playerName);
+        map.put("card", cardName);
+        map.put("value", String.valueOf(value));
+        opponent.sendMessage(messages.format(opponent, messageKey, map));
     }
 
     private void processAITurn(BattleSession session) {

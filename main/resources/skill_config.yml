@@ -218,17 +218,133 @@ skills:
       sound: ENTITY_LIGHTNING_BOLT_THUNDER
       particle: ELECTRIC_SPARK
 
+  # ========== 方向性閃電 ==========
+  lightning_bolt:
+    name: "&b⚡ 雷霆一擊"
+    description: "向前方發射一道閃電"
+    type: lightning_bolt
+    trigger: sneak_right_click
+    lore_requirement: "&b⚡ 雷霆之矛"
+    permission: ""
+    cooldown: 10
+    effects:
+      # 射程距離 (方塊)
+      distance: 15
+      # 閃電數量
+      strike_count: 3
+      # 傷害
+      damage: 6.0
+      # 是否造成火焰
+      set_fire: false
+      sound: ENTITY_LIGHTNING_BOLT_THUNDER
+      particle: ELECTRIC_SPARK
+
+  # ========== 火球技能 ==========
+  blazing_fireball:
+    name: "&c🔥 烈焰火球"
+    description: "向前方發射一顆火球，擊中時爆炸"
+    type: fireball
+    trigger: sneak_right_click
+    lore_requirement: "&c🔥 火焰之心"
+    permission: ""
+    cooldown: 12
+    effects:
+      # 射程距離 (方塊)
+      distance: 20
+      # 爆炸傷害
+      damage: 8.0
+      # 爆炸半徑
+      explosion_radius: 3
+      # 火焰持續時間 (ticks)
+      fire_duration: 60
+      sound: ENTITY_BLAZE_SHOOT
+      particle: FLAME
+
+  # ========== 冰霜射線 ==========
+  frost_beam:
+    name: "&b❄ 霜寒射線"
+    description: "向前方發射一道冰霜射線，凍結路徑上的敵人"
+    type: ice_beam
+    trigger: sneak_right_click
+    lore_requirement: "&b❄ 極寒之力"
+    permission: ""
+    cooldown: 10
+    effects:
+      # 射程距離 (方塊)
+      distance: 12
+      # 傷害
+      damage: 4.0
+      # 緩速等級 (1-5)
+      slowness_level: 3
+      # 緩速持續時間 (ticks)
+      slowness_duration: 100
+      # 射線寬度
+      beam_width: 1.5
+      sound: BLOCK_GLASS_BREAK
+      particle: SNOWFLAKE
+
+  # ========== 五芒星儀式 ==========
+  fire_pentagram:
+    name: "&c✦ 烈焰五芒星"
+    description: "繪製一個火焰五芒星，然後向前方發射造成傷害"
+    type: pentagram
+    trigger: sneak_right_click
+    lore_requirement: "&c✦ 五芒星之力"
+    permission: ""
+    cooldown: 20
+    effects:
+      # 五芒星大小 (方塊)
+      size: 2.5
+      # 總傷害 (分散在移動路徑上)
+      damage: 10.0
+      # 向前移動距離 (方塊)
+      move_distance: 8
+      # 繪製每條線的間隔 (ticks)
+      draw_delay: 4
+      # 火焰持續時間 (ticks)
+      fire_duration: 60
+      sound: ENTITY_BLAZE_SHOOT
+      particle: FLAME
+
+  # ========== 垂直五芒星儀式 ==========
+  vertical_pentagram:
+    name: "&c✦ 垂直烈焰五芒星"
+    description: "在空中繪製一個垂直的火焰五芒星，視覺效果更震撼"
+    type: pentagram_vertical
+    trigger: sneak_right_click
+    lore_requirement: "&c✦ 魔法五芒星"
+    permission: ""
+    cooldown: 25
+    effects:
+      # 五芒星大小 (方塊)
+      size: 3.0
+      # 總傷害 (分散在移動路徑上)
+      damage: 12.0
+      # 向前移動距離 (方塊)
+      move_distance: 12
+      # 繪製每條線的間隔 (ticks)
+      draw_delay: 5
+      # 火焰持續時間 (ticks)
+      fire_duration: 80
+      sound: ENTITY_BLAZE_SHOOT
+      particle: FLAME
+
 # 可以添加更多自定義技能...
 # 支持的技能類型 (type):
-#   - lightning: 閃電類技能
-#   - fire: 火焰類技能
-#   - ice: 冰霜類技能
-#   - explosion: 爆炸/擊退類技能
+#   - lightning: 閃電類技能 (範圍)
+#   - fire: 火焰類技能 (範圍)
+#   - ice: 冰霜類技能 (範圍)
+#   - explosion: 爆炸/擊退類技能 (範圍)
 #   - heal: 治療類技能
 #   - speed: 速度類技能
 #   - teleport: 傳送類技能
 #   - shield: 護盾類技能
-#   - poison: 毒素類技能
+#   - poison: 毒素類技能 (範圍)
+#   - lightning_bolt: 方向性閃電 (向前方發射)
+#   - fireball: 火球技能 (向前方發射，擊中爆炸)
+#   - ice_beam: 冰霜射線 (向前方發射)
+#   - pentagram: 五芒星儀式 (水平繪製五芒星後向前移動)
+#   - pentagram_vertical: 垂直五芒星 (垂直繪製五芒星後向前發射)
 
 # 支持的觸發方式 (trigger):
 #   - right_click: 右鍵點擊

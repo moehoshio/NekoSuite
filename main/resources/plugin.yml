@@ -79,8 +79,8 @@ commands:
     usage: /skill [list|info <技能ID>]
     permission: nekosuite.skill
   ngame:
-    description: 小遊戲系統
-    usage: /ngame <rtp|arena|fishing|cardbattle|blackjack> [子命令]
+    description: 小遊戲系統 (建議使用 /neko game)
+    usage: /neko game <rtp|arena|fishing|cardbattle|blackjack> [子命令]
     permission: nekosuite.game
     aliases:
       - nekogame
