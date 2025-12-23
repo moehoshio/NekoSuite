@@ -1292,7 +1292,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 // Handle /neko game <subcommand> tab completion
                 if (args.length >= 2 && "game".equalsIgnoreCase(args[0])) {
                     if (args.length == 2) {
-                        return filter(Arrays.asList("rtp", "arena", "fishing", "menu"), args[1]);
+                        return filter(Arrays.asList("rtp", "arena", "fishing", "cardbattle", "blackjack", "menu"), args[1]);
                     }
                     if (args.length == 3) {
                         String gameType = args[1].toLowerCase();
@@ -1304,6 +1304,26 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                         }
                         if ("fishing".equals(gameType)) {
                             return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[2]);
+                        }
+                        if ("cardbattle".equals(gameType) || "cb".equals(gameType)) {
+                            List<String> options = new ArrayList<String>(Arrays.asList("menu", "pve", "accept", "decline", "surrender", "同意", "拒絕"));
+                            // Add online players for invitation
+                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                if (!p.getName().equals(sender.getName())) {
+                                    options.add(p.getName());
+                                }
+                            }
+                            return filter(options, args[2]);
+                        }
+                        if ("blackjack".equals(gameType) || "bj".equals(gameType)) {
+                            List<String> options = new ArrayList<String>(Arrays.asList("menu", "bet", "hit", "stand", "double", "accept", "decline", "同意", "拒絕"));
+                            // Add online players for invitation
+                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                if (!p.getName().equals(sender.getName())) {
+                                    options.add(p.getName());
+                                }
+                            }
+                            return filter(options, args[2]);
                         }
                     }
                 }
@@ -1336,7 +1356,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 break;
             case "ngame":
                 if (args.length == 1) {
-                    return filter(Arrays.asList("rtp", "arena", "fishing", "menu"), args[0]);
+                    return filter(Arrays.asList("rtp", "arena", "fishing", "cardbattle", "blackjack", "menu"), args[0]);
                 }
                 if (args.length == 2) {
                     String sub = args[0].toLowerCase();
@@ -1348,6 +1368,26 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                     if ("fishing".equals(sub)) {
                         return filter(Arrays.asList("menu", "start", "join", "status", "leaderboard", "end"), args[1]);
+                    }
+                    if ("cardbattle".equals(sub) || "cb".equals(sub)) {
+                        List<String> options = new ArrayList<String>(Arrays.asList("menu", "pve", "accept", "decline", "surrender", "同意", "拒絕"));
+                        // Add online players for invitation
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            if (!p.getName().equals(sender.getName())) {
+                                options.add(p.getName());
+                            }
+                        }
+                        return filter(options, args[1]);
+                    }
+                    if ("blackjack".equals(sub) || "bj".equals(sub)) {
+                        List<String> options = new ArrayList<String>(Arrays.asList("menu", "bet", "hit", "stand", "double", "accept", "decline", "同意", "拒絕"));
+                        // Add online players for invitation
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            if (!p.getName().equals(sender.getName())) {
+                                options.add(p.getName());
+                            }
+                        }
+                        return filter(options, args[1]);
                     }
                 }
                 break;
@@ -1775,16 +1815,21 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 }
                 break;
             case "accept":
+            case "同意":
                 cardBattleManager.acceptPvP(player);
                 break;
             case "decline":
+            case "拒絕":
+            case "拒绝":
                 cardBattleManager.declinePvP(player);
                 break;
             case "surrender":
                 cardBattleManager.surrender(player);
                 break;
             default:
-                cardBattleManager.openMenu(player);
+                // Treat unrecognized commands as player names for PvP invitation
+                // This supports /neko game cardbattle <player_name> format
+                cardBattleManager.invitePvP(player, args[0]);
                 break;
         }
         return true;
@@ -1829,13 +1874,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 }
                 break;
             case "accept":
+            case "同意":
                 blackjackManager.acceptPvP(player);
                 break;
             case "decline":
+            case "拒絕":
+            case "拒绝":
                 blackjackManager.declinePvP(player);
                 break;
             default:
-                blackjackManager.openMenu(player);
+                // Treat unrecognized commands as player names for PvP invitation
+                // This supports /neko game blackjack <player_name> format
+                blackjackManager.invitePvP(player, args[0]);
                 break;
         }
         return true;

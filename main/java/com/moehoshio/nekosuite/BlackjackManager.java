@@ -456,28 +456,45 @@ public class BlackjackManager {
     }
 
     private void checkPvPTurnEnd(PvPBlackjackSession session, Player currentPlayer) {
-        boolean isPlayer1 = currentPlayer.getName().equals(session.getPlayer1Name());
+        // Game ends when: both players have stood OR one player busts
+        if (session.isPlayer1Bust() || session.isPlayer2Bust()) {
+            endPvPGame(session);
+            return;
+        }
         
-        // Check if both players have finished
         if (session.isPlayer1Stand() && session.isPlayer2Stand()) {
             endPvPGame(session);
             return;
         }
 
-        // Switch to next player
+        // Determine next player: switch to the other player if they haven't stood yet
+        boolean isPlayer1 = currentPlayer.getName().equals(session.getPlayer1Name());
+        
         if (isPlayer1) {
-            session.setPlayer1Turn(false);
-            Player player2 = Bukkit.getPlayer(session.getPlayer2Name());
-            if (player2 != null && player2.isOnline()) {
-                player2.sendMessage(messages.format(player2, "blackjack.pvp_your_turn"));
-                openPvPGameMenu(player2, session);
+            // Current player is Player1, try to switch to Player2
+            if (!session.isPlayer2Stand()) {
+                session.setPlayer1Turn(false);
+                Player player2 = Bukkit.getPlayer(session.getPlayer2Name());
+                if (player2 != null && player2.isOnline()) {
+                    player2.sendMessage(messages.format(player2, "blackjack.pvp_your_turn"));
+                    openPvPGameMenu(player2, session);
+                }
+            } else {
+                // Player2 has stood, Player1 continues (but if Player1 also stood, game would have ended above)
+                openPvPGameMenu(currentPlayer, session);
             }
         } else {
-            session.setPlayer1Turn(true);
-            Player player1 = Bukkit.getPlayer(session.getPlayer1Name());
-            if (player1 != null && player1.isOnline()) {
-                player1.sendMessage(messages.format(player1, "blackjack.pvp_your_turn"));
-                openPvPGameMenu(player1, session);
+            // Current player is Player2, try to switch to Player1
+            if (!session.isPlayer1Stand()) {
+                session.setPlayer1Turn(true);
+                Player player1 = Bukkit.getPlayer(session.getPlayer1Name());
+                if (player1 != null && player1.isOnline()) {
+                    player1.sendMessage(messages.format(player1, "blackjack.pvp_your_turn"));
+                    openPvPGameMenu(player1, session);
+                }
+            } else {
+                // Player1 has stood, Player2 continues (but if Player2 also stood, game would have ended above)
+                openPvPGameMenu(currentPlayer, session);
             }
         }
     }
