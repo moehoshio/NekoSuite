@@ -409,6 +409,16 @@ public class BlackjackManager {
         map.put("card", card.toString());
         player.sendMessage(messages.format(player, "blackjack.card_drawn", map));
 
+        // Notify opponent about the hit
+        String opponentName = isPlayer1 ? session.getPlayer2Name() : session.getPlayer1Name();
+        Player opponent = Bukkit.getPlayer(opponentName);
+        if (opponent != null && opponent.isOnline()) {
+            Map<String, String> oppMap = new HashMap<String, String>();
+            oppMap.put("player", player.getName());
+            oppMap.put("count", String.valueOf(hand.size()));
+            opponent.sendMessage(messages.format(opponent, "blackjack.pvp_opponent_hit", oppMap));
+        }
+
         int handValue = calculateHandValue(hand);
         if (handValue > 21) {
             if (isPlayer1) {
@@ -422,6 +432,14 @@ public class BlackjackManager {
             } else {
                 session.setPlayer2Stand(true);
             }
+            
+            // Notify opponent about bust
+            if (opponent != null && opponent.isOnline()) {
+                Map<String, String> bustMap = new HashMap<String, String>();
+                bustMap.put("player", player.getName());
+                opponent.sendMessage(messages.format(opponent, "blackjack.pvp_opponent_bust", bustMap));
+            }
+            
             checkPvPTurnEnd(session, player);
             return;
         }
@@ -452,6 +470,16 @@ public class BlackjackManager {
         }
 
         player.sendMessage(messages.format(player, "blackjack.player_stand"));
+        
+        // Notify opponent about stand
+        String opponentName = isPlayer1 ? session.getPlayer2Name() : session.getPlayer1Name();
+        Player opponent = Bukkit.getPlayer(opponentName);
+        if (opponent != null && opponent.isOnline()) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("player", player.getName());
+            opponent.sendMessage(messages.format(opponent, "blackjack.pvp_opponent_stand", map));
+        }
+        
         checkPvPTurnEnd(session, player);
     }
 
