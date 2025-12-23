@@ -134,6 +134,26 @@ public class SkillManager implements Listener {
             return;
         }
         
+        // Debug: Log item info if player has debug permission
+        if (player.hasPermission("nekosuite.skill.debug")) {
+            plugin.getLogger().info("[SkillDebug] Player: " + player.getName() + ", Trigger: " + trigger);
+            plugin.getLogger().info("[SkillDebug] Item: " + item.getType().name());
+            for (int i = 0; i < lore.size(); i++) {
+                String loreLine = lore.get(i);
+                // Log with escaped special characters
+                String escaped = loreLine.replace(ChatColor.COLOR_CHAR, '&');
+                plugin.getLogger().info("[SkillDebug] Lore[" + i + "]: '" + escaped + "' (raw: '" + loreLine + "')");
+            }
+            
+            // Log all skill requirements for comparison
+            for (SkillDefinition skill : skills.values()) {
+                String req = skill.getLoreRequirement();
+                String translatedReq = translateColorCodes(req);
+                plugin.getLogger().info("[SkillDebug] Skill '" + skill.getId() + "' trigger: " + skill.getTrigger() + 
+                    ", req: '" + req + "' -> '" + translatedReq.replace(ChatColor.COLOR_CHAR, '&') + "'");
+            }
+        }
+        
         // Find matching skill
         SkillDefinition matchedSkill = null;
         for (SkillDefinition skill : skills.values()) {
@@ -200,9 +220,18 @@ public class SkillManager implements Listener {
         }
         // Translate color codes for comparison
         String coloredRequirement = translateColorCodes(requirement);
+        // Also strip all color codes for fallback comparison
+        String strippedRequirement = ChatColor.stripColor(coloredRequirement);
+        
         for (String line : itemLore) {
             String coloredLine = translateColorCodes(line);
+            // Try exact match with colors first
             if (coloredLine.contains(coloredRequirement)) {
+                return true;
+            }
+            // Fallback: try matching without color codes
+            String strippedLine = ChatColor.stripColor(coloredLine);
+            if (strippedLine.contains(strippedRequirement)) {
                 return true;
             }
         }
