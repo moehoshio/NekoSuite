@@ -61,6 +61,7 @@ commands:
     permission: nekosuite.menu
     aliases:
       - neko
+      - "n"
   nekohelp:
     description: 幫助頁 (已棄用，請使用 /neko help)
     usage: /neko help
