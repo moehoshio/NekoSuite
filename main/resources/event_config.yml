@@ -3,57 +3,57 @@ storage:
     data_dir: "userdata"
 
 events:
-    daily_login:
-        name: "每日登录奖励"
-        description: "每天登录游戏即可获得奖励"
-        enabled: true
-        auto_claim: true
-        limit_modes:
-            count: 1
-            time: "1d"
-            refresh_at_time: "00:00"
-        duration:
-            startDate: "2025-01-01T00:00:00Z"
-            endDate: "2099-12-31T23:59:59Z"
-        rewards:
-            balance50:
-                probability: 1
-                commands:
-                  - "essentials:eco give {player} 50"
-            exp50:
-                probability: 1
-                commands:
-                  - "minecraft:xp add {player} 50 points"
+    # daily_login:
+    #     name: "每日登录奖励"
+    #     description: "每天登录游戏即可获得奖励"
+    #     enabled: true
+    #     auto_claim: true
+    #     limit_modes:
+    #         count: 1
+    #         time: "1d"
+    #         refresh_at_time: "00:00"
+    #     duration:
+    #         startDate: "2025-01-01T00:00:00Z"
+    #         endDate: "2099-12-31T23:59:59Z"
+    #     rewards:
+    #         balance50:
+    #             probability: 1
+    #             commands:
+    #               - "essentials:eco give {player} 50"
+    #         exp50:
+    #             probability: 1
+    #             commands:
+    #               - "minecraft:xp add {player} 50 points"
 
-    sunday_special:
-        name: "周日特别奖励"
-        description: "每周日的特别奖励"
-        enabled: true
-        auto_claim: true
-        limit_modes:
-            count: 1
-            time: "1w"
-            refresh_at_time: "00:00"
-            refresh_at_week: 7
-        duration:
-            startDate: "2025-01-01T00:00:00Z"
-            endDate: "2099-12-31T23:59:59Z"
-        rewards:
-            balance100:
-                probability: 1
-                commands:
-                  - "essentials:eco give {player} 100"
-            exp200:
-                probability: 1
-                commands:
-                  - "minecraft:xp add {player} 200 points"
-            netherite:
-                probability: 1
-                amount: 1
-                name: "minecraft:netherite_ingot"
+    # sunday_special:
+    #     name: "周日特别奖励"
+    #     description: "每周日的特别奖励"
+    #     enabled: true
+    #     auto_claim: true
+    #     limit_modes:
+    #         count: 1
+    #         time: "1w"
+    #         refresh_at_time: "00:00"
+    #         refresh_at_week: 7
+    #     duration:
+    #         startDate: "2025-01-01T00:00:00Z"
+    #         endDate: "2099-12-31T23:59:59Z"
+    #     rewards:
+    #         balance100:
+    #             probability: 1
+    #             commands:
+    #               - "essentials:eco give {player} 100"
+    #         exp200:
+    #             probability: 1
+    #             commands:
+    #               - "minecraft:xp add {player} 200 points"
+    #         netherite:
+    #             probability: 1
+    #             amount: 1
+    #             name: "minecraft:netherite_ingot"
 
     new_year_2026:
-        name: "2026新年活动"
+        name: "Neko Server 2026新年活动"
         description: "新年特别活动，仅在新年期间可用"
         enabled: true
         auto_claim: false
@@ -83,7 +83,7 @@ events:
                         - "broadcast 恭喜 {player} 获得新年特别奖励！"
 
     monthly_reward:
-        name: "月度奖励"
+        name: "猫猫的月度奖励"
         description: "每月1号的特别奖励"
         enabled: true
         auto_claim: true
@@ -96,21 +96,17 @@ events:
             startDate: "2025-01-01T00:00:00Z"
             endDate: "2099-12-31T23:59:59Z"
         rewards:
-            balance500:
+            balance300:
                 probability: 1
                 commands:
-                  - "essentials:eco give {player} 500"
-            exp500:
+                  - "essentials:eco give {player} 300"
+            exp300:
                 probability: 1
                 commands:
-                  - "minecraft:xp add {player} 500 points"
-            diamond_block:
-                probability: 1
-                amount: 1
-                name: "minecraft:diamond_block"
+                  - "minecraft:xp add {player} 300 points"
 
     christmas_2025:
-        name: "圣诞节限定"
+        name: "Neko Server 圣诞节限定"
         description: "平安夜到圣诞节的节庆奖励"
         enabled: true
         auto_claim: false
