@@ -1537,7 +1537,7 @@ arena:
   wave_complete: "&a✔ &7Wave &6{wave} &7complete! Bonus: &6+{bonus} &7(Total: &6{total}&7)"
   mob_killed: "&a✔ &7Mob killed! &6+{points} &7pts (Total: &6{total}&7)"
   mob_died_environment: "&e✔ &7{count} mobs died from environment! &6+{points} &7pts (Total: &6{total}&7)"
-  wave_timeout: "&c✖ &7Wave &6{wave} &7timed out! &c{remaining} &7mobs remaining. Game over!"
+  wave_timeout: "&c✖ &7Wave &6{wave} &7timed out (&c{timeout} &7sec)! &c{remaining} &7mobs remaining. Game over!"
   game_completed: "&a✔ &7Congrats on completing all waves! Final score: &6{score} &7| Kills: &e{kills}"
   game_over: "&c✖ &7Game over! Completed &6{waves} &7waves, Score: &6{score} &7| Kills: &e{kills}"
   status: "&7Wave: &6{wave}/{max_waves} &8| &7Score: &6{score} &8| &7Kills: &e{kills} &8| &7Remaining: &c{remaining}"

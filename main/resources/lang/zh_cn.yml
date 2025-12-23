@@ -1537,7 +1537,7 @@ arena:
   wave_complete: "&a✔ &7第 &6{wave} &7波完成！奖励分数: &6+{bonus} &7(总计: &6{total}&7)"
   mob_killed: "&a✔ &7击杀怪物！&6+{points} &7分 (总计: &6{total}&7)"
   mob_died_environment: "&e✔ &7{count} 只怪物死于环境！&6+{points} &7分 (总计: &6{total}&7)"
-  wave_timeout: "&c✖ &7第 &6{wave} &7波超时！剩余 &c{remaining} &7只怪物未击杀。游戏结束！"
+  wave_timeout: "&c✖ &7第 &6{wave} &7波超时 (&c{timeout} &7秒)！剩余 &c{remaining} &7只怪物未击杀。游戏结束！"
   game_completed: "&a✔ &7恭喜完成所有波次！最终分数: &6{score} &7| 击杀: &e{kills}"
   game_over: "&c✖ &7游戏结束！完成 &6{waves} &7波，分数: &6{score} &7| 击杀: &e{kills}"
   status: "&7波次: &6{wave}/{max_waves} &8| &7分数: &6{score} &8| &7击杀: &e{kills} &8| &7剩余怪物: &c{remaining}"
