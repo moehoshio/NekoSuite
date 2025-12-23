@@ -61,6 +61,8 @@ public class SurvivalArenaManager {
     private double damageMultiplier = 1.1;
     private int spawnRadius = 10;
     private int arenaRadius = 20;
+    private int waveTimeout = 120; // Seconds before wave times out (0 = no timeout)
+    private boolean highlightMobs = true; // Make arena mobs glow
     private List<WaveConfig> waveConfigs = new ArrayList<WaveConfig>();
     private List<String> commandRewards = new ArrayList<String>();
 
@@ -96,6 +98,8 @@ public class SurvivalArenaManager {
         damageMultiplier = config.getDouble("game.damage_multiplier", 1.1);
         spawnRadius = config.getInt("game.spawn_radius", 10);
         arenaRadius = config.getInt("game.arena_radius", 20);
+        waveTimeout = config.getInt("game.wave_timeout", 120);
+        highlightMobs = config.getBoolean("game.highlight_mobs", true);
         commandRewards = config.getStringList("rewards.commands");
 
         // Load wave configurations
@@ -269,6 +273,9 @@ public class SurvivalArenaManager {
         if (session.getMobCheckTask() != null) {
             session.getMobCheckTask().cancel();
         }
+        if (session.getWaveTimeoutTask() != null) {
+            session.getWaveTimeoutTask().cancel();
+        }
 
         // Remove all arena mobs
         clearArenaMobs(session);
@@ -397,6 +404,10 @@ public class SurvivalArenaManager {
                 double newHealth = Math.min(baseHealth * healthScale, 2048);
                 living.setMaxHealth(newHealth);
                 living.setHealth(newHealth);
+                // Highlight arena mobs with glowing effect
+                if (highlightMobs) {
+                    living.setGlowing(true);
+                }
             }
 
             session.addMob(entity.getUniqueId());
@@ -404,6 +415,11 @@ public class SurvivalArenaManager {
 
         // Start mob check task to handle mobs that die from non-player causes (e.g., sunlight)
         startMobCheckTask(player, session);
+
+        // Start wave timeout task if configured
+        if (waveTimeout > 0) {
+            startWaveTimeoutTask(player, session);
+        }
     }
 
     /**
@@ -463,7 +479,44 @@ public class SurvivalArenaManager {
         session.setMobCheckTask(checkTask);
     }
 
+    /**
+     * Start a timeout task for the current wave.
+     * If the wave is not completed within the timeout, the game ends.
+     */
+    private void startWaveTimeoutTask(Player player, ArenaSession session) {
+        // Cancel any existing timeout task
+        if (session.getWaveTimeoutTask() != null) {
+            session.getWaveTimeoutTask().cancel();
+        }
+
+        BukkitTask timeoutTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline() || session.isEnded() || session.getMobCount() == 0) {
+                    return;
+                }
+
+                // Wave timed out - end the game
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("wave", String.valueOf(session.getCurrentWave()));
+                map.put("remaining", String.valueOf(session.getMobCount()));
+                map.put("timeout", String.valueOf(waveTimeout));
+                player.sendMessage(messages.format(player, "arena.wave_timeout", map));
+
+                endGame(player, false);
+            }
+        }.runTaskLater(plugin, waveTimeout * 20L);
+
+        session.setWaveTimeoutTask(timeoutTask);
+    }
+
     private void completeWave(Player player, ArenaSession session) {
+        // Cancel timeout task when wave is completed
+        if (session.getWaveTimeoutTask() != null) {
+            session.getWaveTimeoutTask().cancel();
+            session.setWaveTimeoutTask(null);
+        }
+
         int wave = session.getCurrentWave();
         int bonus = wave * waveScoreMultiplier;
         session.addScore(bonus);
@@ -671,6 +724,9 @@ public class SurvivalArenaManager {
             if (session.getMobCheckTask() != null) {
                 session.getMobCheckTask().cancel();
             }
+            if (session.getWaveTimeoutTask() != null) {
+                session.getWaveTimeoutTask().cancel();
+            }
             clearArenaMobs(session);
             activeSessions.remove(playerName);
         }
@@ -750,6 +806,7 @@ public class SurvivalArenaManager {
         private boolean ended;
         private BukkitTask waveTask;
         private BukkitTask mobCheckTask;
+        private BukkitTask waveTimeoutTask;
         private final Set<UUID> mobIds;
 
         ArenaSession(String playerName, Location arenaCenter, int maxWaves) {
@@ -778,6 +835,8 @@ public class SurvivalArenaManager {
         void setWaveTask(BukkitTask task) { this.waveTask = task; }
         BukkitTask getMobCheckTask() { return mobCheckTask; }
         void setMobCheckTask(BukkitTask task) { this.mobCheckTask = task; }
+        BukkitTask getWaveTimeoutTask() { return waveTimeoutTask; }
+        void setWaveTimeoutTask(BukkitTask task) { this.waveTimeoutTask = task; }
 
         void addMob(UUID id) { mobIds.add(id); }
         void removeMob(UUID id) { mobIds.remove(id); }

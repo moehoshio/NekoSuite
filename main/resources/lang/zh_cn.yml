@@ -1525,3 +1525,19 @@ blackjack:
   economy_missing: "&c✖ &7未找到经济插件，无法下注。"
   insufficient_balance: "&c✖ &7余额不足。需要 &6{needed}&7，当前 &6{balance}&7。"
   pvp_usage: "&7用法: &f/neko game blackjack <玩家名> &7邀请对战"
+
+# 生存竞技场游戏
+arena:
+  disabled: "&c✖ &7此游戏模式目前已停用。"
+  already_in_game: "&e⚠ &7您已经在竞技场中！"
+  no_active_game: "&e⚠ &7您没有进行中的竞技场游戏。"
+  game_started: "&a✔ &7生存竞技场开始！共 &6{max_waves} &7波怪物，准备时间 &6{cooldown} &7秒。"
+  wave_starting: "&e⚡ &7第 &6{wave} &7波即将开始！准备时间: &6{cooldown} &7秒"
+  wave_spawned: "&c⚔ &7第 &6{wave} &7波！&c{count} &7只怪物出现了！"
+  wave_complete: "&a✔ &7第 &6{wave} &7波完成！奖励分数: &6+{bonus} &7(总计: &6{total}&7)"
+  mob_killed: "&a✔ &7击杀怪物！&6+{points} &7分 (总计: &6{total}&7)"
+  mob_died_environment: "&e✔ &7{count} 只怪物死于环境！&6+{points} &7分 (总计: &6{total}&7)"
+  wave_timeout: "&c✖ &7第 &6{wave} &7波超时！剩余 &c{remaining} &7只怪物未击杀。游戏结束！"
+  game_completed: "&a✔ &7恭喜完成所有波次！最终分数: &6{score} &7| 击杀: &e{kills}"
+  game_over: "&c✖ &7游戏结束！完成 &6{waves} &7波，分数: &6{score} &7| 击杀: &e{kills}"
+  status: "&7波次: &6{wave}/{max_waves} &8| &7分数: &6{score} &8| &7击杀: &e{kills} &8| &7剩余怪物: &c{remaining}"
