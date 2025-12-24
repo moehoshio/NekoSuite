@@ -252,7 +252,7 @@ skills:
       # 射程距離 (方塊)
       distance: 20
       # 爆炸傷害
-      damage: 8.0
+      damage: 12.0
       # 爆炸半徑
       explosion_radius: 3
       # 火焰持續時間 (ticks)
@@ -296,7 +296,7 @@ skills:
       # 五芒星大小 (方塊)
       size: 2.5
       # 總傷害 (分散在移動路徑上)
-      damage: 10.0
+      damage: 30.0
       # 向前移動距離 (方塊)
       move_distance: 8
       # 繪製每條線的間隔 (ticks)
@@ -319,7 +319,7 @@ skills:
       # 五芒星大小 (方塊)
       size: 3.0
       # 總傷害 (分散在移動路徑上)
-      damage: 12.0
+      damage: 32.0
       # 向前移動距離 (方塊)
       move_distance: 12
       # 繪製每條線的間隔 (ticks)
