@@ -350,7 +350,7 @@ public class InventoryBackupManager {
         if (clearBeforeRestore) {
             player.getInventory().clear();
             player.getInventory().setArmorContents(new ItemStack[4]);
-            player.getInventory().setItemInOffHand(null);
+            player.getInventory().setItemInOffHand(new ItemStack(Material.AIR));
         }
         
         // Restore inventory
