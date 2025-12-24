@@ -63,6 +63,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private FishingContestManager fishingContestManager;
     private CardBattleManager cardBattleManager;
     private BlackjackManager blackjackManager;
+    private InventoryBackupManager inventoryBackupManager;
 
     @Override
     public void onEnable() {
@@ -87,6 +88,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("fishing_contest_config.yml", false);
         saveResource("card_battle_config.yml", false);
         saveResource("blackjack_config.yml", false);
+        saveResource("inventory_backup_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -206,6 +208,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("ngame").setExecutor(this);
             getCommand("ngame").setTabCompleter(this);
         }
+        if (getCommand("invbackup") != null) {
+            getCommand("invbackup").setExecutor(this);
+            getCommand("invbackup").setTabCompleter(this);
+        }
 
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
@@ -253,6 +259,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 return handleSkill(sender, args);
             case "ngame":
                 return handleNekoGame(sender, args);
+            case "invbackup":
+            case "nekobp":
+            case "ibp":
+                return handleInvBackup(sender, args);
             default:
                 return false;
         }
@@ -1391,6 +1401,50 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
                 break;
+            case "invbackup":
+            case "nekobp":
+            case "ibp":
+                if (args.length == 1) {
+                    List<String> options = new ArrayList<String>(Arrays.asList("menu", "list", "backup", "restore", "cancel"));
+                    options.add(messages.getRaw(sender, "tab.invbackup.select_action"));
+                    return filter(options, args[0]);
+                }
+                if (args.length == 2) {
+                    String sub = args[0].toLowerCase();
+                    if ("menu".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.menu.open"));
+                    }
+                    if ("list".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.invbackup.do_backup"));
+                    }
+                    if ("backup".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.invbackup.do_backup"));
+                    }
+                    if ("restore".equals(sub)) {
+                        if (sender instanceof Player) {
+                            Player player = (Player) sender;
+                            List<InventoryBackupManager.BackupEntry> backups = inventoryBackupManager.getBackups(player.getName());
+                            List<String> suggestions = new ArrayList<String>();
+                            for (InventoryBackupManager.BackupEntry backup : backups) {
+                                if (!backup.isRestored()) {
+                                    suggestions.add(backup.getId());
+                                }
+                            }
+                            suggestions.add(messages.getRaw(sender, "tab.invbackup.select_backup"));
+                            return filter(suggestions, args[1]);
+                        }
+                    }
+                    if ("cancel".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.invbackup.do_cancel"));
+                    }
+                }
+                if (args.length == 3) {
+                    String sub = args[0].toLowerCase();
+                    if ("restore".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.invbackup.do_restore"));
+                    }
+                }
+                break;
             default:
                 break;
         }
@@ -1461,6 +1515,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         fishingContestManager = new FishingContestManager(this, messages, new File(getDataFolder(), "fishing_contest_config.yml"), menuLayout);
         cardBattleManager = new CardBattleManager(this, messages, new File(getDataFolder(), "card_battle_config.yml"), menuLayout);
         blackjackManager = new BlackjackManager(this, messages, new File(getDataFolder(), "blackjack_config.yml"), menuLayout);
+        inventoryBackupManager = new InventoryBackupManager(this, messages, new File(getDataFolder(), "inventory_backup_config.yml"), economy);
         
         // Set callbacks for opening games menu from game managers
         cardBattleManager.setOpenGamesMenuCallback(this::openGamesMenu);
@@ -1696,6 +1751,51 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 sender.sendMessage(messages.format(sender, "ngame.usage"));
                 return true;
         }
+    }
+
+    private boolean handleInvBackup(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(messages.format(sender, "common.only_player"));
+            return true;
+        }
+        Player player = (Player) sender;
+        
+        if (args.length == 0) {
+            // Default: open menu
+            inventoryBackupManager.openMenu(player);
+            return true;
+        }
+        
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "menu":
+                inventoryBackupManager.openMenu(player);
+                break;
+            case "list":
+                inventoryBackupManager.showBackupList(player);
+                break;
+            case "backup":
+                inventoryBackupManager.createManualBackup(player);
+                break;
+            case "restore":
+                if (args.length < 2) {
+                    sender.sendMessage(messages.format(sender, "invbackup.usage"));
+                    return true;
+                }
+                try {
+                    inventoryBackupManager.restoreBackup(player, args[1]);
+                } catch (InventoryBackupManager.BackupException e) {
+                    sender.sendMessage(e.getMessage());
+                }
+                break;
+            case "cancel":
+                inventoryBackupManager.cancelConfirmation(player);
+                break;
+            default:
+                sender.sendMessage(messages.format(sender, "invbackup.usage"));
+                break;
+        }
+        return true;
     }
 
     private boolean handleRtpGameSubcommand(Player player, String[] args) {
@@ -3221,11 +3321,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
 
     @EventHandler
     public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
-        if (survivalArenaManager == null) {
-            return;
-        }
         Player player = event.getEntity();
-        survivalArenaManager.onPlayerDeath(player);
+        
+        // Survival Arena death handling
+        if (survivalArenaManager != null) {
+            survivalArenaManager.onPlayerDeath(player);
+        }
+        
+        // Inventory Backup death handling
+        if (inventoryBackupManager != null) {
+            boolean keepInventory = event.getKeepInventory();
+            inventoryBackupManager.onPlayerDeath(player, keepInventory);
+        }
     }
 
     @EventHandler
@@ -3486,6 +3593,28 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             MailManager.MailMenuHolder mailHolder = (MailManager.MailMenuHolder) holder;
             mailManager.handleMenuClick(player, clicked, event.isShiftClick(), mailHolder.getCurrentPage());
         }
+        if (holder instanceof InventoryBackupManager.BackupMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null) {
+                return;
+            }
+            // Check for navigation action first
+            ItemMeta meta = clicked.getItemMeta();
+            if (meta != null && meta.getLore() != null) {
+                for (String line : meta.getLore()) {
+                    if (line != null && ChatColor.stripColor(line).startsWith("ACTION:OPEN_NAV")) {
+                        openNavigationMenu(player);
+                        return;
+                    }
+                }
+            }
+            InventoryBackupManager.BackupMenuHolder backupHolder = (InventoryBackupManager.BackupMenuHolder) holder;
+            inventoryBackupManager.handleMenuClick(player, clicked, backupHolder.getCurrentPage());
+        }
         if (holder instanceof StrategyGameManager.StrategyGameMenuHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getView().getTopInventory()) {
@@ -3683,6 +3812,107 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     }
                 }
             }, 40L); // 2 seconds delay
+        }
+    }
+
+    // Inventory Backup Event Listeners
+    
+    @EventHandler
+    public void onEntityDamageForBackup(org.bukkit.event.entity.EntityDamageEvent event) {
+        if (inventoryBackupManager == null) {
+            return;
+        }
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getEntity();
+        
+        // Only save snapshot if damage might be fatal and from dangerous sources
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause cause = event.getCause();
+        if (cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.LAVA 
+            || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.VOID
+            || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.FIRE
+            || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.FIRE_TICK
+            || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.CONTACT
+            || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.HOT_FLOOR) {
+            
+            // Check if this could be fatal
+            double health = player.getHealth();
+            double damage = event.getFinalDamage();
+            if (health - damage <= 0) {
+                // Player will die from this, save snapshot
+                inventoryBackupManager.savePreDamageSnapshot(player, cause);
+            }
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerDropItem(org.bukkit.event.player.PlayerDropItemEvent event) {
+        if (inventoryBackupManager == null || !inventoryBackupManager.isAutoBackupEnabled()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        org.bukkit.entity.Item itemEntity = event.getItemDrop();
+        inventoryBackupManager.trackDroppedItem(player, itemEntity);
+    }
+    
+    @EventHandler
+    public void onItemDespawn(org.bukkit.event.entity.ItemDespawnEvent event) {
+        if (inventoryBackupManager == null) {
+            return;
+        }
+        inventoryBackupManager.onTrackedItemDespawn(event.getEntity().getUniqueId());
+    }
+    
+    @EventHandler
+    public void onEntityPickupItem(org.bukkit.event.entity.EntityPickupItemEvent event) {
+        if (inventoryBackupManager == null) {
+            return;
+        }
+        // Item was picked up, not lost
+        inventoryBackupManager.onTrackedItemPickedUp(event.getItem().getUniqueId());
+    }
+    
+    @EventHandler
+    public void onItemDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+        if (inventoryBackupManager == null) {
+            return;
+        }
+        if (!(event.getEntity() instanceof org.bukkit.entity.Item)) {
+            return;
+        }
+        
+        org.bukkit.entity.Item item = (org.bukkit.entity.Item) event.getEntity();
+        org.bukkit.event.entity.EntityDamageEvent.DamageCause cause = event.getCause();
+        
+        // Check if item is destroyed by lava, fire, cactus, etc.
+        String lossReason = null;
+        switch (cause) {
+            case LAVA:
+            case HOT_FLOOR:
+                lossReason = InventoryBackupManager.LOSS_LAVA;
+                break;
+            case FIRE:
+            case FIRE_TICK:
+                lossReason = InventoryBackupManager.LOSS_FIRE;
+                break;
+            case CONTACT: // Cactus
+                lossReason = InventoryBackupManager.LOSS_CACTUS;
+                break;
+            case BLOCK_EXPLOSION:
+            case ENTITY_EXPLOSION:
+                lossReason = InventoryBackupManager.LOSS_EXPLOSION;
+                break;
+            case VOID:
+                lossReason = InventoryBackupManager.LOSS_VOID;
+                break;
+            default:
+                break;
+        }
+        
+        // Item entities don't have health in 1.16.5, check if dead or if damage is high enough
+        if (lossReason != null && (item.isDead() || event.getFinalDamage() >= 1)) {
+            inventoryBackupManager.onTrackedItemDestroyed(item.getUniqueId(), lossReason);
         }
     }
 

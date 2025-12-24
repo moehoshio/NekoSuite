@@ -1,0 +1,52 @@
+# Inventory Backup Configuration
+# 玩家背包備份系統設定
+
+# Data storage settings
+storage:
+  data_dir: "userdata"
+
+# Backup settings
+backup:
+  # Maximum number of backups per player (oldest are deleted when exceeded)
+  max_backups_per_player: 10
+  # Backup expiry in days (0 = no expiry)
+  expiry_days: 7
+  # Enable automatic backup on inventory change
+  auto_backup_enabled: true
+  # Minimum interval between automatic backups (in seconds)
+  # Prevents too many backups when items are frequently moved
+  auto_backup_interval: 60
+
+# Restore settings
+restore:
+  # Cost to restore inventory (Vault economy) - for unverified backups
+  cost: 500.0
+  # Lower cost for verified loss backups (lava, void, despawn)
+  verified_loss_cost: 100.0
+  # Cooldown between restores (in seconds)
+  cooldown: 3600
+  # Whether to require confirmation before restore
+  require_confirmation: true
+  # Clear current inventory before restore (prevents item duplication)
+  clear_before_restore: true
+  # Items that cannot be restored (to prevent abuse)
+  blocked_items:
+    - BEDROCK
+    - COMMAND_BLOCK
+    - BARRIER
+    - STRUCTURE_BLOCK
+    - DEBUG_STICK
+
+# Anti-duplication settings
+anti_dupe:
+  # Enable hash-based duplicate detection (skip backup if same as last)
+  skip_duplicate_content: true
+  # Track restored backups and prevent re-restore
+  track_restored: true
+  # Notify admins when suspicious activity is detected
+  notify_admins: true
+  # Minimum time between the same backup being restored (prevents abuse)
+  restore_cooldown_per_backup: 86400
+  # Only allow restoring verified loss backups (strict mode)
+  # If true, only backups from lava/void/despawn deaths can be restored
+  require_verified_loss: false

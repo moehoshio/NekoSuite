@@ -1729,3 +1729,63 @@ blackjack:
   pvp_you_won: "&a✔ &7恭喜！您贏得了對決！ 你: &6{player1_value} &7| 對手: &6{player2_value}"
   pvp_you_lost: "&c✖ &7您輸了... 勝者: &6{winner}"
   pvp_tie: "&e⚠ &7平局！ 你: &6{player1_value} &7| 對手: &6{player2_value}"
+
+# 背包備份系統
+invbackup:
+  usage: "&7用法: &f/invbackup &6<menu|list|backup|restore|cancel> [備份ID]"
+  backup_created: "&a✔ &7背包備份已建立。"
+  backup_skipped: "&e⚠ &7背包內容無變化，跳過備份。"
+  verified_backup_created: "&a✔ &7已建立經驗證的背包備份。 &8(原因: {reason})"
+  no_backups: "&e⚠ &7您沒有任何背包備份。"
+  not_found: "&c✖ &7找不到該備份。"
+  not_verified_loss: "&c✖ &7此備份不是經驗證的物品丟失，無法回溯。"
+  cooldown: "&c✖ &7請等待 &6{time} &7後再進行回溯。"
+  backup_cooldown: "&c✖ &7該備份最近已回溯過，請等待 &6{time} &7後再試。"
+  insufficient_balance: "&c✖ &7餘額不足，需 &6{cost}&c，當前 &6{balance}&c。"
+  cost_failure: "&c✖ &7扣款失敗，請稍後再試。"
+  confirm_restore: "&e⚠ &7確定要回溯此備份嗎？費用: &6{cost} &7金幣。此操作會清空您當前的背包。再次執行指令以確認。"
+  restore_success: "&a✔ &7背包回溯成功！已花費 &6{cost} &7金幣。"
+  cancelled: "&a✔ &7已取消回溯操作。"
+  list_header: "&8&m─────────────&r &6✦ 背包備份 ✦ &8&m─────────────&r"
+  list_entry: "&7- &f{id} &8| &7時間: &e{time} &8| &7來源: &b{trigger} &8| &7物品: &a{items} {status}"
+  more_backups: "&7... 還有 &6{count} &7個備份。使用 &f/invbackup menu &7查看全部。"
+  status_restored: "&8[已回溯]"
+  status_available: "&a[可用]"
+  status_verified: "&a[驗證丟失]"
+  # Loss reason translations
+  loss_reason:
+    LAVA: "岩漿"
+    VOID: "虛空"
+    FIRE: "火焰"
+    DESPAWN: "消失"
+    CACTUS: "仙人掌"
+    EXPLOSION: "爆炸"
+    DEATH: "死亡"
+    MANUAL: "手動"
+    UNKNOWN: "未知"
+
+menu:
+  invbackup:
+    title: "&#80e85c✦ 背包備份"
+    entry_title: "&6備份 - {time}"
+    time_lore: "&7時間: &e{time}"
+    trigger_lore: "&7來源: &b{trigger}"
+    items_lore: "&7物品數: &a{items}"
+    restored_indicator: "&8✔ 已回溯過"
+    verified_indicator: "&a✔ 驗證丟失 &8({reason})"
+    click_to_restore: "&e點擊回溯此備份"
+    prev_page: "&7◀ 上一頁"
+    next_page: "&7下一頁 ▶"
+    info_title: "&7備份資訊 &8({page}/{total_pages})"
+    info_lore: "&7共 &a{count} &7個備份"
+    cost_lore: "&7回溯費用: &6{cost} &7金幣"
+    create_button: "&a✦ 手動備份"
+    create_lore: "&7點擊建立新備份"
+
+tab:
+  invbackup:
+    select_action: "<選擇操作>"
+    select_backup: "<選擇備份>"
+    do_backup: "<按下Enter備份>"
+    do_restore: "<按下Enter回溯>"
+    do_cancel: "<按下Enter取消>"

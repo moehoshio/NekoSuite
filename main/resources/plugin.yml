@@ -84,3 +84,10 @@ commands:
     permission: nekosuite.game
     aliases:
       - nekogame
+  invbackup:
+    description: 背包備份系統
+    usage: /invbackup <menu|list|backup|restore|cancel> [備份ID]
+    permission: nekosuite.invbackup
+    aliases:
+      - nekobp
+      - ibp
