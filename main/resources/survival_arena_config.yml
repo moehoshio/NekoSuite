@@ -23,6 +23,10 @@ game:
   spawn_radius: 10
   # 競技場半徑
   arena_radius: 20
+  # 每波時間限制 (秒)，超時則失敗 (0 = 無限制)
+  wave_timeout: 120
+  # 是否讓競技場怪物發光 (方便玩家識別目標)
+  highlight_mobs: true
 
 # 波次配置
 waves:
