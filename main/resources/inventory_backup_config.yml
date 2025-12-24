@@ -20,9 +20,9 @@ backup:
 # Restore settings
 restore:
   # Cost to restore inventory (Vault economy) - for unverified backups
-  cost: 500.0
+  cost: 3000.0
   # Lower cost for verified loss backups (lava, void, despawn)
-  verified_loss_cost: 100.0
+  verified_loss_cost: 800.0
   # Cooldown between restores (in seconds)
   cooldown: 3600
   # Whether to require confirmation before restore

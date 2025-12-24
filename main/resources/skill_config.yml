@@ -296,7 +296,7 @@ skills:
       # 五芒星大小 (方塊)
       size: 2.5
       # 總傷害 (分散在移動路徑上)
-      damage: 30.0
+      damage: 72.0
       # 向前移動距離 (方塊)
       move_distance: 8
       # 繪製每條線的間隔 (ticks)
@@ -319,7 +319,7 @@ skills:
       # 五芒星大小 (方塊)
       size: 3.0
       # 總傷害 (分散在移動路徑上)
-      damage: 32.0
+      damage: 86.0
       # 向前移動距離 (方塊)
       move_distance: 12
       # 繪製每條線的間隔 (ticks)

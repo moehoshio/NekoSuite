@@ -294,6 +294,12 @@ tab:
     select_skill: "<選擇技能>"
     show_info: "<顯示技能詳情>"
     show_list: "<顯示技能列表>"
+  invbackup:
+    select_action: "<選擇操作>"
+    select_backup: "<選擇備份>"
+    do_backup: "<按下Enter備份>"
+    do_restore: "<按下Enter回溯>"
+    do_cancel: "<按下Enter取消>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [郵件ID]"
@@ -1199,6 +1205,22 @@ menu:
     back_to_games: "&7◀ 返回遊戲列表"
     back_to_games_lore: "&7返回小遊戲菜單"
   close: "&c✖ 關閉"
+  invbackup:
+    title: "&#80e85c✦ 背包備份"
+    entry_title: "&6備份 - {time}"
+    time_lore: "&7時間: &e{time}"
+    trigger_lore: "&7來源: &b{trigger}"
+    items_lore: "&7物品數: &a{items}"
+    restored_indicator: "&8✔ 已回溯過"
+    verified_indicator: "&a✔ 驗證丟失 &8({reason})"
+    click_to_restore: "&e點擊回溯此備份"
+    prev_page: "&7◀ 上一頁"
+    next_page: "&7下一頁 ▶"
+    info_title: "&7備份資訊 &8({page}/{total_pages})"
+    info_lore: "&7共 &a{count} &7個備份"
+    cost_lore: "&7回溯費用: &6{cost} &7金幣"
+    create_button: "&a✦ 手動備份"
+    create_lore: "&7點擊建立新備份"
 
 # 物品翻譯
 items:
@@ -1531,69 +1553,6 @@ fishing:
   status_participating: "&7剩餘時間: &6{time} &8| &7您的分數: &e{score} &8| &7捕獲: &a{catches} &8| &7排名: &6#{rank}"
   status_spectating: "&7剩餘時間: &6{time} &8| &7參賽人數: &e{players}"
 
-  # 新遊戲模組選單
-  rtpgame:
-    title: "&#60a5fa✦ 隨機傳送挑戰"
-    status_title: "&#60a5fa✦ 挑戰進行中"
-    info_title: "&b✦ 遊戲說明"
-    info_desc1: "&7您將被傳送到隨機位置"
-    info_desc2: "&7必須在時限內到達目標位置"
-    info_desc3: "&7成功可獲得豐富獎勵！"
-    start_button: "&a✦ 開始挑戰"
-    start_lore: "&7時限: &6{time}"
-    click_to_start: "&e點擊開始遊戲"
-    time_remaining: "&c⏱ 剩餘時間: &f{time}"
-    distance_lore: "&7距離目標: &e{distance} &7方塊"
-    target_lore: "&7目標: &6X:{target_x} Y:{target_y} Z:{target_z}"
-    target_compass: "&b✦ 目標羅盤"
-    target_coords: "&7座標: &6{target_x}, {target_y}, {target_z}"
-    end_button: "&c✦ 結束挑戰"
-    end_lore: "&7放棄此次挑戰"
-  arena:
-    title: "&#ff6666✦ 生存競技場"
-    status_title: "&#ff6666✦ 競技場進行中"
-    info_title: "&c✦ 遊戲說明"
-    info_desc1: "&7防守波次進攻的怪物"
-    info_desc2: "&7共 &6{max_waves} &7波，越後面越難"
-    info_desc3: "&7擊殺怪物獲得分數和獎勵！"
-    start_button: "&a✦ 開始挑戰"
-    start_lore: "&7進入競技場開始遊戲"
-    click_to_start: "&e點擊開始遊戲"
-    wave_info: "&e⚔ 波次: &f{wave}/{max_waves}"
-    score_lore: "&6分數: &f{score}"
-    kills_lore: "&c擊殺: &f{kills}"
-    remaining_lore: "&7剩餘怪物: &c{remaining}"
-    end_button: "&c✦ 結束遊戲"
-    end_lore: "&7結束並領取獎勵"
-  fishing:
-    title: "&#00bfff✦ 釣魚大賽"
-    contest_title: "&#00bfff✦ 比賽進行中"
-    info_title: "&b✦ 遊戲說明"
-    info_desc1: "&7限時釣魚比賽"
-    info_desc2: "&7比賽時長: &6{duration}"
-    info_desc3: "&7釣到的魚越稀有分數越高！"
-    start_button: "&a✦ 開始比賽"
-    start_lore: "&7發起新的釣魚大賽"
-    click_to_start: "&e點擊開始比賽"
-    join_button: "&a✦ 加入比賽"
-    join_lore: "&7加入正在進行的比賽"
-    points_title: "&e✦ 分數參考"
-    points_cod: "&7鱈魚: &610 &7分"
-    points_salmon: "&7鮭魚: &615 &7分"
-    points_tropical: "&7熱帶魚: &625 &7分"
-    points_puffer: "&7河豚: &630 &7分"
-    rewards_title: "&6✦ 獎勵說明"
-    rewards_first: "&7第一名: &6鑽石x10 + 金蘋果x5"
-    rewards_second: "&7第二名: &6鑽石x5 + 金蘋果x3"
-    rewards_third: "&7第三名: &6鑽石x3 + 金蘋果x1"
-    time_remaining: "&c⏱ 剩餘時間: &f{time}"
-    players_count: "&7參賽人數: &e{players}"
-    your_score: "&e✦ 您的分數: &f{score}"
-    catches_lore: "&7捕獲數: &a{catches}"
-    rank_lore: "&7目前排名: &6#{rank}"
-    leaderboard_button: "&b✦ 排行榜"
-    leaderboard_lore: "&7查看目前排名"
-
 # 卡牌對決遊戲
 cardbattle:
   disabled: "&c✖ &7卡牌對決遊戲目前已停用。"
@@ -1716,12 +1675,19 @@ blackjack:
   pvp_invite_sent: "&a✔ &7已向 &6{target} &7發送21點對戰邀請。"
   pvp_invite_received: "&e⚡ &6{player} &7邀請您進行21點對決！使用 &f/neko game blackjack 同意 &7接受，&f/neko game blackjack 拒絕 &7拒絕。"
   pvp_invite_declined: "&c✖ &6{player} &7拒絕了您的對戰邀請。"
+  # 以下為向後兼容的別名
+  invite_sent: "&a✔ &7已向 &6{target} &7發送21點對戰邀請。"
+  invite_received: "&e⚡ &6{player} &7邀請您進行21點對決！使用 &f/neko game blackjack accept &7接受，&f/neko game blackjack decline &7拒絕。"
+  invite_declined: "&c✖ &6{player} &7拒絕了您的對戰邀請。"
   decline_success: "&a✔ &7已拒絕對戰邀請。"
   no_pending_invite: "&e⚠ &7您沒有待處理的對戰邀請。"
   inviter_offline: "&c✖ &7邀請者已離線。"
   pvp_started: "&a✔ &7PvP 21點對決開始！對手: &6{opponent}"
   pvp_your_turn: "&e⚡ &7輪到你了！"
   pvp_opponent_turn: "&7等待對手行動..."
+  # 以下為向後兼容的別名
+  your_turn: "&e⚡ &7輪到你了！"
+  opponent_turn: "&7等待對手行動..."
   pvp_opponent_hit: "&6{player} &7抽了一張牌！ (當前手牌: &6{count} &7張)"
   pvp_opponent_stand: "&6{player} &7選擇了停牌。"
   pvp_opponent_bust: "&c💥 &6{player} &7爆牌了！"
@@ -1729,6 +1695,11 @@ blackjack:
   pvp_you_won: "&a✔ &7恭喜！您贏得了對決！ 你: &6{player1_value} &7| 對手: &6{player2_value}"
   pvp_you_lost: "&c✖ &7您輸了... 勝者: &6{winner}"
   pvp_tie: "&e⚠ &7平局！ 你: &6{player1_value} &7| 對手: &6{player2_value}"
+  # 以下為向後兼容的別名
+  pvp_push: "&e⚠ &7平局！賭注已退還。"
+  economy_missing: "&c✖ &7找不到經濟插件，無法進行賭注。"
+  insufficient_balance: "&c✖ &7餘額不足。需要 &6{needed}&7，當前 &6{balance}&7。"
+  pvp_usage: "&7用法: &f/neko game blackjack <玩家> &7來邀請對戰"
 
 # 背包備份系統
 invbackup:
@@ -1763,29 +1734,3 @@ invbackup:
     DEATH: "死亡"
     MANUAL: "手動"
     UNKNOWN: "未知"
-
-menu:
-  invbackup:
-    title: "&#80e85c✦ 背包備份"
-    entry_title: "&6備份 - {time}"
-    time_lore: "&7時間: &e{time}"
-    trigger_lore: "&7來源: &b{trigger}"
-    items_lore: "&7物品數: &a{items}"
-    restored_indicator: "&8✔ 已回溯過"
-    verified_indicator: "&a✔ 驗證丟失 &8({reason})"
-    click_to_restore: "&e點擊回溯此備份"
-    prev_page: "&7◀ 上一頁"
-    next_page: "&7下一頁 ▶"
-    info_title: "&7備份資訊 &8({page}/{total_pages})"
-    info_lore: "&7共 &a{count} &7個備份"
-    cost_lore: "&7回溯費用: &6{cost} &7金幣"
-    create_button: "&a✦ 手動備份"
-    create_lore: "&7點擊建立新備份"
-
-tab:
-  invbackup:
-    select_action: "<選擇操作>"
-    select_backup: "<選擇備份>"
-    do_backup: "<按下Enter備份>"
-    do_restore: "<按下Enter回溯>"
-    do_cancel: "<按下Enter取消>"
