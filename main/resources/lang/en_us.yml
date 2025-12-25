@@ -480,6 +480,22 @@ menu:
     pvp_opponent_turn: "&cOpponent is thinking..."
     pvp_opponent_status: "&cOpponent: {opponent}"
     pvp_opponent_cards: "&7Opponent's card count: {count}"
+  invbackup:
+    title: "&#80e85c✦ Inventory Backup"
+    entry_title: "&6Backup - {time}"
+    time_lore: "&7Time: &e{time}"
+    trigger_lore: "&7Trigger: &b{trigger}"
+    items_lore: "&7Items: &a{items}"
+    restored_indicator: "&8✔ Already restored"
+    verified_indicator: "&a✔ Verified Loss &8({reason})"
+    click_to_restore: "&eClick to restore this backup"
+    prev_page: "&7◀ Previous"
+    next_page: "&7Next ▶"
+    info_title: "&7Backup Info &8({page}/{total_pages})"
+    info_lore: "&7Total: &a{count} &7backups"
+    cost_lore: "&7Restore cost: &6{cost} &7coins"
+    create_button: "&a✦ Manual Backup"
+    create_lore: "&7Click to create a new backup"
   close: "&c✖ Close"
 
 cdk:
@@ -674,6 +690,12 @@ tab:
     select_skill: "<Select skill>"
     show_info: "<Show skill details>"
     show_list: "<Show skill list>"
+  invbackup:
+    select_action: "<Select action>"
+    select_backup: "<Select backup>"
+    do_backup: "<Press Enter to backup>"
+    do_restore: "<Press Enter to restore>"
+    do_cancel: "<Press Enter to cancel>"
 
 mail:
   usage: "&7Usage: &f/mail &6<menu|list|claim|delete> [mailId]"
@@ -1593,29 +1615,3 @@ invbackup:
     DEATH: "Death"
     MANUAL: "Manual"
     UNKNOWN: "Unknown"
-
-menu:
-  invbackup:
-    title: "&#80e85c✦ Inventory Backup"
-    entry_title: "&6Backup - {time}"
-    time_lore: "&7Time: &e{time}"
-    trigger_lore: "&7Trigger: &b{trigger}"
-    items_lore: "&7Items: &a{items}"
-    restored_indicator: "&8✔ Already restored"
-    verified_indicator: "&a✔ Verified Loss &8({reason})"
-    click_to_restore: "&eClick to restore this backup"
-    prev_page: "&7◀ Previous"
-    next_page: "&7Next ▶"
-    info_title: "&7Backup Info &8({page}/{total_pages})"
-    info_lore: "&7Total: &a{count} &7backups"
-    cost_lore: "&7Restore cost: &6{cost} &7coins"
-    create_button: "&a✦ Manual Backup"
-    create_lore: "&7Click to create a new backup"
-
-tab:
-  invbackup:
-    select_action: "<Select action>"
-    select_backup: "<Select backup>"
-    do_backup: "<Press Enter to backup>"
-    do_restore: "<Press Enter to restore>"
-    do_cancel: "<Press Enter to cancel>"

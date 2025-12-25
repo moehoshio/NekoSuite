@@ -8,9 +8,9 @@ storage:
 # Backup settings
 backup:
   # Maximum number of backups per player (oldest are deleted when exceeded)
-  max_backups_per_player: 10
+  max_backups_per_player: 50
   # Backup expiry in days (0 = no expiry)
-  expiry_days: 7
+  expiry_days: 15
   # Enable automatic backup on inventory change
   auto_backup_enabled: true
   # Minimum interval between automatic backups (in seconds)
@@ -20,7 +20,7 @@ backup:
 # Restore settings
 restore:
   # Cost to restore inventory (Vault economy) - for unverified backups
-  cost: 3000.0
+  cost: 10000.0
   # Lower cost for verified loss backups (lava, void, despawn)
   verified_loss_cost: 800.0
   # Cooldown between restores (in seconds)
@@ -49,4 +49,4 @@ anti_dupe:
   restore_cooldown_per_backup: 86400
   # Only allow restoring verified loss backups (strict mode)
   # If true, only backups from lava/void/despawn deaths can be restored
-  require_verified_loss: false
+  require_verified_loss: true
