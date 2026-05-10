@@ -37,6 +37,33 @@ restore:
     - STRUCTURE_BLOCK
     - DEBUG_STICK
 
+# History (change-log + keyframe) settings
+# Enables fine-grained inventory change tracking for rewind-by-count and
+# rewind-by-time operations, plus a periodic reconcile pass for drift correction.
+history:
+  # Master switch for the history subsystem.
+  enabled: true
+  # Maximum number of change records retained per player (ring buffer).
+  max_changes_per_player: 500
+  # Change records older than this are trimmed (0 = no age limit).
+  expiry_minutes: 1440
+  # Insert a keyframe after this many changes since the last keyframe.
+  keyframe_every_n_changes: 25
+  # Insert a keyframe at least every N seconds while the player is online.
+  keyframe_interval_seconds: 300
+  # Periodic reconcile / drift-detection interval (seconds).
+  reconcile_interval_seconds: 300
+  # If a single reconcile pass detects more than this many drifted items,
+  # broadcast to administrators with permission nekosuite.invbackup.admin
+  # (only when anti_dupe.notify_admins is true).
+  reconcile_drift_admin_threshold: 5
+  # Diff using next-tick snapshots (recommended). Disable to use synchronous
+  # diffing inside the event itself (less accurate against plugin side effects).
+  next_tick_diff_enabled: true
+  preview:
+    # Allow the player to scrub older/newer through the preview chest GUI.
+    allow_scrubbing: true
+
 # Anti-duplication settings
 anti_dupe:
   # Enable hash-based duplicate detection (skip backup if same as last)

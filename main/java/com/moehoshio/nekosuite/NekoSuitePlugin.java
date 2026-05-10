@@ -64,6 +64,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private CardBattleManager cardBattleManager;
     private BlackjackManager blackjackManager;
     private InventoryBackupManager inventoryBackupManager;
+    private InventoryHistoryManager inventoryHistoryManager;
 
     @Override
     public void onEnable() {
@@ -1405,7 +1406,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             case "nekobp":
             case "ibp":
                 if (args.length == 1) {
-                    List<String> options = new ArrayList<String>(Arrays.asList("menu", "list", "backup", "restore", "cancel"));
+                    List<String> options = new ArrayList<String>(Arrays.asList("menu", "list", "backup", "restore", "cancel", "rewind", "preview", "history"));
                     options.add(messages.getRaw(sender, "tab.invbackup.select_action"));
                     return filter(options, args[0]);
                 }
@@ -1437,11 +1438,28 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                     if ("cancel".equals(sub)) {
                         return Arrays.asList(messages.getRaw(sender, "tab.invbackup.do_cancel"));
                     }
+                    if ("rewind".equals(sub) || "preview".equals(sub)) {
+                        List<String> options = new ArrayList<String>(Arrays.asList("1", "5", "10", "time", "at"));
+                        options.add(messages.getRaw(sender, "tab.invbackup.rewind_target"));
+                        return filter(options, args[1]);
+                    }
+                    if ("history".equals(sub)) {
+                        return Arrays.asList(messages.getRaw(sender, "tab.invbackup.history_page"));
+                    }
                 }
                 if (args.length == 3) {
                     String sub = args[0].toLowerCase();
                     if ("restore".equals(sub)) {
                         return Arrays.asList(messages.getRaw(sender, "tab.invbackup.do_restore"));
+                    }
+                    if ("rewind".equals(sub) || "preview".equals(sub)) {
+                        String mode = args[1].toLowerCase();
+                        if ("time".equals(mode)) {
+                            return filter(Arrays.asList("5m", "10m", "30m", "1h", "2h", "1d"), args[2]);
+                        }
+                        if ("at".equals(mode)) {
+                            return Arrays.asList(messages.getRaw(sender, "tab.invbackup.rewind_timestamp"));
+                        }
                     }
                 }
                 break;
@@ -1516,6 +1534,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         cardBattleManager = new CardBattleManager(this, messages, new File(getDataFolder(), "card_battle_config.yml"), menuLayout);
         blackjackManager = new BlackjackManager(this, messages, new File(getDataFolder(), "blackjack_config.yml"), menuLayout);
         inventoryBackupManager = new InventoryBackupManager(this, messages, new File(getDataFolder(), "inventory_backup_config.yml"), economy);
+        inventoryHistoryManager = new InventoryHistoryManager(this, messages, new File(getDataFolder(), "inventory_backup_config.yml"), economy, inventoryBackupManager);
+        // Schedule periodic reconcile sweeps (drift detection + keyframe rotation).
+        long reconcileTicks = Math.max(20L, inventoryHistoryManager.getReconcileIntervalMs() / 50L);
+        getServer().getScheduler().runTaskTimer(this, new Runnable() {
+            public void run() {
+                inventoryHistoryManager.runReconcileSweep();
+            }
+        }, reconcileTicks, reconcileTicks);
         
         // Set callbacks for opening games menu from game managers
         cardBattleManager.setOpenGamesMenuCallback(this::openGamesMenu);
@@ -1791,11 +1817,167 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             case "cancel":
                 inventoryBackupManager.cancelConfirmation(player);
                 break;
+            case "rewind":
+                handleRewind(player, args);
+                break;
+            case "preview":
+                handlePreviewCmd(player, args);
+                break;
+            case "history":
+                handleHistoryCmd(player, args);
+                break;
             default:
                 sender.sendMessage(messages.format(sender, "invbackup.usage"));
                 break;
         }
         return true;
+    }
+
+    private void handleRewind(Player player, String[] args) {
+        if (inventoryHistoryManager == null || !inventoryHistoryManager.isEnabled()) {
+            player.sendMessage(messages.format(player, "invbackup.history_disabled"));
+            return;
+        }
+        if (args.length < 2) {
+            player.sendMessage(messages.format(player, "invbackup.usage"));
+            return;
+        }
+        InventoryHistoryManager.RewindTarget target = parseRewindTarget(player, args);
+        if (target == null) {
+            return; // parse helper already messaged
+        }
+        // Show preview first (player confirms via the preview GUI).
+        inventoryHistoryManager.openPreview(player, target);
+    }
+
+    private void handlePreviewCmd(Player player, String[] args) {
+        if (inventoryHistoryManager == null || !inventoryHistoryManager.isEnabled()) {
+            player.sendMessage(messages.format(player, "invbackup.history_disabled"));
+            return;
+        }
+        if (args.length < 2) {
+            player.sendMessage(messages.format(player, "invbackup.usage"));
+            return;
+        }
+        // Same syntax as rewind.
+        String[] sub = new String[args.length];
+        sub[0] = "rewind";
+        for (int i = 1; i < args.length; i++) {
+            sub[i] = args[i];
+        }
+        InventoryHistoryManager.RewindTarget target = parseRewindTarget(player, sub);
+        if (target == null) {
+            return;
+        }
+        inventoryHistoryManager.openPreview(player, target);
+    }
+
+    private void handleHistoryCmd(Player player, String[] args) {
+        if (inventoryHistoryManager == null || !inventoryHistoryManager.isEnabled()) {
+            player.sendMessage(messages.format(player, "invbackup.history_disabled"));
+            return;
+        }
+        int page = 1;
+        if (args.length >= 2) {
+            try {
+                page = Integer.parseInt(args[1]);
+            } catch (NumberFormatException ignored) {
+                page = 1;
+            }
+        }
+        inventoryHistoryManager.showHistory(player, page);
+    }
+
+    /**
+     * Parse rewind args. Supported syntax:
+     *   rewind <N>               -> undo last N changes
+     *   rewind time <duration>   -> e.g. 5m, 1h, 30s
+     *   rewind at <yyyy-MM-dd HH:mm:ss>
+     */
+    private InventoryHistoryManager.RewindTarget parseRewindTarget(Player player, String[] args) {
+        // args[0] is the subcommand (rewind), args[1..] the rest.
+        String mode = args[1].toLowerCase();
+        if ("time".equals(mode)) {
+            if (args.length < 3) {
+                player.sendMessage(messages.format(player, "invbackup.usage"));
+                return null;
+            }
+            long ms = parseDurationToMillis(args[2]);
+            if (ms <= 0) {
+                player.sendMessage(messages.format(player, "invbackup.bad_duration"));
+                return null;
+            }
+            InventoryHistoryManager.RewindTarget t = inventoryHistoryManager.resolveByTime(
+                player.getName(), System.currentTimeMillis() - ms);
+            if (t == null) {
+                player.sendMessage(messages.format(player, "invbackup.no_history"));
+            }
+            return t;
+        }
+        if ("at".equals(mode)) {
+            if (args.length < 3) {
+                player.sendMessage(messages.format(player, "invbackup.usage"));
+                return null;
+            }
+            // Join remainder as the timestamp (allow spaces).
+            StringBuilder sb = new StringBuilder();
+            for (int i = 2; i < args.length; i++) {
+                if (i > 2) sb.append(' ');
+                sb.append(args[i]);
+            }
+            long ts;
+            try {
+                ts = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(sb.toString()).getTime();
+            } catch (java.text.ParseException e) {
+                player.sendMessage(messages.format(player, "invbackup.bad_timestamp"));
+                return null;
+            }
+            InventoryHistoryManager.RewindTarget t = inventoryHistoryManager.resolveByTime(player.getName(), ts);
+            if (t == null) {
+                player.sendMessage(messages.format(player, "invbackup.no_history"));
+            }
+            return t;
+        }
+        // Numeric: rewind N
+        int n;
+        try {
+            n = Integer.parseInt(mode);
+        } catch (NumberFormatException e) {
+            player.sendMessage(messages.format(player, "invbackup.usage"));
+            return null;
+        }
+        if (n <= 0) {
+            player.sendMessage(messages.format(player, "invbackup.usage"));
+            return null;
+        }
+        InventoryHistoryManager.RewindTarget t = inventoryHistoryManager.resolveByCount(player.getName(), n);
+        if (t == null) {
+            player.sendMessage(messages.format(player, "invbackup.no_history"));
+        }
+        return t;
+    }
+
+    private long parseDurationToMillis(String s) {
+        if (s == null || s.isEmpty()) {
+            return 0L;
+        }
+        char c = s.charAt(s.length() - 1);
+        long unitMs;
+        String num;
+        switch (c) {
+            case 's': unitMs = 1000L; num = s.substring(0, s.length() - 1); break;
+            case 'm': unitMs = 60_000L; num = s.substring(0, s.length() - 1); break;
+            case 'h': unitMs = 3_600_000L; num = s.substring(0, s.length() - 1); break;
+            case 'd': unitMs = 86_400_000L; num = s.substring(0, s.length() - 1); break;
+            default:  unitMs = 1000L; num = s; break;
+        }
+        try {
+            long n = Long.parseLong(num);
+            if (n <= 0) return 0L;
+            return n * unitMs;
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 
     private boolean handleRtpGameSubcommand(Player player, String[] args) {
@@ -3377,6 +3559,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             return;
         }
         Player player = (Player) event.getWhoClicked();
+        // Schedule a next-tick diff for the history subsystem. No-op for cancelled menu clicks.
+        if (inventoryHistoryManager != null) {
+            inventoryHistoryManager.scheduleDiff(player, InventoryHistoryManager.TRIGGER_INVENTORY);
+        }
         if (holder instanceof WishMenuHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getView().getTopInventory()) {
@@ -3614,6 +3800,18 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             }
             InventoryBackupManager.BackupMenuHolder backupHolder = (InventoryBackupManager.BackupMenuHolder) holder;
             inventoryBackupManager.handleMenuClick(player, clicked, backupHolder.getCurrentPage());
+        }
+        if (holder instanceof InventoryHistoryManager.PreviewMenuHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getView().getTopInventory()) {
+                return;
+            }
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null) {
+                return;
+            }
+            inventoryHistoryManager.handlePreviewClick(player, clicked);
+            return;
         }
         if (holder instanceof StrategyGameManager.StrategyGameMenuHolder) {
             event.setCancelled(true);
@@ -3914,6 +4112,97 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         if (lossReason != null && (item.isDead() || event.getFinalDamage() >= 1)) {
             inventoryBackupManager.onTrackedItemDestroyed(item.getUniqueId(), lossReason);
         }
+    }
+
+    // ---- Inventory history (two-layer change log) event hooks ----
+
+    @EventHandler
+    public void onInventoryDragForHistory(org.bukkit.event.inventory.InventoryDragEvent event) {
+        if (inventoryHistoryManager == null) return;
+        if (event.getWhoClicked() instanceof Player) {
+            inventoryHistoryManager.scheduleDiff((Player) event.getWhoClicked(),
+                InventoryHistoryManager.TRIGGER_INVENTORY);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerPickupItemForHistory(org.bukkit.event.entity.EntityPickupItemEvent event) {
+        if (inventoryHistoryManager == null) return;
+        if (event.getEntity() instanceof Player) {
+            inventoryHistoryManager.scheduleDiff((Player) event.getEntity(),
+                InventoryHistoryManager.TRIGGER_PICKUP);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDropItemForHistory(org.bukkit.event.player.PlayerDropItemEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getPlayer(), InventoryHistoryManager.TRIGGER_DROP);
+    }
+
+    @EventHandler
+    public void onItemConsumeForHistory(org.bukkit.event.player.PlayerItemConsumeEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getPlayer(), InventoryHistoryManager.TRIGGER_CONSUME);
+    }
+
+    @EventHandler
+    public void onItemBreakForHistory(org.bukkit.event.player.PlayerItemBreakEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getPlayer(), InventoryHistoryManager.TRIGGER_BREAK);
+    }
+
+    @EventHandler
+    public void onBlockPlaceForHistory(org.bukkit.event.block.BlockPlaceEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getPlayer(), InventoryHistoryManager.TRIGGER_BLOCK_PLACE);
+    }
+
+    @EventHandler
+    public void onBlockBreakForHistory(org.bukkit.event.block.BlockBreakEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getPlayer(), InventoryHistoryManager.TRIGGER_BLOCK_BREAK);
+    }
+
+    @EventHandler
+    public void onCraftItemForHistory(org.bukkit.event.inventory.CraftItemEvent event) {
+        if (inventoryHistoryManager == null) return;
+        if (event.getWhoClicked() instanceof Player) {
+            inventoryHistoryManager.scheduleDiff((Player) event.getWhoClicked(),
+                InventoryHistoryManager.TRIGGER_CRAFT);
+        }
+    }
+
+    @EventHandler
+    public void onEnchantItemForHistory(org.bukkit.event.enchantment.EnchantItemEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getEnchanter(), InventoryHistoryManager.TRIGGER_ENCHANT);
+    }
+
+    @EventHandler
+    public void onSwapHandForHistory(org.bukkit.event.player.PlayerSwapHandItemsEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.scheduleDiff(event.getPlayer(), InventoryHistoryManager.TRIGGER_SWAP_HAND);
+    }
+
+    @EventHandler
+    public void onPlayerRespawnForHistory(org.bukkit.event.player.PlayerRespawnEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.forceKeyframe(event.getPlayer(), InventoryHistoryManager.TRIGGER_RESPAWN);
+    }
+
+    @EventHandler
+    public void onPlayerJoinForHistory(org.bukkit.event.player.PlayerJoinEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.forceKeyframe(event.getPlayer(), InventoryHistoryManager.TRIGGER_JOIN);
+    }
+
+    @EventHandler
+    public void onPlayerQuitForHistory(org.bukkit.event.player.PlayerQuitEvent event) {
+        if (inventoryHistoryManager == null) return;
+        inventoryHistoryManager.reconcile(event.getPlayer());
+        inventoryHistoryManager.forceKeyframe(event.getPlayer(), InventoryHistoryManager.TRIGGER_QUIT);
+        inventoryHistoryManager.closePreview(event.getPlayer());
     }
 
     private static class WishMenuHolder implements InventoryHolder {

@@ -497,6 +497,21 @@ menu:
     cost_lore: "&7回溯费用: &6{cost} &7金币"
     create_button: "&a✦ 手动备份"
     create_lore: "&7点击创建新备份"
+    preview:
+      title: "&#80e85c✦ 回溯预览"
+      older: "&7◀ 更早"
+      newer: "&7更晚 ▶"
+      confirm: "&a✔ 确认回溯"
+      confirm_lore: "&7将当前背包替换为预览内容"
+      cancel: "&c✖ 取消"
+      info_title: "&6预览 - {time}"
+      info_time: "&7时间: &e{time} &8(seq {seq})"
+      legend_header: "&7差异:"
+      legend_add: "&a+ {item} x{after}"
+      legend_remove: "&c- {item} x{before}"
+      legend_change: "&e~ {item} {before} → {after}"
+      legend_more: "&8... 还有更多差异"
+      legend_none: "&8(无差异)"
 
 cdk:
   usage: "&7用法: &f/cdk &6<code>"
@@ -696,6 +711,9 @@ tab:
     do_backup: "<按下Enter备份>"
     do_restore: "<按下Enter回溯>"
     do_cancel: "<按下Enter取消>"
+    rewind_target: "<N | time <时长> | at <时间戳>>"
+    rewind_timestamp: "<yyyy-MM-dd HH:mm:ss>"
+    history_page: "<页码>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [邮件ID]"
@@ -1622,7 +1640,7 @@ ngame:
 
 # 背包备份系统
 invbackup:
-  usage: "&7用法: &f/invbackup &6<menu|list|backup|restore|cancel> [备份ID]"
+  usage: "&7用法: &f/invbackup &6<menu|list|backup|restore|cancel|rewind|preview|history> [参数]"
   backup_created: "&a✔ &7背包备份已创建。"
   backup_skipped: "&e⚠ &7背包内容无变化，跳过备份。"
   verified_backup_created: "&a✔ &7已创建经验证的背包备份。 &8(原因: {reason})"
@@ -1652,4 +1670,13 @@ invbackup:
     DEATH: "死亡"
     MANUAL: "手动"
     UNKNOWN: "未知"
+  # History (change-log) messages
+  history_disabled: "&c✖ &7背包历史功能已禁用。"
+  no_history: "&e⚠ &7目前没有可用的背包历史记录。"
+  history_at_edge: "&e⚠ &7已经是最旧/最新的历史记录了。"
+  history_header: "&8&m─────────────&r &6✦ 背包历史 &8&m─────────────&r &7({page}/{total}, 共 {count})"
+  history_entry: "&7#{seq} &8| &e{time} &8| &b{trigger} &8| &7差异槽位: &a{diffs}"
+  bad_duration: "&c✖ &7时长格式无效，例如：&f5m&7、&f1h&7、&f30s"
+  bad_timestamp: "&c✖ &7时间戳格式无效，请使用 &fyyyy-MM-dd HH:mm:ss"
+  drift_detected: "&e⚠ &7侦测到背包漂移 ({count} 个槽位)，已自动修正。"
   status: "&7波次: &6{wave}/{max_waves} &8| &7分数: &6{score} &8| &7击杀: &e{kills} &8| &7剩余怪物: &c{remaining}"
