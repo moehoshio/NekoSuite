@@ -86,7 +86,7 @@ commands:
       - nekogame
   invbackup:
     description: 背包備份系統
-    usage: /invbackup <menu|list|backup|restore|cancel> [備份ID]
+    usage: /invbackup <menu|list|backup|restore|cancel|rewind|preview|history> [參數]
     permission: nekosuite.invbackup
     aliases:
       - nekobp

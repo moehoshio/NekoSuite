@@ -300,6 +300,9 @@ tab:
     do_backup: "<按下Enter備份>"
     do_restore: "<按下Enter回溯>"
     do_cancel: "<按下Enter取消>"
+    rewind_target: "<N | time <時長> | at <時間戳>>"
+    rewind_timestamp: "<yyyy-MM-dd HH:mm:ss>"
+    history_page: "<頁碼>"
 
 mail:
   usage: "&7用法: &f/mail &6<menu|list|claim|delete> [郵件ID]"
@@ -1221,6 +1224,21 @@ menu:
     cost_lore: "&7回溯費用: &6{cost} &7金幣"
     create_button: "&a✦ 手動備份"
     create_lore: "&7點擊建立新備份"
+    preview:
+      title: "&#80e85c✦ 回溯預覽"
+      older: "&7◀ 更早"
+      newer: "&7更晚 ▶"
+      confirm: "&a✔ 確認回溯"
+      confirm_lore: "&7將當前背包替換為預覽內容"
+      cancel: "&c✖ 取消"
+      info_title: "&6預覽 - {time}"
+      info_time: "&7時間: &e{time} &8(seq {seq})"
+      legend_header: "&7差異:"
+      legend_add: "&a+ {item} x{after}"
+      legend_remove: "&c- {item} x{before}"
+      legend_change: "&e~ {item} {before} → {after}"
+      legend_more: "&8... 還有更多差異"
+      legend_none: "&8(無差異)"
 
 # 物品翻譯
 items:
@@ -1703,7 +1721,7 @@ blackjack:
 
 # 背包備份系統
 invbackup:
-  usage: "&7用法: &f/invbackup &6<menu|list|backup|restore|cancel> [備份ID]"
+  usage: "&7用法: &f/invbackup &6<menu|list|backup|restore|cancel|rewind|preview|history> [參數]"
   backup_created: "&a✔ &7背包備份已建立。"
   backup_skipped: "&e⚠ &7背包內容無變化，跳過備份。"
   verified_backup_created: "&a✔ &7已建立經驗證的背包備份。 &8(原因: {reason})"
@@ -1734,3 +1752,12 @@ invbackup:
     DEATH: "死亡"
     MANUAL: "手動"
     UNKNOWN: "未知"
+  # History (change-log) messages
+  history_disabled: "&c✖ &7背包歷史功能已停用。"
+  no_history: "&e⚠ &7目前沒有可用的背包歷史記錄。"
+  history_at_edge: "&e⚠ &7已經是最舊/最新的歷史記錄了。"
+  history_header: "&8&m─────────────&r &6✦ 背包歷史 &8&m─────────────&r &7({page}/{total}, 共 {count})"
+  history_entry: "&7#{seq} &8| &e{time} &8| &b{trigger} &8| &7差異槽位: &a{diffs}"
+  bad_duration: "&c✖ &7時長格式無效，例如：&f5m&7、&f1h&7、&f30s"
+  bad_timestamp: "&c✖ &7時間戳格式無效，請使用 &fyyyy-MM-dd HH:mm:ss"
+  drift_detected: "&e⚠ &7偵測到背包漂移 ({count} 個槽位)，已自動修正。"
