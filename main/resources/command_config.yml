@@ -1,0 +1,196 @@
+# NekoSuite command customization
+# =================================
+# This file lets server owners customise the labels players type for every NekoSuite
+# command and sub-command without recompiling the plugin. The keys under `commands:` MUST
+# match canonical names declared in plugin.yml. Each entry supports:
+#
+#   aliases:        # extra labels that should trigger the same command (e.g. "qiyuan" -> /wish).
+#   subcommands:    # for every canonical sub-command, list the inputs that should map to it.
+#                   # The canonical key itself is always accepted.
+#   nested:         # OPTIONAL: nested sub-command groups. Useful for commands like /ngame rtp <sub>
+#                   # or /wish ticket <sub>. Each nested key represents the parent sub-command and
+#                   # contains its own `subcommands:` block.
+#
+# Notes:
+# - All matching is case-insensitive.
+# - When you add a new sub-feature, ALWAYS register its sub-commands here (see docs/DEVELOPMENT.md).
+# - To remove an alias, simply delete it from the list; canonical names cannot be disabled.
+
+commands:
+  wish:
+    aliases: []
+    subcommands:
+      menu: [menu, m, gui]
+      history: [history, hist, log]
+      ticket: [ticket, tk, tickets]
+    nested:
+      ticket:
+        subcommands:
+          list: [list, ls]
+          query: [query, q, info]
+          add: [add, give, "+"]
+          remove: [remove, take, "-"]
+          set: [set, "="]
+
+  event:
+    aliases: []
+    subcommands:
+      menu: [menu, m, gui]
+
+  exp:
+    aliases: [experience]
+    subcommands:
+      menu: [menu, m, gui]
+      deposit: [deposit, dep, save, store]
+      withdraw: [withdraw, raw, take, w]
+      pay: [pay, transfer, send]
+      exchange: [exchange, ex, redeem]
+
+  cdk:
+    aliases: [redeem]
+    subcommands: {}
+
+  buy:
+    aliases: [shop]
+    subcommands:
+      menu: [menu, m, gui]
+
+  mail:
+    aliases: []
+    subcommands:
+      menu: [menu, m, gui, inbox]
+      claim: [claim, get, c]
+      delete: [delete, del, remove, d]
+
+  mailsend:
+    aliases: [sendmail]
+    subcommands: {}
+
+  mailadmin:
+    aliases: []
+    subcommands:
+      send: [send, s]
+      template: [template, t, tpl]
+
+  language:
+    aliases: [lang]
+    subcommands:
+      list: [list, ls]
+      reset: [reset, default]
+
+  nekoreload:
+    aliases: [nreload]
+    subcommands:
+      reload: [reload]
+
+  sgame:
+    aliases: [strategygame]
+    subcommands:
+      menu: [menu, m, gui]
+      status: [status, info, stat]
+      abandon: [abandon, quit, give-up]
+
+  artifact:
+    aliases: []
+    subcommands:
+      list: [list, ls]
+      give: [give, send, grant]
+
+  announce:
+    aliases: [broadcast, bc]
+    subcommands: {}
+
+  nekomenu:
+    aliases: []
+    subcommands:
+      menu: [menu, m, gui, main]
+      help: [help, h, "?"]
+      game: [game, games, g]
+
+  nekohelp:
+    aliases: []
+    subcommands: {}
+
+  ntp:
+    aliases: [neckotp, neckotpa]
+    subcommands:
+      accept: [accept, yes, y, ok]
+      deny: [deny, no, n, reject]
+      toggle: [toggle, switch]
+      cancel: [cancel, abort]
+      status: [status, info]
+
+  ntpadmin:
+    aliases: []
+    subcommands:
+      lock: [lock]
+      unlock: [unlock]
+      status: [status, info]
+
+  skill:
+    aliases: [skills]
+    subcommands:
+      list: [list, ls]
+      info: [info, view, show]
+
+  ngame:
+    aliases: []
+    subcommands:
+      menu: [menu, m, gui]
+      rtp: [rtp, randomtp, random]
+      arena: [arena, survival]
+      fishing: [fishing, fish, contest]
+      cardbattle: [cardbattle, cb, cards]
+      blackjack: [blackjack, bj, "21"]
+    nested:
+      rtp:
+        subcommands:
+          menu: [menu, m, gui]
+          start: [start, begin, go]
+          status: [status, info]
+          end: [end, stop, finish]
+      arena:
+        subcommands:
+          menu: [menu, m, gui]
+          start: [start, begin, join]
+          status: [status, info]
+          end: [end, stop, finish]
+      fishing:
+        subcommands:
+          menu: [menu, m, gui]
+          start: [start, begin]
+          join: [join, j]
+          status: [status, info]
+          leaderboard: [leaderboard, top, board]
+          end: [end, stop, finish]
+      cardbattle:
+        subcommands:
+          menu: [menu, m, gui]
+          pve: [pve, ai, vs-ai]
+          pvp: [pvp, vs]
+          accept: [accept, yes, y, 同意]
+          decline: [decline, no, n, 拒絕, 拒绝]
+          surrender: [surrender, give-up, 投降]
+          resume: [resume, continue, 恢復, 恢复]
+      blackjack:
+        subcommands:
+          menu: [menu, m, gui]
+          bet: [bet, wager, start]
+          hit: [hit, draw]
+          stand: [stand, stay]
+          double: [double, dd]
+          pvp: [pvp, vs]
+          accept: [accept, yes, y, 同意]
+          decline: [decline, no, n, 拒絕, 拒绝]
+
+  invbackup:
+    aliases: []
+    subcommands:
+      menu: [menu, m, gui]
+      list: [list, ls]
+      backup: [backup, save, snapshot]
+      restore: [restore, recover]
+      cancel: [cancel, abort]
+      rewind: [rewind, undo]
+      preview: [preview, peek]
+      history: [history, hist, log]
