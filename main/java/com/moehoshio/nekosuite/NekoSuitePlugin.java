@@ -1816,6 +1816,9 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
                 break;
             case "cancel":
                 inventoryBackupManager.cancelConfirmation(player);
+                if (inventoryHistoryManager != null) {
+                    inventoryHistoryManager.cancelRewind(player);
+                }
                 break;
             case "rewind":
                 handleRewind(player, args);

@@ -884,7 +884,13 @@ public class InventoryHistoryManager {
         }
 
         // Suppress next-tick diff caused by our own inventory mutations.
+        // Critical: any runDiff already scheduled (e.g. the InventoryClickEvent
+        // that committed the Confirm button) would otherwise capture a post
+        // snapshot AFTER our mutations and record a phantom change covering
+        // the entire rewind delta. Dropping the stale pre-snapshot makes that
+        // scheduled runDiff a no-op (`pre == null` short-circuit).
         UUID uuid = player.getUniqueId();
+        pendingPreSnapshots.remove(uuid);
         pendingDiffPlayers.add(uuid);
         try {
             if (clearBeforeRestore) {
@@ -1082,6 +1088,9 @@ public class InventoryHistoryManager {
         if ("cancel".equals(id)) {
             player.closeInventory();
             previewStates.remove(player.getUniqueId());
+            // Also clear any text-mode confirmation tied to this rewind so a
+            // cancelled preview cannot be silently re-confirmed later.
+            pendingRewindConfirmations.remove(player.getUniqueId());
             player.sendMessage(messages.format(player, "invbackup.cancelled"));
             return true;
         }
@@ -1101,6 +1110,18 @@ public class InventoryHistoryManager {
 
     public void closePreview(Player player) {
         previewStates.remove(player.getUniqueId());
+    }
+
+    /**
+     * Clear any pending text-mode rewind confirmation for this player. Mirrors
+     * {@link InventoryBackupManager#cancelConfirmation(Player)} so the
+     * {@code /invbackup cancel} command and the preview Cancel button cannot
+     * leave a stale confirmation around to be exploited later.
+     *
+     * @return true if a confirmation was cleared, false otherwise
+     */
+    public boolean cancelRewind(Player player) {
+        return pendingRewindConfirmations.remove(player.getUniqueId()) != null;
     }
 
     private List<String> buildDiffLegend(Player player, FullSnapshot live, FullSnapshot target) {
