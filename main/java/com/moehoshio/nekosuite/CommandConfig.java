@@ -221,7 +221,7 @@ public final class CommandConfig {
      *       to become routable (existing labels are unaffected).</li>
      * </ol>
      *
-     * <p>Failures are logged but never propagated — command customisation is best-effort and
+     * <p>Failures are logged but never propagated — command customization is best-effort and
      * NekoSuite must remain functional even when reflection access is denied.
      */
     public void applyAliasRegistration(JavaPlugin plugin) {

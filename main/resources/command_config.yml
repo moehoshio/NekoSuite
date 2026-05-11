@@ -1,6 +1,6 @@
 # NekoSuite command customization
 # =================================
-# This file lets server owners customise the labels players type for every NekoSuite
+# This file lets server owners customize the labels players type for every NekoSuite
 # command and sub-command without recompiling the plugin. The keys under `commands:` MUST
 # match canonical names declared in plugin.yml. Each entry supports:
 #
