@@ -159,6 +159,45 @@ public class CardBattleManager {
     }
 
     /**
+     * Clean up any session and pending invitations owned by a quitting player.
+     * Without this the player's slot in {@link #activeSessions} stays occupied
+     * after a disconnect, blocking subsequent /cardbattle commands ("already in
+     * game") and leaving opponents waiting on a turn that never comes.
+     */
+    public void onPlayerQuit(Player player) {
+        String name = player.getName();
+
+        // Drop any active session for this player. For PvP also notify the
+        // opponent and clear their side so they can start a new game.
+        BattleSession session = activeSessions.remove(name);
+        if (session != null && !session.isEnded()) {
+            session.setEnded(true);
+            if (!session.isPvE()) {
+                String opponentName = name.equals(session.getPlayer1Name())
+                        ? session.getPlayer2Name() : session.getPlayer1Name();
+                activeSessions.remove(opponentName);
+                Player opponent = Bukkit.getPlayer(opponentName);
+                if (opponent != null && opponent.isOnline()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put("player", name);
+                    opponent.sendMessage(messages.format(opponent, "cardbattle.opponent_quit", map));
+                    opponent.closeInventory();
+                }
+            }
+        }
+
+        // Drop pending invitations involving this player (either side).
+        pendingInvitations.remove(name);
+        java.util.Iterator<Map.Entry<String, String>> it = pendingInvitations.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String> entry = it.next();
+            if (name.equals(entry.getValue())) {
+                it.remove();
+            }
+        }
+    }
+
+    /**
      * Start a PvE game against an AI opponent.
      */
     public void startPvEGame(Player player, String opponentId) {

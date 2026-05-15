@@ -3527,6 +3527,12 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         if (survivalArenaManager != null) {
             survivalArenaManager.onPlayerQuit(player);
         }
+        if (blackjackManager != null) {
+            blackjackManager.onPlayerQuit(player);
+        }
+        if (cardBattleManager != null) {
+            cardBattleManager.onPlayerQuit(player);
+        }
     }
 
     @EventHandler
