@@ -65,6 +65,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private BlackjackManager blackjackManager;
     private InventoryBackupManager inventoryBackupManager;
     private InventoryHistoryManager inventoryHistoryManager;
+    private CommandConfig commandConfig;
 
     @Override
     public void onEnable() {
@@ -90,6 +91,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         saveResource("card_battle_config.yml", false);
         saveResource("blackjack_config.yml", false);
         saveResource("inventory_backup_config.yml", false);
+        saveResource("command_config.yml", false);
         setupEconomy();
         setupPermission();
         loadManagers();
@@ -214,12 +216,28 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
             getCommand("invbackup").setTabCompleter(this);
         }
 
+        // Register configurable command aliases from command_config.yml.
+        // This must run AFTER setExecutor calls so PluginCommand instances have an executor when
+        // their alias labels are routed back here.
+        if (commandConfig != null) {
+            commandConfig.applyAliasRegistration(this);
+        }
+
         getLogger().info("NekoSuite Bukkit module enabled (JDK 1.8 compatible).");
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String name = command.getName().toLowerCase();
+        // Translate sub-command aliases configured in command_config.yml so each handler's
+        // existing switch on args[0] keeps working without per-handler edits. Unknown tokens
+        // (e.g. player names, pool names, CDK codes) are preserved verbatim.
+        if (commandConfig != null && args.length > 0) {
+            String canonical = commandConfig.resolveSubIfKnown(name, args[0]);
+            if (canonical != null) {
+                args[0] = canonical;
+            }
+        }
         switch (name) {
             case "wish":
                 return handleWish(sender, args);
@@ -355,8 +373,10 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         
         String action = args[1].toLowerCase();
-        
-        // List tickets
+        if (commandConfig != null) {
+            // Normalize nested sub-command aliases for /wish ticket <action>.
+            action = commandConfig.resolveSub("wish.ticket", action);
+        }
         if ("list".equals(action)) {
             String targetName = args.length > 2 ? args[2] : player.getName();
             
@@ -1516,6 +1536,7 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         private void loadManagers() {
         messages = new Messages(this);
         menuLayout = new MenuLayout(this);
+        commandConfig = new CommandConfig(this);
         wishManager = new WishManager(this, messages, new File(getDataFolder(), "wish_config.yml"), economy);
         eventManager = new EventManager(this, messages, new File(getDataFolder(), "event_config.yml"));
         expManager = new ExpManager(this, messages, new File(getDataFolder(), "exp_config.yml"), menuLayout);
@@ -1746,6 +1767,15 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
         Player player = (Player) sender;
 
+        // Normalize the game-type token in case we were entered from /neko game (where args[0] is
+        // not yet normalized by onCommand's top-level ngame namespace).
+        if (commandConfig != null && args.length > 0) {
+            String canonical = commandConfig.resolveSubIfKnown("ngame", args[0]);
+            if (canonical != null) {
+                args[0] = canonical;
+            }
+        }
+
         // No args or "menu" - open games menu
         if (args.length == 0 || "menu".equalsIgnoreCase(args[0])) {
             openGamesMenu(player);
@@ -1757,6 +1787,13 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         String[] subArgs = new String[args.length - 1];
         if (args.length > 1) {
             System.arraycopy(args, 1, subArgs, 0, args.length - 1);
+        }
+        // Normalize the nested sub-action (e.g. /ngame rtp <action>) using the per-game namespace.
+        if (commandConfig != null && subArgs.length > 0) {
+            String canonical = commandConfig.resolveSubIfKnown("ngame." + gameType, subArgs[0]);
+            if (canonical != null) {
+                subArgs[0] = canonical;
+            }
         }
 
         switch (gameType) {
