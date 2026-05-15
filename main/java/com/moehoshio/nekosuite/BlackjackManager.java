@@ -109,6 +109,14 @@ public class BlackjackManager {
             return;
         }
 
+        // If player is already in a PvP game, re-open the PvP game menu instead
+        // of letting them place a new bet (which would create conflicting state).
+        PvPBlackjackSession pvp = pvpSessions.get(player.getName());
+        if (pvp != null && !pvp.isEnded()) {
+            openPvPGameMenu(player, pvp);
+            return;
+        }
+
         BlackjackSession session = activeSessions.get(player.getName());
         if (session != null && !session.isEnded()) {
             openGameMenu(player, session);
@@ -127,6 +135,13 @@ public class BlackjackManager {
         }
 
         if (activeSessions.containsKey(player.getName())) {
+            player.sendMessage(messages.format(player, "blackjack.already_in_game"));
+            return;
+        }
+
+        // Also reject if the player is currently in a PvP session — otherwise
+        // they would have two concurrent games and the state maps would desync.
+        if (pvpSessions.containsKey(player.getName())) {
             player.sendMessage(messages.format(player, "blackjack.already_in_game"));
             return;
         }
@@ -150,9 +165,12 @@ public class BlackjackManager {
         // Check for natural blackjack
         if (calculateHandValue(session.getPlayerHand()) == 21) {
             session.setPlayerBlackjack(true);
-            // Reveal dealer hand and check for tie
-            while (calculateHandValue(session.getDealerHand()) < 17) {
-                session.getDealerHand().add(drawCard());
+            // Standard rule: with a natural 21 the dealer doesn't draw more
+            // cards; just reveal the dealer's hole card to see if it's also a
+            // natural blackjack (push) or not (player wins 3:2).
+            if (session.getDealerHand().size() == 2
+                    && calculateHandValue(session.getDealerHand()) == 21) {
+                session.setDealerBlackjack(true);
             }
             endGame(player, session);
             return;
@@ -312,9 +330,23 @@ public class BlackjackManager {
             return;
         }
 
+        // Re-check that the accepter isn't already in another game (could have
+        // happened between invite and accept).
+        if (activeSessions.containsKey(player.getName()) || pvpSessions.containsKey(player.getName())) {
+            player.sendMessage(messages.format(player, "blackjack.already_in_game"));
+            return;
+        }
+
         Player inviter = Bukkit.getPlayer(inviterName);
         if (inviter == null || !inviter.isOnline()) {
             player.sendMessage(messages.format(player, "blackjack.inviter_offline"));
+            return;
+        }
+
+        // Re-check inviter too — they might have started a single-player game
+        // or another PvP game in the meantime.
+        if (activeSessions.containsKey(inviter.getName()) || pvpSessions.containsKey(inviter.getName())) {
+            player.sendMessage(messages.format(player, "blackjack.target_in_game"));
             return;
         }
 
@@ -596,6 +628,23 @@ public class BlackjackManager {
         // Clean up
         pvpSessions.remove(session.getPlayer1Name());
         pvpSessions.remove(session.getPlayer2Name());
+
+        // Close any stale game inventories so players aren't left with the
+        // mid-game GUI showing hit/stand buttons after the round ended.
+        if (player1 != null && player1.isOnline()) {
+            org.bukkit.inventory.InventoryView view = player1.getOpenInventory();
+            if (view != null && view.getTopInventory() != null
+                    && view.getTopInventory().getHolder() instanceof BlackjackMenuHolder) {
+                player1.closeInventory();
+            }
+        }
+        if (player2 != null && player2.isOnline()) {
+            org.bukkit.inventory.InventoryView view = player2.getOpenInventory();
+            if (view != null && view.getTopInventory() != null
+                    && view.getTopInventory().getHolder() instanceof BlackjackMenuHolder) {
+                player2.closeInventory();
+            }
+        }
     }
 
     private void openPvPGameMenu(Player player, PvPBlackjackSession session) {
@@ -679,6 +728,60 @@ public class BlackjackManager {
      */
     public boolean isInPvPGame(String playerName) {
         return pvpSessions.containsKey(playerName);
+    }
+
+    /**
+     * Clean up any state owned by the leaving player so the next session can
+     * start without "already in game" errors and so opponents aren't stuck
+     * waiting on a disconnected player.
+     */
+    public void onPlayerQuit(Player player) {
+        String name = player.getName();
+
+        // Drop any single-player session (the player forfeits).
+        BlackjackSession single = activeSessions.remove(name);
+        if (single != null) {
+            single.setEnded(true);
+        }
+
+        // If the player was in a PvP game, end it: notify the opponent, award
+        // them the win, and clean both sides.
+        PvPBlackjackSession pvp = pvpSessions.get(name);
+        if (pvp != null && !pvp.isEnded()) {
+            pvp.setEnded(true);
+            String opponentName = name.equals(pvp.getPlayer1Name())
+                    ? pvp.getPlayer2Name() : pvp.getPlayer1Name();
+            pvpSessions.remove(pvp.getPlayer1Name());
+            pvpSessions.remove(pvp.getPlayer2Name());
+
+            Player opponent = Bukkit.getPlayer(opponentName);
+            if (opponent != null && opponent.isOnline()) {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("player", name);
+                opponent.sendMessage(messages.format(opponent, "blackjack.pvp_opponent_quit", map));
+                // Close any stale PvP GUI on the opponent's side.
+                org.bukkit.inventory.InventoryView view = opponent.getOpenInventory();
+                if (view != null && view.getTopInventory() != null
+                        && view.getTopInventory().getHolder() instanceof BlackjackMenuHolder) {
+                    opponent.closeInventory();
+                }
+            }
+        } else if (pvp != null) {
+            // Already ended; just make sure the maps don't keep the entry.
+            pvpSessions.remove(name);
+        }
+
+        // Drop any pending PvP invitation where this player is the target.
+        pvpInvitations.remove(name);
+
+        // Also drop any pending invitations this player sent out as inviter.
+        java.util.Iterator<Map.Entry<String, String>> it = pvpInvitations.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String> entry = it.next();
+            if (name.equals(entry.getValue())) {
+                it.remove();
+            }
+        }
     }
 
     /**
