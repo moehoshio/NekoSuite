@@ -164,13 +164,24 @@ menu:
     info_title: "&7Mail Info &8({page}/{total_pages})"
     info_lore: "&7Unread: &a{unread} &8| &7Unclaimed: &6{unclaimed}"
   sgame:
-    title: "&#ffcc00✦ Cat Kingdom Adventure"
-    victory_title: "&#ffcc00✦ Adventure Complete!"
-    start_game_title: "&#ffcc00✦ Start Adventure"
-    story_title: "&6✦ Cat Kingdom Legend"
-    story_desc1: "&7In the mysterious cat kingdom of Meoceria..."
-    story_desc2: "&7An ancient darkness threatens the land."
-    story_desc3: "&7As an adventurer, your mission is to save the kingdom!"
+    title: "&#ffcc00✦ Hero's Legend: Battle of the End"
+    victory_title: "&#ffcc00✦ The Ender Dragon Falls!"
+    start_game_title: "&#ffcc00✦ Begin the Journey"
+    story_title: "&6✦ Hero's Legend"
+    story_desc1: "&7A monster tide burned Dawn Village to ash."
+    story_desc2: "&7Claim a lost relic, slay the beasts, save the land."
+    story_desc3: "&7And duel the Ender Dragon at journey's end!"
+    length_short: "&a✦ Short Journey"
+    length_short_desc: "&7Swift and tightly paced"
+    length_medium: "&e✦ Medium Journey"
+    length_medium_desc: "&7Balanced and well-rounded"
+    length_long: "&c✦ Long Journey"
+    length_long_desc: "&7An epic, far-reaching saga"
+    length_random: "&d✦ Random Journey"
+    length_random_desc: "&7Fate unknown, different every run"
+    length_stages: "&7Stages: &a{stages}"
+    click_to_choose_difficulty: "&eClick to choose difficulty"
+    difficulty_select_title: "&#ffcc00✦ Choose Difficulty"
     start_button: "&a✦ Start New Adventure"
     start_button_lore1: "&7Starting gold: &6{starting_gold}"
     start_button_lore2: "&7Starting health: &c{starting_health}"
@@ -752,13 +763,15 @@ sgame:
   game_already_ended: "&e⚠ &7This game has ended. Use &f/sgame start &7to start a new one."
   game_started: "&a✔ &7A new adventure begins!"
   story_intro: |-
-    &8&m─────────────&r &6✦ Cat Kingdom Adventure ✦ &8&m─────────────&r
-    &7In the mysterious cat kingdom of "Meoceria"...
-    &7An ancient darkness threatens the land.
-    &7As a brave adventurer, you must explore,
-    &7make wise choices, defeat monsters, trade with merchants,
-    &7and gather resources to save the kingdom!
+    &8&m─────────────&r &6✦ Hero's Legend: Battle of the End ✦ &8&m─────────────&r
+    &7Flames rose as a monster tide swept from the Black Forest,
+    &7and Dawn Village was reduced to ash.
+    &7As the village's lone surviving youth, you set out to fight back.
+    &7Reclaim a lost relic, slay the beasts haunting the land,
+    &7save village after village amid fire and hard choices,
+    &7and face the Ender Dragon — bringer of the End — in a final duel!
     &8&m───────────────────────────────────&r
+  artifact_gained: "&6✦ &7You obtained the relic: &e{item}&7!"
   game_ended: "&a✔ &7Adventure ended! Rewards: &6{rewards}"
   game_abandoned: "&c✖ &7You abandoned this adventure and earned no rewards."
   game_over_health: "&c✖ &7Your health was depleted... adventure over!"
@@ -1308,10 +1321,10 @@ games:
       - "&7Check status or start a round"
       - "&eClick to open menu"
   sgame:
-    title: "&6✦ Cat Kingdom Adventure"
+    title: "&6✦ Hero's Legend: Battle of the End"
     lore:
-      - "&7A strategy adventure game"
-      - "&7Explore, battle, and trade!"
+      - "&7A medieval hero adventure"
+      - "&7Explore, battle, and slay the dragon!"
       - "&eClick to play"
   fishing:
     title: "&b✦ Fishing Contest"
