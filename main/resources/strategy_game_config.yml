@@ -18,7 +18,7 @@ game:
   starting_attack: 12
   starting_defense: 6
   starting_magic: 25
-  # 預設關卡數（沿用 default_length 對應的檔位）
+  # 後備關卡數：當 game.lengths 缺失或為空時才採用；正常情況下會被 default_length 對應檔位覆寫
   max_stages: 30
   # 預設流程長度檔位
   default_length: medium
