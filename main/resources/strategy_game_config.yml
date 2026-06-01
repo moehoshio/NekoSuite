@@ -1,48 +1,489 @@
 # NekoSuite Strategy Game Configuration
-# 貓咪冒險 - 策略遊戲配置
+# 勇者傳說：終界之戰 (Hero's Legend: Battle of the End)
+#
+# 一段中世紀奇幻冒險：勇者自殘破的村莊出發，取得傳說神器，
+# 沿途斬殺蜘蛛、殭屍、強盜，拯救村莊，最終於終界龍巢決戰。
+#
+# 所有文本字段皆使用 i18n key，於語言檔的 sgame.config 之下定義（目前以 zh_tw 為主）。
 
 storage:
   data_dir: userdata
 
 game:
   # 起始金幣
-  starting_gold: 30
+  starting_gold: 40
   # 起始生命值
   starting_health: 100
-  # 完成遊戲所需的最大階段數
-  max_stages: 15
   # 起始戰鬥屬性
-  starting_attack: 10
-  starting_defense: 5
+  starting_attack: 12
+  starting_defense: 6
   starting_magic: 25
+  # 後備關卡數：當 game.lengths 缺失或為空時才採用；正常情況下會被 default_length 對應檔位覆寫
+  max_stages: 30
+  # 預設流程長度檔位
+  default_length: medium
+  # 流程長度檔位 -> 關卡數。玩家於開始時選擇，或選「隨機」由系統抽選。
+  lengths:
+    short: 20
+    medium: 30
+    long: 50
 
+# ============================================================
 # 遊戲事件配置
-# type: story (普通劇情), shop (商店), battle (戰鬥)
+# type: story (劇情/委託/鐵匠/借宿/抉擇), shop (商店), battle (戰鬥)
 # weight: 隨機選擇時的基礎權重 (默認10)
 # followup_events: 完成此事件後，這些事件的權重會提高
 # prerequisite_events: 必須先經過這些事件才能進入
-# requirement: 進入事件的條件
-#   item: 需要的虛擬物品ID
-#   item_amount: 需要的數量 (默認1)
-#   gold: 需要持有的最低金幣數
-#   gold_cost: 進入時消耗的金幣
-#   fail_text: 條件不足時的提示 (使用i18n key)
-# choices中的 requirement: 選擇的條件
-#   result_alt: 條件不足時的替代結果文字 (使用i18n key)
-#   gold_change_alt: 條件不足時的金幣變化
-#   health_change_alt: 條件不足時的生命變化
-#   item_gain: 選擇後獲得的虛擬物品
-#   item_gain_amount: 獲得數量
-#   item_cost: 選擇時消耗的虛擬物品
-#   item_cost_amount: 消耗數量
-# 
-# 所有文本字段現在使用i18n key，在語言文件的 sgame.config 下定義
-
+# fixed_stage: 此事件固定出現的關卡 (絕對值，0 起算)
+# fixed_stage_ratio: 此事件固定出現的關卡比例 (0..1，會隨流程長度縮放)
+# exclusive: true 時該關只會出現此事件 (用於最終 Boss)
+# enemy_id: 戰鬥事件指定的敵人 (留空則依關卡隨機)
+# requirement: 進入事件的條件 (item / item_amount / gold / gold_cost / fail_text)
+#
+# choices 內可用字段：
+#   text / result / result_alt: i18n key
+#   gold_change / health_change: 金幣 / 生命變化
+#   gold_change_alt / health_change_alt: 條件不足時的替代變化
+#   item_gain / item_gain_amount: 獲得虛擬物品
+#   item_cost / item_cost_amount: 消耗虛擬物品
+#   requirement: 選擇的條件 (item / item_amount / gold)
+#   attack_change / defense_change / magic_change: 永久屬性成長
+#   max_health_change / max_magic_change: 永久上限成長 (同時回復等量)
+#   equip_grant: 直接獲得並裝備指定裝備 (用於神器與鐵匠強化)
+#   restore_full: true 時完全恢復生命與魔力 (借宿)
+# ============================================================
 events:
+
+  # ---------- 序章：覺醒 (固定錨點) ----------
+  village_under_attack:
+    name: "sgame.config.events.village_under_attack.name"
+    type: story
+    weight: 100
+    fixed_stage: 0
+    exclusive: true
+    followup_events:
+      - veteran_knight
+    description:
+      - "sgame.config.events.village_under_attack.desc1"
+      - "sgame.config.events.village_under_attack.desc2"
+      - "sgame.config.events.village_under_attack.desc3"
+    choices:
+      - text: "sgame.config.events.village_under_attack.choice1.text"
+        result: "sgame.config.events.village_under_attack.choice1.result"
+        gold_change: 0
+        health_change: -15
+        attack_change: 3
+        item_gain: village_token
+        item_gain_amount: 1
+      - text: "sgame.config.events.village_under_attack.choice2.text"
+        result: "sgame.config.events.village_under_attack.choice2.result"
+        gold_change: 25
+        health_change: 0
+        item_gain: village_token
+        item_gain_amount: 1
+      - text: "sgame.config.events.village_under_attack.choice3.text"
+        result: "sgame.config.events.village_under_attack.choice3.result"
+        gold_change: 40
+        health_change: -10
+
+  veteran_knight:
+    name: "sgame.config.events.veteran_knight.name"
+    type: story
+    weight: 30
+    fixed_stage: 1
+    followup_events:
+      - artifact_altar
+    description:
+      - "sgame.config.events.veteran_knight.desc1"
+      - "sgame.config.events.veteran_knight.desc2"
+    choices:
+      - text: "sgame.config.events.veteran_knight.choice1.text"
+        result: "sgame.config.events.veteran_knight.choice1.result"
+        gold_change: 0
+        health_change: 10
+        defense_change: 2
+        item_gain: knights_map
+        item_gain_amount: 1
+      - text: "sgame.config.events.veteran_knight.choice2.text"
+        result: "sgame.config.events.veteran_knight.choice2.result"
+        gold_change: 20
+        health_change: 0
+        item_gain: knights_map
+        item_gain_amount: 1
+
+  # ---------- 第一幕：神器之路 (固定錨點，三選一神器) ----------
+  artifact_altar:
+    name: "sgame.config.events.artifact_altar.name"
+    type: story
+    weight: 100
+    fixed_stage_ratio: 0.16
+    exclusive: true
+    description:
+      - "sgame.config.events.artifact_altar.desc1"
+      - "sgame.config.events.artifact_altar.desc2"
+      - "sgame.config.events.artifact_altar.desc3"
+    choices:
+      - text: "sgame.config.events.artifact_altar.choice1.text"
+        result: "sgame.config.events.artifact_altar.choice1.result"
+        equip_grant: artifact_sword
+        attack_change: 0
+      - text: "sgame.config.events.artifact_altar.choice2.text"
+        result: "sgame.config.events.artifact_altar.choice2.result"
+        equip_grant: artifact_bow
+        magic_change: 5
+      - text: "sgame.config.events.artifact_altar.choice3.text"
+        result: "sgame.config.events.artifact_altar.choice3.result"
+        equip_grant: artifact_axe
+        max_health_change: 10
+
+  # ---------- 中期休整 (固定錨點，借宿全回復) ----------
+  mid_rest_camp:
+    name: "sgame.config.events.mid_rest_camp.name"
+    type: story
+    weight: 100
+    fixed_stage_ratio: 0.42
+    description:
+      - "sgame.config.events.mid_rest_camp.desc1"
+      - "sgame.config.events.mid_rest_camp.desc2"
+    choices:
+      - text: "sgame.config.events.mid_rest_camp.choice1.text"
+        result: "sgame.config.events.mid_rest_camp.choice1.result"
+        gold_change: -20
+        restore_full: true
+      - text: "sgame.config.events.mid_rest_camp.choice2.text"
+        result: "sgame.config.events.mid_rest_camp.choice2.result"
+        gold_change: 0
+        health_change: 25
+        magic_change: 10
+      - text: "sgame.config.events.mid_rest_camp.choice3.text"
+        result: "sgame.config.events.mid_rest_camp.choice3.result"
+        gold_change: 0
+        health_change: 0
+        defense_change: 2
+
+  # ---------- 後期：血月凶兆 (固定錨點，抉擇影響走向) ----------
+  blood_moon_omen:
+    name: "sgame.config.events.blood_moon_omen.name"
+    type: story
+    weight: 100
+    fixed_stage_ratio: 0.66
+    description:
+      - "sgame.config.events.blood_moon_omen.desc1"
+      - "sgame.config.events.blood_moon_omen.desc2"
+    choices:
+      - text: "sgame.config.events.blood_moon_omen.choice1.text"
+        result: "sgame.config.events.blood_moon_omen.choice1.result"
+        gold_change: 0
+        health_change: -20
+        attack_change: 4
+        item_gain: village_token
+        item_gain_amount: 1
+      - text: "sgame.config.events.blood_moon_omen.choice2.text"
+        result: "sgame.config.events.blood_moon_omen.choice2.result"
+        gold_change: 0
+        health_change: 15
+        defense_change: 3
+      - text: "sgame.config.events.blood_moon_omen.choice3.text"
+        result: "sgame.config.events.blood_moon_omen.choice3.result"
+        gold_change: 50
+        health_change: -10
+
+  # ---------- 終局：龍巢之路 (固定錨點，鍛造與補給) ----------
+  dragon_road:
+    name: "sgame.config.events.dragon_road.name"
+    type: story
+    weight: 100
+    fixed_stage_ratio: 0.85
+    description:
+      - "sgame.config.events.dragon_road.desc1"
+      - "sgame.config.events.dragon_road.desc2"
+    choices:
+      - text: "sgame.config.events.dragon_road.choice1.text"
+        result: "sgame.config.events.dragon_road.choice1.result"
+        gold_change: 0
+        health_change: 0
+        item_gain: dragon_scale
+        item_gain_amount: 1
+      - text: "sgame.config.events.dragon_road.choice2.text"
+        result: "sgame.config.events.dragon_road.choice2.result"
+        gold_change: -15
+        restore_full: true
+      - text: "sgame.config.events.dragon_road.choice3.text"
+        result: "sgame.config.events.dragon_road.choice3.result"
+        gold_change: 0
+        health_change: 0
+        attack_change: 3
+        defense_change: 3
+
+  final_warning:
+    name: "sgame.config.events.final_warning.name"
+    type: story
+    weight: 100
+    fixed_stage_ratio: 0.94
+    description:
+      - "sgame.config.events.final_warning.desc1"
+      - "sgame.config.events.final_warning.desc2"
+      - "sgame.config.events.final_warning.desc3"
+    choices:
+      - text: "sgame.config.events.final_warning.choice1.text"
+        result: "sgame.config.events.final_warning.choice1.result"
+        gold_change: 0
+        health_change: 30
+      - text: "sgame.config.events.final_warning.choice2.text"
+        result: "sgame.config.events.final_warning.choice2.result"
+        gold_change: 0
+        health_change: 0
+        attack_change: 2
+        defense_change: 2
+
+  # ---------- 最終 Boss：終界龍 (最後一關，exclusive) ----------
+  end_dragon:
+    name: "sgame.config.events.end_dragon.name"
+    type: battle
+    weight: 100
+    fixed_stage_ratio: 1.0
+    exclusive: true
+    enemy_id: ender_dragon
+    description:
+      - "sgame.config.events.end_dragon.desc1"
+      - "sgame.config.events.end_dragon.desc2"
+      - "sgame.config.events.end_dragon.desc3"
+    choices:
+      - text: "sgame.config.events.end_dragon.choice1.text"
+        result: "sgame.config.events.end_dragon.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  # ---------- 固定早期商店 ----------
+  starter_shop:
+    name: "sgame.config.events.starter_shop.name"
+    type: shop
+    weight: 100
+    fixed_stage: 2
+    description:
+      - "sgame.config.events.starter_shop.desc1"
+      - "sgame.config.events.starter_shop.desc2"
+    choices:
+      - text: "sgame.config.events.starter_shop.choice1.text"
+        result: "sgame.config.events.starter_shop.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  # ---------- 鐵匠鋪：鍛造 / 升級 / 神器覺醒 ----------
+  blacksmith_forge:
+    name: "sgame.config.events.blacksmith_forge.name"
+    type: story
+    weight: 12
+    description:
+      - "sgame.config.events.blacksmith_forge.desc1"
+      - "sgame.config.events.blacksmith_forge.desc2"
+    choices:
+      - text: "sgame.config.events.blacksmith_forge.choice1.text"
+        result: "sgame.config.events.blacksmith_forge.choice1.result"
+        result_alt: "sgame.config.events.blacksmith_forge.choice1.result_alt"
+        gold_change: -40
+        gold_change_alt: 0
+        attack_change: 4
+        requirement:
+          gold: 40
+      - text: "sgame.config.events.blacksmith_forge.choice2.text"
+        result: "sgame.config.events.blacksmith_forge.choice2.result"
+        result_alt: "sgame.config.events.blacksmith_forge.choice2.result_alt"
+        gold_change: -40
+        gold_change_alt: 0
+        defense_change: 4
+        requirement:
+          gold: 40
+      - text: "sgame.config.events.blacksmith_forge.choice3.text"
+        result: "sgame.config.events.blacksmith_forge.choice3.result"
+        result_alt: "sgame.config.events.blacksmith_forge.choice3.result_alt"
+        gold_change: -60
+        gold_change_alt: 0
+        item_cost: dragon_scale
+        item_cost_amount: 1
+        attack_change: 8
+        defense_change: 4
+        requirement:
+          item: dragon_scale
+          item_amount: 1
+          gold: 60
+      - text: "sgame.config.events.blacksmith_forge.choice4.text"
+        result: "sgame.config.events.blacksmith_forge.choice4.result"
+        gold_change: 0
+        health_change: 0
+
+  # ---------- 借宿 / 旅店 (恢復) ----------
+  village_inn:
+    name: "sgame.config.events.village_inn.name"
+    type: story
+    weight: 11
+    description:
+      - "sgame.config.events.village_inn.desc1"
+      - "sgame.config.events.village_inn.desc2"
+    choices:
+      - text: "sgame.config.events.village_inn.choice1.text"
+        result: "sgame.config.events.village_inn.choice1.result"
+        result_alt: "sgame.config.events.village_inn.choice1.result_alt"
+        gold_change: -25
+        gold_change_alt: 0
+        restore_full: true
+        requirement:
+          gold: 25
+      - text: "sgame.config.events.village_inn.choice2.text"
+        result: "sgame.config.events.village_inn.choice2.result"
+        gold_change: 0
+        health_change: 20
+      - text: "sgame.config.events.village_inn.choice3.text"
+        result: "sgame.config.events.village_inn.choice3.result"
+        gold_change: 0
+        health_change: 0
+        magic_change: 8
+
+  # ---------- 委託：採藥跑腿 ----------
+  herbalist_request:
+    name: "sgame.config.events.herbalist_request.name"
+    type: story
+    weight: 11
+    description:
+      - "sgame.config.events.herbalist_request.desc1"
+      - "sgame.config.events.herbalist_request.desc2"
+    choices:
+      - text: "sgame.config.events.herbalist_request.choice1.text"
+        result: "sgame.config.events.herbalist_request.choice1.result"
+        result_alt: "sgame.config.events.herbalist_request.choice1.result_alt"
+        gold_change: 50
+        gold_change_alt: 0
+        item_cost: herb
+        item_cost_amount: 3
+        item_gain: healing_potion
+        item_gain_amount: 1
+        requirement:
+          item: herb
+          item_amount: 3
+      - text: "sgame.config.events.herbalist_request.choice2.text"
+        result: "sgame.config.events.herbalist_request.choice2.result"
+        gold_change: 0
+        health_change: 0
+        item_gain: village_token
+        item_gain_amount: 1
+
+  # ---------- 委託：村民求援 (引導戰鬥) ----------
+  village_plea:
+    name: "sgame.config.events.village_plea.name"
+    type: story
+    weight: 11
+    followup_events:
+      - bandit_ambush
+      - wolf_pack
+    description:
+      - "sgame.config.events.village_plea.desc1"
+      - "sgame.config.events.village_plea.desc2"
+    choices:
+      - text: "sgame.config.events.village_plea.choice1.text"
+        result: "sgame.config.events.village_plea.choice1.result"
+        gold_change: 0
+        health_change: 0
+        attack_change: 2
+        item_gain: village_token
+        item_gain_amount: 1
+      - text: "sgame.config.events.village_plea.choice2.text"
+        result: "sgame.config.events.village_plea.choice2.result"
+        gold_change: 30
+        health_change: 0
+      - text: "sgame.config.events.village_plea.choice3.text"
+        result: "sgame.config.events.village_plea.choice3.result"
+        gold_change: 0
+        health_change: 5
+
+  # ---------- 抉擇：岔路 ----------
+  crossroad_choice:
+    name: "sgame.config.events.crossroad_choice.name"
+    type: story
+    weight: 12
+    description:
+      - "sgame.config.events.crossroad_choice.desc1"
+      - "sgame.config.events.crossroad_choice.desc2"
+    choices:
+      - text: "sgame.config.events.crossroad_choice.choice1.text"
+        result: "sgame.config.events.crossroad_choice.choice1.result"
+        gold_change: 20
+        health_change: 0
+        item_gain: herb
+        item_gain_amount: 2
+      - text: "sgame.config.events.crossroad_choice.choice2.text"
+        result: "sgame.config.events.crossroad_choice.choice2.result"
+        gold_change: 0
+        health_change: 10
+        magic_change: 8
+      - text: "sgame.config.events.crossroad_choice.choice3.text"
+        result: "sgame.config.events.crossroad_choice.choice3.result"
+        gold_change: 45
+        health_change: -15
+
+  # ---------- 訓練場 ----------
+  training_grounds:
+    name: "sgame.config.events.training_grounds.name"
+    type: story
+    weight: 10
+    description:
+      - "sgame.config.events.training_grounds.desc1"
+      - "sgame.config.events.training_grounds.desc2"
+    choices:
+      - text: "sgame.config.events.training_grounds.choice1.text"
+        result: "sgame.config.events.training_grounds.choice1.result"
+        result_alt: "sgame.config.events.training_grounds.choice1.result_alt"
+        gold_change: -20
+        gold_change_alt: 0
+        attack_change: 3
+        requirement:
+          gold: 20
+      - text: "sgame.config.events.training_grounds.choice2.text"
+        result: "sgame.config.events.training_grounds.choice2.result"
+        result_alt: "sgame.config.events.training_grounds.choice2.result_alt"
+        gold_change: -20
+        gold_change_alt: 0
+        max_magic_change: 8
+        requirement:
+          gold: 20
+      - text: "sgame.config.events.training_grounds.choice3.text"
+        result: "sgame.config.events.training_grounds.choice3.result"
+        gold_change: 0
+        health_change: 0
+
+  # ---------- 一般劇情事件池 ----------
+  forest_crossroads:
+    name: "sgame.config.events.forest_crossroads.name"
+    type: story
+    weight: 12
+    description:
+      - "sgame.config.events.forest_crossroads.desc1"
+      - "sgame.config.events.forest_crossroads.desc2"
+    choices:
+      - text: "sgame.config.events.forest_crossroads.choice1.text"
+        result: "sgame.config.events.forest_crossroads.choice1.result"
+        gold_change: 15
+        health_change: 0
+        item_gain: herb
+        item_gain_amount: 1
+      - text: "sgame.config.events.forest_crossroads.choice2.text"
+        result: "sgame.config.events.forest_crossroads.choice2.result"
+        result_alt: "sgame.config.events.forest_crossroads.choice2.result_alt"
+        gold_change: 55
+        gold_change_alt: 25
+        health_change: 0
+        health_change_alt: -15
+        requirement:
+          item: village_token
+          item_amount: 1
+      - text: "sgame.config.events.forest_crossroads.choice3.text"
+        result: "sgame.config.events.forest_crossroads.choice3.result"
+        gold_change: 0
+        health_change: 8
+
   mysterious_merchant:
     name: "sgame.config.events.mysterious_merchant.name"
     type: story
-    weight: 15
+    weight: 12
     followup_events:
       - traveling_merchant_shop
     description:
@@ -62,269 +503,8 @@ events:
       - text: "sgame.config.events.mysterious_merchant.choice3.text"
         result: "sgame.config.events.mysterious_merchant.choice3.result"
         gold_change: -30
-        health_change: -15
-
-  injured_traveler:
-    name: "sgame.config.events.injured_traveler.name"
-    type: story
-    weight: 12
-    followup_events:
-      - village_festival
-    description:
-      - "sgame.config.events.injured_traveler.desc1"
-      - "sgame.config.events.injured_traveler.desc2"
-    choices:
-      - text: "sgame.config.events.injured_traveler.choice1.text"
-        result: "sgame.config.events.injured_traveler.choice1.result"
-        result_alt: "sgame.config.events.injured_traveler.choice1.result_alt"
-        gold_change: 40
-        gold_change_alt: 15
-        health_change: 0
-        health_change_alt: -5
-        item_cost: healing_potion
-        item_cost_amount: 1
-        requirement:
-          item: healing_potion
-          item_amount: 1
-      - text: "sgame.config.events.injured_traveler.choice2.text"
-        result: "sgame.config.events.injured_traveler.choice2.result"
-        gold_change: 25
-        health_change: 0
-      - text: "sgame.config.events.injured_traveler.choice3.text"
-        result: "sgame.config.events.injured_traveler.choice3.result"
-        gold_change: 0
-        health_change: 0
-
-  ancient_shrine:
-    name: "sgame.config.events.ancient_shrine.name"
-    type: story
-    weight: 8
-    followup_events:
-      - secret_vault
-    requirement:
-      gold: 20
-      fail_text: "sgame.config.events.ancient_shrine.fail_text"
-    description:
-      - "sgame.config.events.ancient_shrine.desc1"
-      - "sgame.config.events.ancient_shrine.desc2"
-    choices:
-      - text: "sgame.config.events.ancient_shrine.choice1.text"
-        result: "sgame.config.events.ancient_shrine.choice1.result"
-        gold_change: -20
-        health_change: 30
-        item_gain: blessed_amulet
-        item_gain_amount: 1
-      - text: "sgame.config.events.ancient_shrine.choice2.text"
-        result: "sgame.config.events.ancient_shrine.choice2.result"
-        gold_change: 40
         health_change: -10
-      - text: "sgame.config.events.ancient_shrine.choice3.text"
-        result: "sgame.config.events.ancient_shrine.choice3.result"
-        gold_change: 5
-        health_change: 5
 
-  forest_crossroads:
-    name: "sgame.config.events.forest_crossroads.name"
-    type: story
-    weight: 12
-    description:
-      - "sgame.config.events.forest_crossroads.desc1"
-      - "sgame.config.events.forest_crossroads.desc2"
-    choices:
-      - text: "sgame.config.events.forest_crossroads.choice1.text"
-        result: "sgame.config.events.forest_crossroads.choice1.result"
-        gold_change: 10
-        health_change: 0
-      - text: "sgame.config.events.forest_crossroads.choice2.text"
-        result: "sgame.config.events.forest_crossroads.choice2.result"
-        result_alt: "sgame.config.events.forest_crossroads.choice2.result_alt"
-        gold_change: 60
-        gold_change_alt: 35
-        health_change: 0
-        health_change_alt: -15
-        requirement:
-          item: blessed_amulet
-          item_amount: 1
-      - text: "sgame.config.events.forest_crossroads.choice3.text"
-        result: "sgame.config.events.forest_crossroads.choice3.result"
-        gold_change: 0
-        health_change: 5
-
-  treasure_chest:
-    name: "sgame.config.events.treasure_chest.name"
-    type: story
-    weight: 10
-    followup_events:
-      - secret_vault
-    description:
-      - "sgame.config.events.treasure_chest.desc1"
-      - "sgame.config.events.treasure_chest.desc2"
-    choices:
-      - text: "sgame.config.events.treasure_chest.choice1.text"
-        result: "sgame.config.events.treasure_chest.choice1.result"
-        gold_change: 30
-        health_change: 0
-        item_gain: treasure_key
-        item_gain_amount: 1
-      - text: "sgame.config.events.treasure_chest.choice2.text"
-        result: "sgame.config.events.treasure_chest.choice2.result"
-        gold_change: 50
-        health_change: -20
-      - text: "sgame.config.events.treasure_chest.choice3.text"
-        result: "sgame.config.events.treasure_chest.choice3.result"
-        gold_change: 0
-        health_change: 0
-
-  village_festival:
-    name: "sgame.config.events.village_festival.name"
-    type: story
-    weight: 10
-    description:
-      - "sgame.config.events.village_festival.desc1"
-      - "sgame.config.events.village_festival.desc2"
-    choices:
-      - text: "sgame.config.events.village_festival.choice1.text"
-        result: "sgame.config.events.village_festival.choice1.result"
-        gold_change: -10
-        health_change: 20
-      - text: "sgame.config.events.village_festival.choice2.text"
-        result: "sgame.config.events.village_festival.choice2.result"
-        gold_change: 25
-        health_change: 0
-        item_gain: performer_badge
-        item_gain_amount: 1
-      - text: "sgame.config.events.village_festival.choice3.text"
-        result: "sgame.config.events.village_festival.choice3.result"
-        gold_change: 0
-        health_change: -5
-
-  secret_vault:
-    name: "sgame.config.events.secret_vault.name"
-    type: story
-    weight: 5
-    prerequisite_events:
-      - treasure_chest
-    requirement:
-      item: treasure_key
-      item_amount: 1
-      fail_text: "sgame.config.events.secret_vault.fail_text"
-    description:
-      - "sgame.config.events.secret_vault.desc1"
-      - "sgame.config.events.secret_vault.desc2"
-    choices:
-      - text: "sgame.config.events.secret_vault.choice1.text"
-        result: "sgame.config.events.secret_vault.choice1.result"
-        gold_change: 100
-        health_change: 0
-        item_cost: treasure_key
-        item_cost_amount: 1
-      - text: "sgame.config.events.secret_vault.choice2.text"
-        result: "sgame.config.events.secret_vault.choice2.result"
-        gold_change: 0
-        health_change: 0
-
-  traveling_merchant_shop:
-    name: "sgame.config.events.traveling_merchant_shop.name"
-    type: shop
-    weight: 8
-    prerequisite_events:
-      - mysterious_merchant
-    requirement:
-      item: merchant_token
-      item_amount: 1
-      fail_text: "sgame.config.events.traveling_merchant_shop.fail_text"
-    description:
-      - "sgame.config.events.traveling_merchant_shop.desc1"
-      - "sgame.config.events.traveling_merchant_shop.desc2"
-    choices:
-      - text: "sgame.config.events.traveling_merchant_shop.choice1.text"
-        result: "sgame.config.events.traveling_merchant_shop.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  monster_ambush:
-    name: "sgame.config.events.monster_ambush.name"
-    type: battle
-    weight: 12
-    description:
-      - "sgame.config.events.monster_ambush.desc1"
-      - "sgame.config.events.monster_ambush.desc2"
-    choices:
-      - text: "sgame.config.events.monster_ambush.choice1.text"
-        result: "sgame.config.events.monster_ambush.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  blacksmith_shop:
-    name: "sgame.config.events.blacksmith_shop.name"
-    type: shop
-    weight: 8
-    description:
-      - "sgame.config.events.blacksmith_shop.desc1"
-      - "sgame.config.events.blacksmith_shop.desc2"
-    choices:
-      - text: "sgame.config.events.blacksmith_shop.choice1.text"
-        result: "sgame.config.events.blacksmith_shop.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  # 新增戰鬥事件
-  goblin_camp:
-    name: "sgame.config.events.goblin_camp.name"
-    type: battle
-    weight: 10
-    description:
-      - "sgame.config.events.goblin_camp.desc1"
-      - "sgame.config.events.goblin_camp.desc2"
-    choices:
-      - text: "sgame.config.events.goblin_camp.choice1.text"
-        result: "sgame.config.events.goblin_camp.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  dungeon_entrance:
-    name: "sgame.config.events.dungeon_entrance.name"
-    type: battle
-    weight: 8
-    min_stage: 3
-    description:
-      - "sgame.config.events.dungeon_entrance.desc1"
-      - "sgame.config.events.dungeon_entrance.desc2"
-    choices:
-      - text: "sgame.config.events.dungeon_entrance.choice1.text"
-        result: "sgame.config.events.dungeon_entrance.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  haunted_graveyard:
-    name: "sgame.config.events.haunted_graveyard.name"
-    type: battle
-    weight: 10
-    min_stage: 4
-    description:
-      - "sgame.config.events.haunted_graveyard.desc1"
-      - "sgame.config.events.haunted_graveyard.desc2"
-    choices:
-      - text: "sgame.config.events.haunted_graveyard.choice1.text"
-        result: "sgame.config.events.haunted_graveyard.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  dragon_lair_entrance:
-    name: "sgame.config.events.dragon_lair_entrance.name"
-    type: battle
-    weight: 6
-    min_stage: 8
-    description:
-      - "sgame.config.events.dragon_lair_entrance.desc1"
-      - "sgame.config.events.dragon_lair_entrance.desc2"
-    choices:
-      - text: "sgame.config.events.dragon_lair_entrance.choice1.text"
-        result: "sgame.config.events.dragon_lair_entrance.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  # 新增劇情事件
   wandering_minstrel:
     name: "sgame.config.events.wandering_minstrel.name"
     type: story
@@ -341,10 +521,35 @@ events:
         result: "sgame.config.events.wandering_minstrel.choice2.result"
         gold_change: 0
         health_change: 0
+        magic_change: 6
       - text: "sgame.config.events.wandering_minstrel.choice3.text"
         result: "sgame.config.events.wandering_minstrel.choice3.result"
         gold_change: 15
         health_change: -5
+
+  mystic_fountain:
+    name: "sgame.config.events.mystic_fountain.name"
+    type: story
+    weight: 9
+    description:
+      - "sgame.config.events.mystic_fountain.desc1"
+      - "sgame.config.events.mystic_fountain.desc2"
+    choices:
+      - text: "sgame.config.events.mystic_fountain.choice1.text"
+        result: "sgame.config.events.mystic_fountain.choice1.result"
+        gold_change: 0
+        health_change: 30
+      - text: "sgame.config.events.mystic_fountain.choice2.text"
+        result: "sgame.config.events.mystic_fountain.choice2.result"
+        gold_change: -15
+        health_change: 0
+        max_magic_change: 6
+      - text: "sgame.config.events.mystic_fountain.choice3.text"
+        result: "sgame.config.events.mystic_fountain.choice3.result"
+        gold_change: 0
+        health_change: 0
+        item_gain: herb
+        item_gain_amount: 2
 
   abandoned_mine:
     name: "sgame.config.events.abandoned_mine.name"
@@ -367,27 +572,117 @@ events:
         result: "sgame.config.events.abandoned_mine.choice3.result"
         gold_change: 20
         health_change: 0
+        item_gain: dragon_scale
+        item_gain_amount: 1
 
-  mystic_fountain:
-    name: "sgame.config.events.mystic_fountain.name"
+  ancient_shrine:
+    name: "sgame.config.events.ancient_shrine.name"
     type: story
     weight: 8
+    requirement:
+      gold: 20
+      fail_text: "sgame.config.events.ancient_shrine.fail_text"
     description:
-      - "sgame.config.events.mystic_fountain.desc1"
-      - "sgame.config.events.mystic_fountain.desc2"
+      - "sgame.config.events.ancient_shrine.desc1"
+      - "sgame.config.events.ancient_shrine.desc2"
     choices:
-      - text: "sgame.config.events.mystic_fountain.choice1.text"
-        result: "sgame.config.events.mystic_fountain.choice1.result"
-        gold_change: 0
+      - text: "sgame.config.events.ancient_shrine.choice1.text"
+        result: "sgame.config.events.ancient_shrine.choice1.result"
+        gold_change: -20
         health_change: 30
-      - text: "sgame.config.events.mystic_fountain.choice2.text"
-        result: "sgame.config.events.mystic_fountain.choice2.result"
-        gold_change: -15
-        health_change: 50
-      - text: "sgame.config.events.mystic_fountain.choice3.text"
-        result: "sgame.config.events.mystic_fountain.choice3.result"
-        gold_change: 25
+        item_gain: blessed_amulet
+        item_gain_amount: 1
+      - text: "sgame.config.events.ancient_shrine.choice2.text"
+        result: "sgame.config.events.ancient_shrine.choice2.result"
+        gold_change: 40
+        health_change: -10
+      - text: "sgame.config.events.ancient_shrine.choice3.text"
+        result: "sgame.config.events.ancient_shrine.choice3.result"
+        gold_change: 5
+        health_change: 5
+
+  treasure_chest:
+    name: "sgame.config.events.treasure_chest.name"
+    type: story
+    weight: 9
+    followup_events:
+      - secret_vault
+    description:
+      - "sgame.config.events.treasure_chest.desc1"
+      - "sgame.config.events.treasure_chest.desc2"
+    choices:
+      - text: "sgame.config.events.treasure_chest.choice1.text"
+        result: "sgame.config.events.treasure_chest.choice1.result"
+        gold_change: 30
+        health_change: 0
+        item_gain: treasure_key
+        item_gain_amount: 1
+      - text: "sgame.config.events.treasure_chest.choice2.text"
+        result: "sgame.config.events.treasure_chest.choice2.result"
+        gold_change: 50
         health_change: -20
+      - text: "sgame.config.events.treasure_chest.choice3.text"
+        result: "sgame.config.events.treasure_chest.choice3.result"
+        gold_change: 0
+        health_change: 0
+
+  secret_vault:
+    name: "sgame.config.events.secret_vault.name"
+    type: story
+    weight: 6
+    prerequisite_events:
+      - treasure_chest
+    requirement:
+      item: treasure_key
+      item_amount: 1
+      fail_text: "sgame.config.events.secret_vault.fail_text"
+    description:
+      - "sgame.config.events.secret_vault.desc1"
+      - "sgame.config.events.secret_vault.desc2"
+    choices:
+      - text: "sgame.config.events.secret_vault.choice1.text"
+        result: "sgame.config.events.secret_vault.choice1.result"
+        gold_change: 90
+        health_change: 0
+        item_cost: treasure_key
+        item_cost_amount: 1
+        item_gain: dragon_scale
+        item_gain_amount: 1
+      - text: "sgame.config.events.secret_vault.choice2.text"
+        result: "sgame.config.events.secret_vault.choice2.result"
+        gold_change: 0
+        health_change: 0
+
+  injured_traveler:
+    name: "sgame.config.events.injured_traveler.name"
+    type: story
+    weight: 10
+    description:
+      - "sgame.config.events.injured_traveler.desc1"
+      - "sgame.config.events.injured_traveler.desc2"
+    choices:
+      - text: "sgame.config.events.injured_traveler.choice1.text"
+        result: "sgame.config.events.injured_traveler.choice1.result"
+        result_alt: "sgame.config.events.injured_traveler.choice1.result_alt"
+        gold_change: 40
+        gold_change_alt: 15
+        health_change: 0
+        health_change_alt: -5
+        item_cost: healing_potion
+        item_cost_amount: 1
+        requirement:
+          item: healing_potion
+          item_amount: 1
+      - text: "sgame.config.events.injured_traveler.choice2.text"
+        result: "sgame.config.events.injured_traveler.choice2.result"
+        gold_change: 0
+        health_change: 0
+        item_gain: village_token
+        item_gain_amount: 1
+      - text: "sgame.config.events.injured_traveler.choice3.text"
+        result: "sgame.config.events.injured_traveler.choice3.result"
+        gold_change: 0
+        health_change: 0
 
   bandit_toll:
     name: "sgame.config.events.bandit_toll.name"
@@ -405,12 +700,32 @@ events:
         result: "sgame.config.events.bandit_toll.choice2.result"
         gold_change: 0
         health_change: -15
+        attack_change: 2
       - text: "sgame.config.events.bandit_toll.choice3.text"
         result: "sgame.config.events.bandit_toll.choice3.result"
         gold_change: 40
         health_change: -25
 
-  # 新增商店事件
+  # ---------- 商店事件池 ----------
+  traveling_merchant_shop:
+    name: "sgame.config.events.traveling_merchant_shop.name"
+    type: shop
+    weight: 8
+    prerequisite_events:
+      - mysterious_merchant
+    requirement:
+      item: merchant_token
+      item_amount: 1
+      fail_text: "sgame.config.events.traveling_merchant_shop.fail_text"
+    description:
+      - "sgame.config.events.traveling_merchant_shop.desc1"
+      - "sgame.config.events.traveling_merchant_shop.desc2"
+    choices:
+      - text: "sgame.config.events.traveling_merchant_shop.choice1.text"
+        result: "sgame.config.events.traveling_merchant_shop.choice1.result"
+        gold_change: 0
+        health_change: 0
+
   potion_shop:
     name: "sgame.config.events.potion_shop.name"
     type: shop
@@ -421,6 +736,20 @@ events:
     choices:
       - text: "sgame.config.events.potion_shop.choice1.text"
         result: "sgame.config.events.potion_shop.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  armory:
+    name: "sgame.config.events.armory.name"
+    type: shop
+    weight: 8
+    min_stage: 3
+    description:
+      - "sgame.config.events.armory.desc1"
+      - "sgame.config.events.armory.desc2"
+    choices:
+      - text: "sgame.config.events.armory.choice1.text"
+        result: "sgame.config.events.armory.choice1.result"
         gold_change: 0
         health_change: 0
 
@@ -438,106 +767,171 @@ events:
         gold_change: 0
         health_change: 0
 
-  # 固定階段事件 - 第一關必定出現的新手引導商店
-  starter_shop:
-    name: "sgame.config.events.starter_shop.name"
-    type: shop
-    weight: 10
-    fixed_stage: 1
-    description:
-      - "sgame.config.events.starter_shop.desc1"
-      - "sgame.config.events.starter_shop.desc2"
-    choices:
-      - text: "sgame.config.events.starter_shop.choice1.text"
-        result: "sgame.config.events.starter_shop.choice1.result"
-        gold_change: 0
-        health_change: 0
-
-  # 固定階段事件 - 中期休息站 (第6關)
-  rest_station:
-    name: "sgame.config.events.rest_station.name"
-    type: story
-    weight: 10
-    fixed_stage: 6
-    description:
-      - "sgame.config.events.rest_station.desc1"
-      - "sgame.config.events.rest_station.desc2"
-    choices:
-      - text: "sgame.config.events.rest_station.choice1.text"
-        result: "sgame.config.events.rest_station.choice1.result"
-        gold_change: -15
-        health_change: 40
-      - text: "sgame.config.events.rest_station.choice2.text"
-        result: "sgame.config.events.rest_station.choice2.result"
-        gold_change: 0
-        health_change: 20
-      - text: "sgame.config.events.rest_station.choice3.text"
-        result: "sgame.config.events.rest_station.choice3.result"
-        gold_change: 0
-        health_change: 0
-
-  # 固定階段事件 - 後期休息站 (第10關，迎戰強敵前的準備)
-  late_rest_station:
-    name: "sgame.config.events.late_rest_station.name"
-    type: story
-    weight: 10
-    fixed_stage: 10
-    description:
-      - "sgame.config.events.late_rest_station.desc1"
-      - "sgame.config.events.late_rest_station.desc2"
-    choices:
-      - text: "sgame.config.events.late_rest_station.choice1.text"
-        result: "sgame.config.events.late_rest_station.choice1.result"
-        gold_change: -20
-        health_change: 50
-      - text: "sgame.config.events.late_rest_station.choice2.text"
-        result: "sgame.config.events.late_rest_station.choice2.result"
-        gold_change: 0
-        health_change: 25
-      - text: "sgame.config.events.late_rest_station.choice3.text"
-        result: "sgame.config.events.late_rest_station.choice3.result"
-        gold_change: 0
-        health_change: 0
-
-  # 固定階段事件 - 最終決戰預告 (第13關)
-  final_warning:
-    name: "sgame.config.events.final_warning.name"
-    type: story
-    weight: 10
-    fixed_stage: 13
-    description:
-      - "sgame.config.events.final_warning.desc1"
-      - "sgame.config.events.final_warning.desc2"
-      - "sgame.config.events.final_warning.desc3"
-    choices:
-      - text: "sgame.config.events.final_warning.choice1.text"
-        result: "sgame.config.events.final_warning.choice1.result"
-        gold_change: 0
-        health_change: 30
-      - text: "sgame.config.events.final_warning.choice2.text"
-        result: "sgame.config.events.final_warning.choice2.result"
-        gold_change: 0
-        health_change: 0
-
-  # 最終 Boss 戰 - 第14關 (最後一關，exclusive確保只有這個事件)
-  final_boss:
-    name: "sgame.config.events.final_boss.name"
+  # ---------- 戰鬥事件池 (對應 Minecraft 生物) ----------
+  slime_swamp:
+    name: "sgame.config.events.slime_swamp.name"
     type: battle
-    weight: 100
-    fixed_stage: 14
-    exclusive: true
-    enemy_id: dark_lord
+    weight: 9
+    enemy_id: slime
     description:
-      - "sgame.config.events.final_boss.desc1"
-      - "sgame.config.events.final_boss.desc2"
-      - "sgame.config.events.final_boss.desc3"
+      - "sgame.config.events.slime_swamp.desc1"
+      - "sgame.config.events.slime_swamp.desc2"
     choices:
-      - text: "sgame.config.events.final_boss.choice1.text"
-        result: "sgame.config.events.final_boss.choice1.result"
+      - text: "sgame.config.events.slime_swamp.choice1.text"
+        result: "sgame.config.events.slime_swamp.choice1.result"
         gold_change: 0
         health_change: 0
 
-# 商店物品配置
+  goblin_raid:
+    name: "sgame.config.events.goblin_raid.name"
+    type: battle
+    weight: 10
+    enemy_id: goblin
+    description:
+      - "sgame.config.events.goblin_raid.desc1"
+      - "sgame.config.events.goblin_raid.desc2"
+    choices:
+      - text: "sgame.config.events.goblin_raid.choice1.text"
+        result: "sgame.config.events.goblin_raid.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  wolf_pack:
+    name: "sgame.config.events.wolf_pack.name"
+    type: battle
+    weight: 10
+    enemy_id: wolf
+    min_stage: 1
+    description:
+      - "sgame.config.events.wolf_pack.desc1"
+      - "sgame.config.events.wolf_pack.desc2"
+    choices:
+      - text: "sgame.config.events.wolf_pack.choice1.text"
+        result: "sgame.config.events.wolf_pack.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  bandit_ambush:
+    name: "sgame.config.events.bandit_ambush.name"
+    type: battle
+    weight: 10
+    enemy_id: bandit
+    min_stage: 2
+    description:
+      - "sgame.config.events.bandit_ambush.desc1"
+      - "sgame.config.events.bandit_ambush.desc2"
+    choices:
+      - text: "sgame.config.events.bandit_ambush.choice1.text"
+        result: "sgame.config.events.bandit_ambush.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  skeleton_crypt:
+    name: "sgame.config.events.skeleton_crypt.name"
+    type: battle
+    weight: 9
+    enemy_id: skeleton
+    min_stage: 2
+    description:
+      - "sgame.config.events.skeleton_crypt.desc1"
+      - "sgame.config.events.skeleton_crypt.desc2"
+    choices:
+      - text: "sgame.config.events.skeleton_crypt.choice1.text"
+        result: "sgame.config.events.skeleton_crypt.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  zombie_horde:
+    name: "sgame.config.events.zombie_horde.name"
+    type: battle
+    weight: 9
+    enemy_id: zombie
+    min_stage: 3
+    description:
+      - "sgame.config.events.zombie_horde.desc1"
+      - "sgame.config.events.zombie_horde.desc2"
+    choices:
+      - text: "sgame.config.events.zombie_horde.choice1.text"
+        result: "sgame.config.events.zombie_horde.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  spider_nest:
+    name: "sgame.config.events.spider_nest.name"
+    type: battle
+    weight: 9
+    enemy_id: spider
+    min_stage: 4
+    description:
+      - "sgame.config.events.spider_nest.desc1"
+      - "sgame.config.events.spider_nest.desc2"
+    choices:
+      - text: "sgame.config.events.spider_nest.choice1.text"
+        result: "sgame.config.events.spider_nest.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  witch_hut:
+    name: "sgame.config.events.witch_hut.name"
+    type: battle
+    weight: 8
+    enemy_id: witch
+    min_stage: 5
+    description:
+      - "sgame.config.events.witch_hut.desc1"
+      - "sgame.config.events.witch_hut.desc2"
+    choices:
+      - text: "sgame.config.events.witch_hut.choice1.text"
+        result: "sgame.config.events.witch_hut.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  dark_knight_duel:
+    name: "sgame.config.events.dark_knight_duel.name"
+    type: battle
+    weight: 7
+    enemy_id: dark_knight
+    min_stage: 7
+    description:
+      - "sgame.config.events.dark_knight_duel.desc1"
+      - "sgame.config.events.dark_knight_duel.desc2"
+    choices:
+      - text: "sgame.config.events.dark_knight_duel.choice1.text"
+        result: "sgame.config.events.dark_knight_duel.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  young_dragon:
+    name: "sgame.config.events.young_dragon.name"
+    type: battle
+    weight: 6
+    enemy_id: dragon
+    min_stage: 9
+    description:
+      - "sgame.config.events.young_dragon.desc1"
+      - "sgame.config.events.young_dragon.desc2"
+    choices:
+      - text: "sgame.config.events.young_dragon.choice1.text"
+        result: "sgame.config.events.young_dragon.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+  monster_ambush:
+    name: "sgame.config.events.monster_ambush.name"
+    type: battle
+    weight: 10
+    description:
+      - "sgame.config.events.monster_ambush.desc1"
+      - "sgame.config.events.monster_ambush.desc2"
+    choices:
+      - text: "sgame.config.events.monster_ambush.choice1.text"
+        result: "sgame.config.events.monster_ambush.choice1.result"
+        gold_change: 0
+        health_change: 0
+
+# ============================================================
+# 商店物品配置 (消耗品)
+# ============================================================
 shop:
   items:
     - id: small_potion
@@ -583,8 +977,10 @@ shop:
       effect_value: 1
       effect_description: "sgame.config.shop.healing_potion.effect"
 
+# ============================================================
 # 裝備配置
 # slot: weapon (武器), armor (護甲), accessory (飾品)
+# ============================================================
 equipment:
   items:
     - id: iron_sword
@@ -592,16 +988,43 @@ equipment:
       slot: weapon
       price: 40
       material: IRON_SWORD
-      attack_bonus: 5
+      attack_bonus: 6
       defense_bonus: 0
       health_bonus: 0
       magic_bonus: 0
     - id: steel_sword
       name: "sgame.config.equipment.steel_sword.name"
       slot: weapon
-      price: 85
+      price: 90
       material: DIAMOND_SWORD
-      attack_bonus: 12
+      attack_bonus: 13
+      defense_bonus: 0
+      health_bonus: 0
+      magic_bonus: 0
+    - id: artifact_sword
+      name: "sgame.config.equipment.artifact_sword.name"
+      slot: weapon
+      price: 0
+      material: GOLDEN_SWORD
+      attack_bonus: 18
+      defense_bonus: 4
+      health_bonus: 0
+      magic_bonus: 0
+    - id: artifact_bow
+      name: "sgame.config.equipment.artifact_bow.name"
+      slot: weapon
+      price: 0
+      material: BOW
+      attack_bonus: 15
+      defense_bonus: 0
+      health_bonus: 0
+      magic_bonus: 8
+    - id: artifact_axe
+      name: "sgame.config.equipment.artifact_axe.name"
+      slot: weapon
+      price: 0
+      material: GOLDEN_AXE
+      attack_bonus: 21
       defense_bonus: 0
       health_bonus: 0
       magic_bonus: 0
@@ -623,6 +1046,15 @@ equipment:
       defense_bonus: 8
       health_bonus: 20
       magic_bonus: 0
+    - id: knight_plate
+      name: "sgame.config.equipment.knight_plate.name"
+      slot: armor
+      price: 140
+      material: DIAMOND_CHESTPLATE
+      attack_bonus: 0
+      defense_bonus: 14
+      health_bonus: 35
+      magic_bonus: 0
     - id: magic_ring
       name: "sgame.config.equipment.magic_ring.name"
       slot: accessory
@@ -641,20 +1073,22 @@ equipment:
       defense_bonus: 5
       health_bonus: 15
       magic_bonus: 5
+    - id: hero_emblem
+      name: "sgame.config.equipment.hero_emblem.name"
+      slot: accessory
+      price: 160
+      material: NETHER_STAR
+      attack_bonus: 5
+      defense_bonus: 5
+      health_bonus: 20
+      magic_bonus: 10
 
+# ============================================================
 # 戰鬥敵人配置
-# 新增: attack, defense, magic 屬性用於戰鬥計算
-# 新增: crit_chance (暴擊率%), crit_multiplier (暴擊傷害倍率), dodge_chance (閃避率%)
-# 新增: skills 敵人特殊技能列表
-#   - id: 技能ID
-#   - name: 技能名稱 (i18n key)
-#   - description: 技能描述 (i18n key)
-#   - type: damage/heal/buff/debuff/status
-#   - power: 技能傷害/治療量
-#   - chance: 使用機率 (%)
-#   - status_effect: 狀態效果 (poison/burn/freeze/stun)
-#   - status_duration: 狀態持續回合數
-#   - status_power: 每回合狀態傷害
+# 屬性: attack/defense/magic 用於戰鬥計算
+# crit_chance(暴擊率%), crit_multiplier(暴擊倍率), dodge_chance(閃避率%)
+# skills: 敵人特殊技能 (type: damage/heal/buff/debuff/status)
+# ============================================================
 battles:
   enemies:
     - id: slime
@@ -737,7 +1171,7 @@ battles:
           type: damage
           power: 18
           chance: 25
-      
+
     - id: skeleton
       name: "sgame.config.enemies.skeleton.name"
       description: "sgame.config.enemies.skeleton.desc"
@@ -759,7 +1193,7 @@ battles:
           type: damage
           power: 12
           chance: 20
-          
+
     - id: zombie
       name: "sgame.config.enemies.zombie.name"
       description: "sgame.config.enemies.zombie.desc"
@@ -784,7 +1218,7 @@ battles:
           status_effect: poison
           status_duration: 3
           status_power: 4
-          
+
     - id: spider
       name: "sgame.config.enemies.spider.name"
       description: "sgame.config.enemies.spider.desc"
@@ -818,7 +1252,7 @@ battles:
           status_effect: poison
           status_duration: 2
           status_power: 5
-          
+
     - id: witch
       name: "sgame.config.enemies.witch.name"
       description: "sgame.config.enemies.witch.desc"
@@ -852,7 +1286,7 @@ battles:
           status_effect: freeze
           status_duration: 1
           status_power: 0
-          
+
     - id: dark_knight
       name: "sgame.config.enemies.dark_knight.name"
       description: "sgame.config.enemies.dark_knight.desc"
@@ -883,7 +1317,7 @@ battles:
           status_effect: stun
           status_duration: 1
           status_power: 0
-          
+
     - id: dragon
       name: "sgame.config.enemies.dragon.name"
       description: "sgame.config.enemies.dragon.desc"
@@ -924,75 +1358,83 @@ battles:
           status_duration: 1
           status_power: 0
 
-    # 最終 Boss - 黑暗領主
-    - id: dark_lord
-      name: "sgame.config.enemies.dark_lord.name"
-      description: "sgame.config.enemies.dark_lord.desc"
-      power: 120
-      damage: 45
-      health: 200
-      attack: 40
-      defense: 35
-      magic: 45
-      gold_reward: 200
+    # 最終 Boss - 終界龍
+    - id: ender_dragon
+      name: "sgame.config.enemies.ender_dragon.name"
+      description: "sgame.config.enemies.ender_dragon.desc"
+      power: 130
+      damage: 48
+      health: 240
+      attack: 42
+      defense: 36
+      magic: 50
+      gold_reward: 250
       min_stage: 11
       crit_chance: 25
       crit_multiplier: 2.5
       dodge_chance: 15
       skills:
-        - id: shadow_blast
-          name: "sgame.config.enemies.dark_lord.skill1.name"
-          description: "sgame.config.enemies.dark_lord.skill1.desc"
+        - id: dragon_breath
+          name: "sgame.config.enemies.ender_dragon.skill1.name"
+          description: "sgame.config.enemies.ender_dragon.skill1.desc"
           type: status
-          power: 40
+          power: 45
           chance: 35
           status_effect: burn
           status_duration: 3
-          status_power: 10
-        - id: soul_drain
-          name: "sgame.config.enemies.dark_lord.skill2.name"
-          description: "sgame.config.enemies.dark_lord.skill2.desc"
+          status_power: 12
+        - id: wing_gust
+          name: "sgame.config.enemies.ender_dragon.skill2.name"
+          description: "sgame.config.enemies.ender_dragon.skill2.desc"
           type: damage
-          power: 50
+          power: 55
           chance: 25
-        - id: dark_binding
-          name: "sgame.config.enemies.dark_lord.skill3.name"
-          description: "sgame.config.enemies.dark_lord.skill3.desc"
+        - id: ender_charge
+          name: "sgame.config.enemies.ender_dragon.skill3.name"
+          description: "sgame.config.enemies.ender_dragon.skill3.desc"
           type: status
-          power: 20
+          power: 25
           chance: 30
           status_effect: stun
           status_duration: 2
           status_power: 0
-        - id: apocalypse
-          name: "sgame.config.enemies.dark_lord.skill4.name"
-          description: "sgame.config.enemies.dark_lord.skill4.desc"
+        - id: void_roar
+          name: "sgame.config.enemies.ender_dragon.skill4.name"
+          description: "sgame.config.enemies.ender_dragon.skill4.desc"
           type: status
           power: 60
           chance: 15
           status_effect: poison
           status_duration: 5
-          status_power: 12
+          status_power: 14
 
+# ============================================================
 # 結束獎勵配置 (根據分數發放真實獎勵)
+# 分數隨關卡數成長，較長流程可達更高獎勵階級。
+# ============================================================
 end_rewards:
   - name: "sgame.config.rewards.novice.name"
-    min_score: 100
+    min_score: 150
     commands:
       - "minecraft:give {player} minecraft:iron_ingot 5"
   - name: "sgame.config.rewards.adventurer.name"
-    min_score: 300
+    min_score: 400
     commands:
       - "minecraft:give {player} minecraft:gold_ingot 3"
   - name: "sgame.config.rewards.veteran.name"
-    min_score: 500
+    min_score: 700
     commands:
       - "minecraft:give {player} minecraft:diamond 2"
   - name: "sgame.config.rewards.legendary.name"
-    min_score: 800
+    min_score: 1100
     commands:
       - "minecraft:give {player} minecraft:emerald 5"
-  - name: "sgame.config.rewards.king.name"
-    min_score: 1000
+  - name: "sgame.config.rewards.hero.name"
+    min_score: 1600
     commands:
       - "minecraft:give {player} minecraft:netherite_ingot 1"
+  - name: "sgame.config.rewards.dragonslayer.name"
+    min_score: 2400
+    commands:
+      - "minecraft:give {player} minecraft:netherite_ingot 2"
+      - "minecraft:give {player} minecraft:diamond 8"

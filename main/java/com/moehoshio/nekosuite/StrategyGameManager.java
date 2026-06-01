@@ -22,19 +22,27 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Strategy Game Module - A text-based adventure game with events, battles, and trading.
- * 
+ * Strategy Game Module - "Hero's Legend: Battle of the End"
+ * (勇者傳說：終界之戰) - a chapter-based medieval adventure.
+ *
  * Background Story:
- * In a mystical realm called Nekoria, an ancient darkness threatens the land.
- * Players become brave adventurers who must explore, make choices, fight monsters,
- * and trade with merchants to gather resources and save the kingdom.
- * 
+ * In the fractured continent of Aldoria, the seal binding the End Dragon
+ * (終界龍) has shattered. Villages burn, monsters roam, and the people cry
+ * out for a champion. The player rises as a young hero: setting out from a
+ * ruined village, claiming a legendary artifact, slaying the spiders, zombies
+ * and bandits that plague the land, rescuing villagers, and finally marching on
+ * the dragon's nest to end the calamity once and for all.
+ *
  * Game features:
- * - Virtual currency (Gold Coins) used within the game
- * - Events with multiple choices that affect outcomes
- * - Simulated card-like battles
- * - Trading with NPC merchants
- * - Real rewards given at game end based on progress
+ * - Selectable run length: short (20), medium (30) or long (50) stages,
+ *   chosen by the player or rolled at random.
+ * - Chapter beats anchored by ratio so the story scales to any run length.
+ * - Branching events (story / shop / battle) with choices that can grant gold,
+ *   health, items, permanent stat growth, or a legendary artifact.
+ * - Blacksmith forging/upgrading, inn lodging (full restore), and villager quests.
+ * - Multi-round, stats-driven battles against themed monsters, culminating in
+ *   the multi-phase End Dragon boss.
+ * - Real server rewards granted at the end based on the final score.
  */
 public class StrategyGameManager {
 
@@ -47,7 +55,7 @@ public class StrategyGameManager {
     // Default values for game configuration
     private static final int DEFAULT_STARTING_GOLD = 100;
     private static final int DEFAULT_STARTING_HEALTH = 100;
-    private static final int DEFAULT_MAX_STAGES = 10;
+    private static final int DEFAULT_MAX_STAGES = 30;
     private static final int DEFAULT_ENEMY_POWER = 30;
     private static final int DEFAULT_ENEMY_DAMAGE = 10;
     
@@ -67,6 +75,9 @@ public class StrategyGameManager {
     private int startingAttack = 10;
     private int startingDefense = 5;
     private int startingMagic = 20;
+    // Run-length tiers: key -> stage count (e.g. short=20, medium=30, long=50)
+    private final Map<String, Integer> lengthOptions = new java.util.LinkedHashMap<String, Integer>();
+    private String defaultLengthKey = "medium";
     private final List<GameEvent> gameEvents = new ArrayList<GameEvent>();
     private final List<ShopItem> shopItems = new ArrayList<ShopItem>();
     private final List<BattleEnemy> enemies = new ArrayList<BattleEnemy>();
@@ -92,10 +103,34 @@ public class StrategyGameManager {
     private void loadConfig(YamlConfiguration config) {
         startingGold = config.getInt("game.starting_gold", 100);
         startingHealth = config.getInt("game.starting_health", 100);
-        maxStages = config.getInt("game.max_stages", 10);
+        maxStages = config.getInt("game.max_stages", DEFAULT_MAX_STAGES);
         startingAttack = config.getInt("game.starting_attack", 10);
         startingDefense = config.getInt("game.starting_defense", 5);
         startingMagic = config.getInt("game.starting_magic", 20);
+
+        // Load run-length tiers (short/medium/long -> stage counts).
+        lengthOptions.clear();
+        ConfigurationSection lengthSection = config.getConfigurationSection("game.lengths");
+        if (lengthSection != null) {
+            for (String key : lengthSection.getKeys(false)) {
+                int stages = lengthSection.getInt(key, maxStages);
+                if (stages > 0) {
+                    lengthOptions.put(key, stages);
+                }
+            }
+        }
+        if (lengthOptions.isEmpty()) {
+            // Sensible defaults if not configured.
+            lengthOptions.put("short", 20);
+            lengthOptions.put("medium", 30);
+            lengthOptions.put("long", 50);
+        }
+        defaultLengthKey = config.getString("game.default_length", "medium");
+        if (!lengthOptions.containsKey(defaultLengthKey)) {
+            defaultLengthKey = lengthOptions.keySet().iterator().next();
+        }
+        // Keep the legacy single value in sync with the default tier.
+        maxStages = lengthOptions.get(defaultLengthKey);
 
         // Load events
         gameEvents.clear();
@@ -159,10 +194,32 @@ public class StrategyGameManager {
      * Start a new game session for a player.
      */
     public void startGame(Player player) {
-        startGame(player, "normal");
+        startGame(player, "normal", defaultLengthKey);
     }
-    
+
     public void startGame(Player player, String difficulty) {
+        startGame(player, difficulty, defaultLengthKey);
+    }
+
+    /**
+     * Resolve a length key to a concrete stage count. The special key
+     * "random" picks one of the configured tiers at random.
+     */
+    private int resolveLengthStages(String lengthKey) {
+        if (lengthKey == null) {
+            return maxStages;
+        }
+        if ("random".equalsIgnoreCase(lengthKey)) {
+            List<Integer> values = new ArrayList<Integer>(lengthOptions.values());
+            if (values.isEmpty()) {
+                return maxStages;
+            }
+            return values.get(random.nextInt(values.size()));
+        }
+        return lengthOptions.getOrDefault(lengthKey, maxStages);
+    }
+
+    public void startGame(Player player, String difficulty, String lengthKey) {
         String playerName = player.getName();
         if (activeSessions.containsKey(playerName)) {
             player.sendMessage(messages.format(player, "sgame.already_in_game"));
@@ -190,6 +247,10 @@ public class StrategyGameManager {
         session.setDefense(defense);
         session.setMagic(magic);
         session.setMaxMagic(magic);
+        // Resolve and store the chosen run length for this session.
+        int stages = resolveLengthStages(lengthKey);
+        session.setMaxStages(stages);
+        session.setLengthKey("random".equalsIgnoreCase(lengthKey) ? "random" : lengthKey);
         
         activeSessions.put(playerName, session);
         saveSession(session);
@@ -228,7 +289,7 @@ public class StrategyGameManager {
         map.put("gold", String.valueOf(session.getGold()));
         map.put("health", String.valueOf(session.getHealth()));
         map.put("stage", String.valueOf(session.getCurrentStage()));
-        map.put("max_stage", String.valueOf(maxStages));
+        map.put("max_stage", String.valueOf(session.getMaxStages()));
         map.put("victories", String.valueOf(session.getBattleVictories()));
         player.sendMessage(messages.format(player, "sgame.status", map));
     }
@@ -296,7 +357,7 @@ public class StrategyGameManager {
         }
 
         // Check if player has completed enough stages
-        if (session.getCurrentStage() >= maxStages) {
+        if (session.getCurrentStage() >= session.getMaxStages()) {
             openVictoryMenu(player, session);
             return;
         }
@@ -351,57 +412,41 @@ public class StrategyGameManager {
             });
         safeSet(inv, 4, storyItem);
 
-        // Difficulty selection buttons
-        Map<String, String> easyMap = new HashMap<String, String>();
-        easyMap.put("starting_gold", String.valueOf((int)(startingGold * 1.5)));
-        easyMap.put("starting_health", String.valueOf((int)(startingHealth * 1.3)));
-        easyMap.put("max_stages", String.valueOf(maxStages));
-        easyMap.put("difficulty", messages.format(player, "menu.sgame.difficulty_easy"));
-        
-        ItemStack easyItem = createItem(Material.LIME_WOOL,
-            messages.format(player, "menu.sgame.difficulty_easy"),
-            new String[]{
-                messages.format(player, "menu.sgame.difficulty_easy_desc1"),
-                messages.format(player, "menu.sgame.difficulty_easy_desc2", easyMap),
-                "",
-                messages.format(player, "menu.sgame.click_to_start"),
-                "ID:start_easy"
-            });
-        safeSet(inv, 11, easyItem);
-        
-        Map<String, String> normalMap = new HashMap<String, String>();
-        normalMap.put("starting_gold", String.valueOf(startingGold));
-        normalMap.put("starting_health", String.valueOf(startingHealth));
-        normalMap.put("max_stages", String.valueOf(maxStages));
-        normalMap.put("difficulty", messages.format(player, "menu.sgame.difficulty_normal"));
-        
-        ItemStack normalItem = createItem(Material.YELLOW_WOOL,
-            messages.format(player, "menu.sgame.difficulty_normal"),
-            new String[]{
-                messages.format(player, "menu.sgame.difficulty_normal_desc1"),
-                messages.format(player, "menu.sgame.difficulty_normal_desc2", normalMap),
-                "",
-                messages.format(player, "menu.sgame.click_to_start"),
-                "ID:start_normal"
-            });
-        safeSet(inv, 13, normalItem);
-        
-        Map<String, String> hardMap = new HashMap<String, String>();
-        hardMap.put("starting_gold", String.valueOf((int)(startingGold * 0.7)));
-        hardMap.put("starting_health", String.valueOf((int)(startingHealth * 0.8)));
-        hardMap.put("max_stages", String.valueOf(maxStages));
-        hardMap.put("difficulty", messages.format(player, "menu.sgame.difficulty_hard"));
-        
-        ItemStack hardItem = createItem(Material.RED_WOOL,
-            messages.format(player, "menu.sgame.difficulty_hard"),
-            new String[]{
-                messages.format(player, "menu.sgame.difficulty_hard_desc1"),
-                messages.format(player, "menu.sgame.difficulty_hard_desc2", hardMap),
-                "",
-                messages.format(player, "menu.sgame.click_to_start"),
-                "ID:start_hard"
-            });
-        safeSet(inv, 15, hardItem);
+        // Length tier selection. Each tier opens a difficulty submenu.
+        int[] lengthSlots = {10, 12, 14, 16};
+        String[] lengthKeys = {"short", "medium", "long"};
+        Material[] lengthMats = {Material.LIME_WOOL, Material.YELLOW_WOOL, Material.RED_WOOL};
+        int idx = 0;
+        for (int i = 0; i < lengthKeys.length && idx < lengthSlots.length; i++) {
+            String key = lengthKeys[i];
+            if (!lengthOptions.containsKey(key)) {
+                continue;
+            }
+            Map<String, String> lenMap = new HashMap<String, String>();
+            lenMap.put("stages", String.valueOf(lengthOptions.get(key)));
+            ItemStack lenItem = createItem(lengthMats[i % lengthMats.length],
+                messages.format(player, "menu.sgame.length_" + key),
+                new String[]{
+                    messages.format(player, "menu.sgame.length_" + key + "_desc", lenMap),
+                    messages.format(player, "menu.sgame.length_stages", lenMap),
+                    "",
+                    messages.format(player, "menu.sgame.click_to_choose_difficulty"),
+                    "ID:pick_len_" + key
+                });
+            safeSet(inv, lengthSlots[idx++], lenItem);
+        }
+        // Random length option
+        if (idx < lengthSlots.length) {
+            ItemStack randomItem = createItem(Material.ENDER_PEARL,
+                messages.format(player, "menu.sgame.length_random"),
+                new String[]{
+                    messages.format(player, "menu.sgame.length_random_desc"),
+                    "",
+                    messages.format(player, "menu.sgame.click_to_choose_difficulty"),
+                    "ID:pick_len_random"
+                });
+            safeSet(inv, lengthSlots[idx++], randomItem);
+        }
 
         // Navigation button (back to main menu) - slot before close button
         int navSlot = layout.getCloseSlot() > 0 ? layout.getCloseSlot() - 1 : DEFAULT_NAV_SLOT;
@@ -423,6 +468,70 @@ public class StrategyGameManager {
     }
 
     /**
+     * Second step of the start flow: choose a difficulty for the previously
+     * selected run length. Button IDs encode both as start_&lt;difficulty&gt;_&lt;length&gt;.
+     */
+    private void openDifficultyMenu(Player player, String lengthKey) {
+        MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+        String title = messages.format(player, "menu.sgame.difficulty_select_title");
+        Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.START_GAME), layout.getSize(), title);
+
+        int stages = resolveLengthStages(lengthKey);
+        // For the "random" tier we cannot show a fixed number ahead of time.
+        String stagesLabel = "random".equalsIgnoreCase(lengthKey)
+            ? messages.format(player, "menu.sgame.length_random")
+            : String.valueOf(stages);
+
+        ItemStack infoItem = createItem(Material.WRITTEN_BOOK,
+            messages.format(player, "menu.sgame.difficulty_select_title"),
+            new String[]{
+                messages.format(player, "menu.sgame.length_" + ("random".equalsIgnoreCase(lengthKey) ? "random" : lengthKey)),
+                "&7" + stagesLabel
+            });
+        safeSet(inv, 4, infoItem);
+
+        String[] difficulties = {"easy", "normal", "hard"};
+        Material[] diffMats = {Material.LIME_WOOL, Material.YELLOW_WOOL, Material.RED_WOOL};
+        int[] diffSlots = {11, 13, 15};
+        for (int i = 0; i < difficulties.length; i++) {
+            String diff = difficulties[i];
+            double goldMul = "easy".equals(diff) ? 1.5 : ("hard".equals(diff) ? 0.7 : 1.0);
+            double hpMul = "easy".equals(diff) ? 1.3 : ("hard".equals(diff) ? 0.8 : 1.0);
+            Map<String, String> dMap = new HashMap<String, String>();
+            dMap.put("starting_gold", String.valueOf((int)(startingGold * goldMul)));
+            dMap.put("starting_health", String.valueOf((int)(startingHealth * hpMul)));
+            dMap.put("max_stages", stagesLabel);
+            ItemStack dItem = createItem(diffMats[i],
+                messages.format(player, "menu.sgame.difficulty_" + diff),
+                new String[]{
+                    messages.format(player, "menu.sgame.difficulty_" + diff + "_desc1"),
+                    messages.format(player, "menu.sgame.difficulty_" + diff + "_desc2", dMap),
+                    "",
+                    messages.format(player, "menu.sgame.click_to_start"),
+                    "ID:start_" + diff + "_" + lengthKey
+                });
+            safeSet(inv, diffSlots[i], dItem);
+        }
+
+        // Back to length selection
+        int navSlot = layout.getCloseSlot() > 0 ? layout.getCloseSlot() - 1 : DEFAULT_NAV_SLOT;
+        ItemStack backItem = createItem(Material.COMPASS,
+            messages.format(player, "menu.sgame.back"),
+            new String[]{
+                messages.format(player, "menu.sgame.back"),
+                "ID:back_to_length"
+            });
+        safeSet(inv, navSlot, backItem);
+
+        ItemStack closeItem = createItem(Material.BARRIER,
+            messages.format(player, "menu.sgame.close"),
+            new String[]{"ID:close"});
+        safeSet(inv, layout.getCloseSlot(), closeItem);
+
+        player.openInventory(inv);
+    }
+
+    /**
      * Open victory menu when player completes all stages.
      */
     private void openVictoryMenu(Player player, GameSession session) {
@@ -435,7 +544,7 @@ public class StrategyGameManager {
         statusMap.put("gold", String.valueOf(session.getGold()));
         statusMap.put("health", String.valueOf(session.getHealth()));
         statusMap.put("stage", String.valueOf(session.getCurrentStage()));
-        statusMap.put("max_stage", String.valueOf(maxStages));
+        statusMap.put("max_stage", String.valueOf(session.getMaxStages()));
         statusMap.put("victories", String.valueOf(session.getVictories()));
         
         ItemStack statusItem = createItem(Material.BOOK, 
@@ -496,7 +605,7 @@ public class StrategyGameManager {
         statusMap.put("defense", String.valueOf(session.getDefense() + getEquipmentDefenseBonus(session)));
         statusMap.put("magic", String.valueOf(session.getMagic()));
         statusMap.put("stage", String.valueOf(session.getCurrentStage()));
-        statusMap.put("max_stage", String.valueOf(maxStages));
+        statusMap.put("max_stage", String.valueOf(session.getMaxStages()));
         
         ItemStack statusItem = createItem(Material.BOOK, 
             messages.format(player, "menu.sgame.status_title", statusMap),
@@ -1427,17 +1536,42 @@ public class StrategyGameManager {
      * Handle clicks in the start game menu.
      */
     private void handleStartGameMenuClick(Player player, String id) {
-        if ("start_easy".equals(id)) {
+        if (id == null) {
+            return;
+        }
+        if ("close".equals(id)) {
             player.closeInventory();
-            startGame(player, "easy");
-        } else if ("start_normal".equals(id) || "start_new_game".equals(id)) {
+            return;
+        }
+        if ("back_to_length".equals(id)) {
+            openStartGameMenu(player);
+            return;
+        }
+        // Step 1: a length tier was chosen -> open difficulty submenu.
+        if (id.startsWith("pick_len_")) {
+            String lengthKey = id.substring("pick_len_".length());
+            openDifficultyMenu(player, lengthKey);
+            return;
+        }
+        // Step 2: difficulty + length chosen -> start the game.
+        if (id.startsWith("start_")) {
+            String rest = id.substring("start_".length());
+            String difficulty;
+            String lengthKey;
+            int sep = rest.indexOf('_');
+            if (sep >= 0) {
+                difficulty = rest.substring(0, sep);
+                lengthKey = rest.substring(sep + 1);
+            } else {
+                // Backwards-compatible: "start_easy" / "start_normal" / "start_hard".
+                difficulty = "start_new_game".equals(id) ? "normal" : rest;
+                lengthKey = defaultLengthKey;
+            }
+            if (!"easy".equals(difficulty) && !"normal".equals(difficulty) && !"hard".equals(difficulty)) {
+                difficulty = "normal";
+            }
             player.closeInventory();
-            startGame(player, "normal");
-        } else if ("start_hard".equals(id)) {
-            player.closeInventory();
-            startGame(player, "hard");
-        } else if ("close".equals(id)) {
-            player.closeInventory();
+            startGame(player, difficulty, lengthKey);
         }
     }
 
@@ -1874,6 +2008,52 @@ public class StrategyGameManager {
         
         session.addGold(goldChange);
         session.addHealth(healthChange);
+
+        // Apply permanent progression rewards (only on the primary outcome).
+        if (!useAltResult) {
+            if (choice.getMaxHealthChange() != 0) {
+                session.setMaxHealth(Math.max(1, session.getMaxHealth() + choice.getMaxHealthChange()));
+                if (choice.getMaxHealthChange() > 0) {
+                    session.addHealth(choice.getMaxHealthChange());
+                }
+            }
+            if (choice.getMaxMagicChange() != 0) {
+                session.setMaxMagic(Math.max(0, session.getMaxMagic() + choice.getMaxMagicChange()));
+                if (choice.getMaxMagicChange() > 0) {
+                    session.addMagic(choice.getMaxMagicChange());
+                }
+            }
+            if (choice.getAttackChange() != 0) {
+                session.addAttack(choice.getAttackChange());
+            }
+            if (choice.getDefenseChange() != 0) {
+                session.addDefense(choice.getDefenseChange());
+            }
+            if (choice.getMagicChange() != 0) {
+                session.addMagic(choice.getMagicChange());
+            }
+            // Inn lodging: fully restore health and magic.
+            if (choice.isRestoreFull()) {
+                session.setHealth(session.getMaxHealth());
+                session.setMagic(session.getMaxMagic());
+            }
+            // Grant (and auto-equip) a piece of equipment, e.g. a legendary artifact.
+            if (choice.hasEquipGrant()) {
+                Equipment granted = findEquipment(choice.getEquipGrant());
+                if (granted != null) {
+                    if ("weapon".equals(granted.getSlot())) {
+                        session.setEquippedWeapon(granted.getId());
+                    } else if ("armor".equals(granted.getSlot())) {
+                        session.setEquippedArmor(granted.getId());
+                    } else {
+                        session.setEquippedAccessory(granted.getId());
+                    }
+                    Map<String, String> artMap = new HashMap<String, String>();
+                    artMap.put("item", resolveI18n(player, granted.getName()));
+                    player.sendMessage(messages.format(player, "sgame.artifact_gained", artMap));
+                }
+            }
+        }
         
         // Add gained items
         if (choice.getItemGain() != null && !choice.getItemGain().isEmpty() && !useAltResult) {
@@ -2579,10 +2759,11 @@ public class StrategyGameManager {
      */
     private List<GameEvent> selectEventsForStage(GameSession session, int count) {
         int currentStage = session.getCurrentStage();
+        int runStages = session.getMaxStages();
         
         // First, check for exclusive fixed-stage events (like final boss)
         for (GameEvent event : gameEvents) {
-            if (event.hasFixedStage() && event.getFixedStage() == currentStage && event.isExclusive()) {
+            if (event.hasFixedStage() && event.getEffectiveFixedStage(runStages) == currentStage && event.isExclusive()) {
                 // This is an exclusive event for this stage - only return this event
                 List<GameEvent> exclusive = new ArrayList<GameEvent>();
                 exclusive.add(event);
@@ -2602,7 +2783,7 @@ public class StrategyGameManager {
         
         for (GameEvent event : gameEvents) {
             // Skip events with fixed stages that don't match current stage
-            if (event.hasFixedStage() && event.getFixedStage() != currentStage) {
+            if (event.hasFixedStage() && event.getEffectiveFixedStage(runStages) != currentStage) {
                 continue;
             }
             
@@ -2621,7 +2802,7 @@ public class StrategyGameManager {
             }
             
             // If this is a fixed-stage event for current stage, add to priority list
-            if (event.hasFixedStage() && event.getFixedStage() == currentStage) {
+            if (event.hasFixedStage() && event.getEffectiveFixedStage(runStages) == currentStage) {
                 fixedForThisStage.add(event);
             }
             
@@ -2799,6 +2980,8 @@ public class StrategyGameManager {
             data.getInt("sgame.health", startingHealth));
         session.setMaxHealth(data.getInt("sgame.max_health", startingHealth));
         session.setCurrentStage(data.getInt("sgame.current_stage", 0));
+        session.setMaxStages(data.getInt("sgame.max_stages", maxStages));
+        session.setLengthKey(data.getString("sgame.length", defaultLengthKey));
         session.setBattleVictories(data.getInt("sgame.battle_victories", 0));
         session.setEnded(data.getBoolean("sgame.ended", false));
         session.setCurrentEventId(data.getString("sgame.current_event_id", null));
@@ -2862,6 +3045,8 @@ public class StrategyGameManager {
         data.set("sgame.health", session.getHealth());
         data.set("sgame.max_health", session.getMaxHealth());
         data.set("sgame.current_stage", session.getCurrentStage());
+        data.set("sgame.max_stages", session.getMaxStages());
+        data.set("sgame.length", session.getLengthKey());
         data.set("sgame.battle_victories", session.getBattleVictories());
         data.set("sgame.ended", session.isEnded());
         data.set("sgame.current_event_id", session.getCurrentEventId());
@@ -2957,6 +3142,8 @@ public class StrategyGameManager {
         private int health;
         private int maxHealth;
         private int currentStage;
+        private int maxStages;       // Total stages for this run (length tier)
+        private String lengthKey;    // Chosen length tier key (short/medium/long/random)
         private int battleVictories;
         private boolean ended;
         private String currentEventId;
@@ -3006,6 +3193,8 @@ public class StrategyGameManager {
             this.health = health;
             this.maxHealth = health;
             this.currentStage = 0;
+            this.maxStages = DEFAULT_MAX_STAGES;
+            this.lengthKey = "medium";
             this.battleVictories = 0;
             this.ended = false;
             this.inventory = new HashMap<String, Integer>();
@@ -3040,6 +3229,10 @@ public class StrategyGameManager {
         void setMaxHealth(int maxHealth) { this.maxHealth = maxHealth; }
         int getCurrentStage() { return currentStage; }
         void setCurrentStage(int stage) { this.currentStage = stage; }
+        int getMaxStages() { return maxStages; }
+        void setMaxStages(int maxStages) { this.maxStages = maxStages > 0 ? maxStages : DEFAULT_MAX_STAGES; }
+        String getLengthKey() { return lengthKey; }
+        void setLengthKey(String lengthKey) { this.lengthKey = lengthKey != null ? lengthKey : "medium"; }
         void incrementStage() { 
             this.currentStage++; 
             // Clear current stage events so new ones are generated for next stage
@@ -3286,13 +3479,14 @@ public class StrategyGameManager {
         private final List<String> followupEvents; // Events that get boosted weight after this one
         private final List<String> prerequisiteEvents; // Must have visited these events first
         private final int fixedStage; // Stage where this event MUST appear (-1 = no fixed stage)
+        private final double fixedStageRatio; // Relative beat position 0..1 (-1 = unused). Scales with run length.
         private final boolean exclusive; // If true, only this event appears at fixed stage
         private final String enemyId; // Specific enemy for battle events (null = random)
 
         GameEvent(String id, String name, List<String> description, List<EventChoice> choices, 
                   String eventType, EventRequirement requirement, int weight, 
                   List<String> followupEvents, List<String> prerequisiteEvents,
-                  int fixedStage, boolean exclusive, String enemyId) {
+                  int fixedStage, double fixedStageRatio, boolean exclusive, String enemyId) {
             this.id = id;
             this.name = name;
             this.description = description != null ? description : new ArrayList<String>();
@@ -3303,6 +3497,7 @@ public class StrategyGameManager {
             this.followupEvents = followupEvents != null ? followupEvents : new ArrayList<String>();
             this.prerequisiteEvents = prerequisiteEvents != null ? prerequisiteEvents : new ArrayList<String>();
             this.fixedStage = fixedStage;
+            this.fixedStageRatio = fixedStageRatio;
             this.exclusive = exclusive;
             this.enemyId = enemyId;
         }
@@ -3316,6 +3511,7 @@ public class StrategyGameManager {
             List<String> followups = section.getStringList("followup_events");
             List<String> prereqs = section.getStringList("prerequisite_events");
             int fixedStage = section.getInt("fixed_stage", -1);
+            double fixedStageRatio = section.getDouble("fixed_stage_ratio", -1.0);
             boolean exclusive = section.getBoolean("exclusive", false);
             String enemyId = section.getString("enemy_id", null);
             
@@ -3328,7 +3524,7 @@ public class StrategyGameManager {
                 }
             }
             
-            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs, fixedStage, exclusive, enemyId);
+            return new GameEvent(id, name, desc, choices, eventType, requirement, weight, followups, prereqs, fixedStage, fixedStageRatio, exclusive, enemyId);
         }
 
         String getId() { return id; }
@@ -3343,7 +3539,25 @@ public class StrategyGameManager {
         List<String> getPrerequisiteEvents() { return prerequisiteEvents; }
         boolean hasPrerequisites() { return !prerequisiteEvents.isEmpty(); }
         int getFixedStage() { return fixedStage; }
-        boolean hasFixedStage() { return fixedStage >= 0; }
+        boolean hasFixedStage() { return fixedStage >= 0 || fixedStageRatio >= 0.0; }
+        /**
+         * Resolve the concrete stage this beat anchors to for a run of the given
+         * length. Ratio beats scale with the run length (0 -> first stage,
+         * 1 -> last stage); absolute fixed_stage takes precedence when set.
+         */
+        int getEffectiveFixedStage(int maxStages) {
+            if (fixedStage >= 0) {
+                return fixedStage;
+            }
+            if (fixedStageRatio >= 0.0) {
+                int last = Math.max(0, maxStages - 1);
+                int stage = (int) Math.round(fixedStageRatio * last);
+                if (stage < 0) stage = 0;
+                if (stage > last) stage = last;
+                return stage;
+            }
+            return -1;
+        }
         boolean isExclusive() { return exclusive; }
         String getEnemyId() { return enemyId; }
         boolean hasEnemyId() { return enemyId != null && !enemyId.isEmpty(); }
@@ -3445,11 +3659,21 @@ public class StrategyGameManager {
         private final String itemCost; // Item consumed by this choice
         private final int itemCostAmount;
         private final EventRequirement requirement;
+        // Permanent progression rewards
+        private final int attackChange;
+        private final int defenseChange;
+        private final int magicChange;
+        private final int maxHealthChange;
+        private final int maxMagicChange;
+        private final String equipGrant;   // Equipment id granted (and auto-equipped) by this choice
+        private final boolean restoreFull; // Inn lodging: fully restore health & magic
 
         EventChoice(String text, String resultText, String resultTextAlt, 
                    int goldChange, int healthChange, int goldChangeAlt, int healthChangeAlt,
                    String itemGain, int itemGainAmount, String itemCost, int itemCostAmount,
-                   EventRequirement requirement) {
+                   EventRequirement requirement,
+                   int attackChange, int defenseChange, int magicChange,
+                   int maxHealthChange, int maxMagicChange, String equipGrant, boolean restoreFull) {
             this.text = text != null ? text : "選擇";
             this.resultText = resultText != null ? resultText : "";
             this.resultTextAlt = resultTextAlt;
@@ -3462,6 +3686,13 @@ public class StrategyGameManager {
             this.itemCost = itemCost;
             this.itemCostAmount = itemCostAmount > 0 ? itemCostAmount : 1;
             this.requirement = requirement;
+            this.attackChange = attackChange;
+            this.defenseChange = defenseChange;
+            this.magicChange = magicChange;
+            this.maxHealthChange = maxHealthChange;
+            this.maxMagicChange = maxMagicChange;
+            this.equipGrant = equipGrant;
+            this.restoreFull = restoreFull;
         }
 
         static EventChoice fromMap(Map<?, ?> raw) {
@@ -3479,6 +3710,13 @@ public class StrategyGameManager {
             int itemGainAmt = parseInt(raw.get("item_gain_amount"));
             String itemCost = raw.get("item_cost") != null ? raw.get("item_cost").toString() : null;
             int itemCostAmt = parseInt(raw.get("item_cost_amount"));
+            int attackChange = parseInt(raw.get("attack_change"));
+            int defenseChange = parseInt(raw.get("defense_change"));
+            int magicChange = parseInt(raw.get("magic_change"));
+            int maxHealthChange = parseInt(raw.get("max_health_change"));
+            int maxMagicChange = parseInt(raw.get("max_magic_change"));
+            String equipGrant = raw.get("equip_grant") != null ? raw.get("equip_grant").toString() : null;
+            boolean restoreFull = raw.get("restore_full") != null && Boolean.parseBoolean(raw.get("restore_full").toString());
             
             EventRequirement req = null;
             if (raw.get("requirement") instanceof Map) {
@@ -3486,7 +3724,9 @@ public class StrategyGameManager {
             }
             
             return new EventChoice(text, result, resultAlt, gold, health, goldAlt, healthAlt, 
-                                  itemGain, itemGainAmt, itemCost, itemCostAmt, req);
+                                  itemGain, itemGainAmt, itemCost, itemCostAmt, req,
+                                  attackChange, defenseChange, magicChange, maxHealthChange,
+                                  maxMagicChange, equipGrant, restoreFull);
         }
 
         String getText() { return text; }
@@ -3503,6 +3743,14 @@ public class StrategyGameManager {
         EventRequirement getRequirement() { return requirement; }
         boolean hasRequirement() { return requirement != null; }
         boolean hasAltResult() { return resultTextAlt != null && !resultTextAlt.isEmpty(); }
+        int getAttackChange() { return attackChange; }
+        int getDefenseChange() { return defenseChange; }
+        int getMagicChange() { return magicChange; }
+        int getMaxHealthChange() { return maxHealthChange; }
+        int getMaxMagicChange() { return maxMagicChange; }
+        String getEquipGrant() { return equipGrant; }
+        boolean hasEquipGrant() { return equipGrant != null && !equipGrant.isEmpty(); }
+        boolean isRestoreFull() { return restoreFull; }
     }
 
     private static class ShopItem {

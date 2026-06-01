@@ -126,6 +126,15 @@ commands:
 
 ---
 
+## 小遊戲開發
+
+NekoSuite 內建多個小遊戲，其**故事設定、玩法規則、配置項與各自的開發進度／待辦**集中記錄於 [`docs/minigames/`](minigames/README.md)，每個小遊戲擁有獨立文檔，可各自迭代補充。整體進度與剩餘工作索引見 [`docs/TODO.md`](TODO.md)。
+
+- 共用架構基礎（Manager、命令分派、GUI、i18n、配置熱重載、經濟獎勵）與共用故事基礎：見 [`docs/minigames/README.md`](minigames/README.md)。
+- 新增小遊戲時，請依該檔末段的「新增一個小遊戲的步驟」操作，並同步維護對應單檔文檔與 [`docs/TODO.md`](TODO.md)。
+
+---
+
 ## 配置與國際化
 
 - 配置檔位於 `main/resources/*.yml`，首次啟動會複製到插件資料夾；修改後須重載 `/nekoreload`。

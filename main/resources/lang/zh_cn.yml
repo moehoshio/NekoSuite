@@ -164,13 +164,24 @@ menu:
     info_title: "&7邮件信息 &8({page}/{total_pages})"
     info_lore: "&7未读: &a{unread} &8| &7待领取: &6{unclaimed}"
   sgame:
-    title: "&#ffcc00✦ 猫咪王国冒险"
-    victory_title: "&#ffcc00✦ 冒险成功！"
-    start_game_title: "&#ffcc00✦ 开始冒险"
-    story_title: "&6✦ 猫咪王国传说"
-    story_desc1: "&7在神秘的猫咪王国「喵科利亚」中..."
-    story_desc2: "&7一股古老的黑暗力量正在威胁这片土地。"
-    story_desc3: "&7作为冒险者，你的使命是拯救王国！"
+    title: "&#ffcc00✦ 勇者传说：终界之战"
+    victory_title: "&#ffcc00✦ 终界龙已伏诛！"
+    start_game_title: "&#ffcc00✦ 踏上征途"
+    story_title: "&6✦ 勇者传说"
+    story_desc1: "&7怪潮焚毁黎明村，你是唯一的幸存勇者。"
+    story_desc2: "&7寻得失传神器，斩妖除魔，拯救苍生。"
+    story_desc3: "&7最终，与终界龙决一死战！"
+    length_short: "&a✦ 短程征途"
+    length_short_desc: "&7轻装速战，剧情紧凑"
+    length_medium: "&e✦ 中程征途"
+    length_medium_desc: "&7张弛有度，最为均衡"
+    length_long: "&c✦ 长程征途"
+    length_long_desc: "&7漫漫长路，史诗体验"
+    length_random: "&d✦ 随机征途"
+    length_random_desc: "&7命运未知，每局皆不同"
+    length_stages: "&7关卡数: &a{stages}"
+    click_to_choose_difficulty: "&e点击选择难度"
+    difficulty_select_title: "&#ffcc00✦ 选择难度"
     start_button: "&a✦ 开始新冒险"
     start_button_lore1: "&7起始金币: &6{starting_gold}"
     start_button_lore2: "&7起始生命: &c{starting_health}"
@@ -226,6 +237,14 @@ menu:
     equip_slot_accessory: "&f饰品槽"
     equip_empty: "&7空"
     equip_click_to_change: "&e点击更换装备"
+    # Event confirmation menu i18n
+    confirm_choices_preview: "&7可选择的选项:"
+    confirm_enter_event: "&a✔ 确认进入"
+    confirm_enter_lore: "&7确认选择此事件并开始"
+    back_to_selection: "&c✖ 返回选择"
+    back_to_selection_lore: "&7返回事件选择列表"
+    confirm_warning: "&e⚠ 注意"
+    confirm_warning_lore: "&7一旦确认进入，必须完成事件"
     # Event selection i18n
     event_type_lore: "&7类型: {type}"
     type_story: "&a剧情"
@@ -302,6 +321,12 @@ menu:
     small_potion_name: "&a小型治疗药水"
     small_potion_effect: "&7恢复 25 点生命值"
     large_potion_name: "&a大型治疗药水"
+    large_potion_effect: "&7恢复 50 点生命值"
+    magic_potion_name: "&d魔法药水"
+    magic_potion_effect: "&7恢复 15 点魔法值"
+    item_count: "&7数量: &f{count}"
+    click_to_use: "&e点击使用"
+    back_to_battle_lore: "&7返回战斗选择"
   rtpgame:
     title: "&#60a5fa✦ 随机传送挑战"
     status_title: "&#60a5fa✦ 挑战进行中"
@@ -752,13 +777,14 @@ sgame:
   game_already_ended: "&e⚠ &7此游戏已结束。使用 &f/sgame start &7开始新游戏。"
   game_started: "&a✔ &7新的冒险开始了！"
   story_intro: |-
-    &8&m─────────────&r &6✦ 猫咪王国冒险 ✦ &8&m─────────────&r
-    &7在神秘的猫咪王国「喵科利亚」中...
-    &7一股古老的黑暗力量正在威胁这片土地。
-    &7作为一名勇敢的冒险者，你必须探索这片土地，
-    &7做出明智的选择，战胜怪物，与商人交易，
-    &7收集资源来拯救王国！
+    &8&m─────────────&r &6✦ 勇者传说：终界之战 ✦ &8&m─────────────&r
+    &7烽火燃起，怪潮自黑森林涌出，黎明村化为焦土。
+    &7身为村中幸存的年轻人，你踏上了讨伐之路。
+    &7沿途你将寻得失传的神器，斩杀盘踞大陆的妖魔，
+    &7在烽火与抉择之间拯救一座座村庄，
+    &7直至与引发终界灾厄的元凶——终界龙，决一死战！
     &8&m───────────────────────────────────&r
+  artifact_gained: "&6✦ &7你获得了神器: &e{item}&7！"
   game_ended: "&a✔ &7冒险结束！获得奖励: &6{rewards}"
   game_abandoned: "&c✖ &7你放弃了这次冒险，没有获得奖励。"
   game_over_health: "&c✖ &7你的生命值耗尽了...冒险结束！"
@@ -815,361 +841,575 @@ sgame:
   # Config texts - Events
   config:
     events:
-      mysterious_merchant:
-        name: "&6神秘商人"
-        desc1: "&7你在路上遇到一位神秘的商人..."
-        desc2: "&7他似乎有些东西想交易。"
+      village_under_attack:
+        name: '&c✦ 烈焰村庄'
+        desc1: '&7破晓时分，怪潮自黑森林涌出，黎明村陷入火海。'
+        desc2: '&7父老在烈焰中倒下，孩童的哭声撕裂晨雾。'
+        desc3: '&7身为村中唯一还能握剑的年轻人——你别无退路。'
         choice1:
-          text: "&a与他交易"
-          result: "&7商人很高兴，给了你一些金币作为回报！"
+          text: '&f挺身而出，正面迎敌'
+          result: '&7你挥舞断剑杀入火场，身上添了伤，却也悟得杀意。村民因你而得救。'
         choice2:
-          text: "&c忽略他离开"
-          result: "&7你继续你的旅程，什么也没发生。"
+          text: '&f先护送老弱撤离'
+          result: '&7你背起伤者冲出火巷，村民塞给你一袋盘缠聊表谢意。'
         choice3:
-          text: "&e尝试抢劫"
-          result: "&c商人是个伪装的盗贼！你被攻击了！"
-      injured_traveler:
-        name: "&b受伤的旅人"
-        desc1: "&7路边躺着一个受伤的旅人..."
-        desc2: "&7他似乎需要帮助。"
+          text: '&f趁乱搜刮可用之物'
+          result: '&7你在废墟中翻出财物与补给，虽遭村民侧目，行囊却充实了不少。'
+      veteran_knight:
+        name: '&e✦ 隐居的老骑士'
+        desc1: '&7林间木屋里，住着一位断臂的老骑士。'
+        desc2: '&7他凝视你良久，缓缓道出尘封的传说与一张残破地图。'
         choice1:
-          text: "&a帮助他 (使用治疗药水)"
-          result: "&7旅人非常感激，给了你丰厚的报酬！"
-          result_alt: "&7你尽力帮助了他，他给了你一些金币。"
+          text: '&f聆听他的教诲'
+          result: '&7老骑士传授你防身之道与神器祭坛的方位，临别还为你裹伤。'
         choice2:
-          text: "&e查看他的背包"
-          result: "&7你发现了一些金币，但感觉有些不安..."
+          text: '&f只求那张地图'
+          result: '&7你以几枚银币换得地图，老骑士摇头叹息，却未阻拦。'
+      artifact_altar:
+        name: '&6✦ 神器祭坛'
+        desc1: '&7祭坛深藏于远古遗迹，三道神光自石座升腾。'
+        desc2: '&7传说中沉睡的神器，正等待有缘的勇者。'
+        desc3: '&7你只能带走其中一件——选择，将定义你的战斗之道。'
+        choice1:
+          text: '&b取【圣剑·黎明】'
+          result: '&7剑光如朝阳迸发，攻防兼备。你成为一名正统的剑士。'
+        choice2:
+          text: '&a取【破晓之弓】'
+          result: '&7弓弦震颤，灵力流转。你成为精于远射与法术的游侠。'
         choice3:
-          text: "&c离开"
-          result: "&7你继续赶路。"
-      ancient_shrine:
-        name: "&d古老的神殿"
-        desc1: "&7你发现了一座古老的神殿..."
-        desc2: "&7神殿中央有一个祭坛。"
-        fail_text: "&c你需要至少20金币才能进入神殿"
+          text: '&c取【裂地战斧】'
+          result: '&7战斧轰然落地，杀气滔天。你成为摧枯拉朽的狂战士。'
+      mid_rest_camp:
+        name: '&a✦ 旅途营地'
+        desc1: '&7行至半途，你在溪畔扎下营地。'
+        desc2: '&7篝火劈啪作响，是难得喘息的时刻。'
         choice1:
-          text: "&a献上金币祈祷 (花费20金币)"
-          result: "&7神明保佑了你，恢复了生命力！"
+          text: '&f好好睡上一觉（-20金币）'
+          result: '&7你付钱向过路商队买来热食与毛毯，彻底恢复了状态。'
         choice2:
-          text: "&e探索神殿"
-          result: "&7你找到了一些宝物！"
+          text: '&f静心调息'
+          result: '&7你打坐冥想，生命与魔力都有所回复。'
         choice3:
-          text: "&c离开神殿"
-          result: "&7你尊重这个地方，继续前进。"
-      forest_crossroads:
-        name: "&2森林岔路"
-        desc1: "&7你来到了一个分岔路口..."
-        desc2: "&7左边看起来很阴暗，右边阳光明媚。"
+          text: '&f擦拭与保养装备'
+          result: '&7你细细打磨甲胄，防御更为扎实。'
+      blood_moon_omen:
+        name: '&4✦ 血月凶兆'
+        desc1: '&7夜空被染成血色，远方传来巨龙的低吼。'
+        desc2: '&7怪物因血月而狂暴，这是抉择的时刻。'
         choice1:
-          text: "&a走右边的路"
-          result: "&7安全的道路，你找到了一些金币。"
+          text: '&f逆月而行，磨砺杀意'
+          result: '&7你在血月下与群怪死战，伤痕累累，剑意却臻至新境。'
         choice2:
-          text: "&c走左边的路 (需要护身符)"
-          result: "&7护身符保护了你，你发现了大量宝藏！"
-          result_alt: "&7危险的道路，你受伤了但找到了一些宝物。"
+          text: '&f据守高地，稳扎稳打'
+          result: '&7你选择固守，养精蓄锐，防御与心神俱稳。'
         choice3:
-          text: "&e原路返回"
-          result: "&7你决定谨慎行事。"
-      treasure_chest:
-        name: "&6宝箱"
-        desc1: "&7你发现了一个闪闪发光的宝箱！"
-        desc2: "&7你会如何处理它？"
+          text: '&f趁乱洗劫废弃营寨'
+          result: '&7你冒险搜刮，满载而归，也付出了流血的代价。'
+      dragon_road:
+        name: '&5✦ 龙巢之路'
+        desc1: '&7终界的气息扑面而来，脚下是通往龙巢的最后一段险径。'
+        desc2: '&7在踏入死地之前，你还有时间做最后的准备。'
         choice1:
-          text: "&a小心地打开"
-          result: "&7你成功避开陷阱，获得了奖励！"
+          text: '&f拾取龙巢散落的鳞片'
+          result: '&7你捡起一片坚硬的龙鳞，这是锻造神兵的绝佳材料。'
         choice2:
-          text: "&e直接打开"
-          result: "&c触发了陷阱！但里面的宝物很丰富。"
+          text: '&f在前哨补给站歇脚（-15金币）'
+          result: '&7你付费彻底休整，以最佳状态迎接决战。'
         choice3:
-          text: "&c不碰它离开"
-          result: "&7安全第一。"
-      village_festival:
-        name: "&e村庄庆典"
-        desc1: "&7你路过一个正在举办庆典的村庄。"
-        desc2: "&7村民们很热情地邀请你参加。"
-        choice1:
-          text: "&a参加庆典 (花费10金币)"
-          result: "&7你度过了愉快的时光，恢复了精力！"
-        choice2:
-          text: "&e表演赚钱"
-          result: "&7村民们很喜欢你的表演！"
-        choice3:
-          text: "&c继续赶路"
-          result: "&7你没有时间休息。"
-      secret_vault:
-        name: "&5秘密金库"
-        desc1: "&7你发现了一个隐藏的金库入口！"
-        desc2: "&7需要钥匙才能打开。"
-        fail_text: "&c你需要一把宝藏钥匙才能进入"
-        choice1:
-          text: "&a使用钥匙开门"
-          result: "&7金库里满是财宝！你发财了！"
-        choice2:
-          text: "&c离开"
-          result: "&7你决定保留钥匙，以后再来。"
-      traveling_merchant_shop:
-        name: "&6旅行商人的商店"
-        desc1: "&7一位旅行商人愿意与你交易..."
-        desc2: "&7他有一些特殊的物品出售。"
-        fail_text: "&c需要商人代币才能进入特别商店"
-        choice1:
-          text: "&a查看商品"
-          result: "&7欢迎光临！"
-      monster_ambush:
-        name: "&c怪物伏击"
-        desc1: "&7你走进了一个黑暗的区域..."
-        desc2: "&7突然，一个怪物从暗处跳出！"
-        choice1:
-          text: "&c准备战斗"
-          result: "&7你拔出武器准备迎战！"
-      blacksmith_shop:
-        name: "&8铁匠铺"
-        desc1: "&7你来到了一间铁匠铺。"
-        desc2: "&7这里有各种装备可以购买。"
-        choice1:
-          text: "&a浏览装备"
-          result: "&7欢迎来到我的铁匠铺！"
-      # 新增战斗事件
-      goblin_camp:
-        name: "&2哥布林营地"
-        desc1: "&7你发现了一个哥布林的营地..."
-        desc2: "&c几只哥布林注意到了你的存在！"
-        choice1:
-          text: "&c准备战斗"
-          result: "&7哥布林们向你冲来！"
-      dungeon_entrance:
-        name: "&8地下城入口"
-        desc1: "&7你发现了一个神秘的地下城入口..."
-        desc2: "&c里面传来阴森的声音！"
-        choice1:
-          text: "&c进入探索"
-          result: "&7你鼓起勇气踏入黑暗..."
-      haunted_graveyard:
-        name: "&5闹鬼墓地"
-        desc1: "&7一片阴森的墓地出现在眼前..."
-        desc2: "&c不死生物在墓碑间游荡！"
-        choice1:
-          text: "&c迎战亡灵"
-          result: "&7骷髅从坟墓中爬出！"
-      dragon_lair_entrance:
-        name: "&4龙穴入口"
-        desc1: "&c前方是传说中的龙穴..."
-        desc2: "&4空气中弥漫着危险的气息！"
-        choice1:
-          text: "&c挑战巨龙"
-          result: "&4巨龙的咆哮震动了整个洞穴！"
-      # 新增剧情事件
-      wandering_minstrel:
-        name: "&d流浪诗人"
-        desc1: "&7一位流浪诗人正在路边弹奏..."
-        desc2: "&7他的音乐令人心旷神怡。"
-        choice1:
-          text: "&a给予小费 (花费10金币)"
-          result: "&7诗人为你演奏了一曲疗愈之歌！"
-        choice2:
-          text: "&c继续赶路"
-          result: "&7你点头致意后继续前行。"
-        choice3:
-          text: "&e请他预言命运"
-          result: "&7诗人告诉你前方的危险，你获得了情报奖励！"
-      abandoned_mine:
-        name: "&8废弃矿坑"
-        desc1: "&7你发现了一座废弃的矿坑..."
-        desc2: "&7里面似乎还有未开采的矿石。"
-        choice1:
-          text: "&a冒险开采"
-          result: "&7你发现了矿石，但也遇到了一些危险！"
-        choice2:
-          text: "&c离开"
-          result: "&7你决定不冒这个险。"
-        choice3:
-          text: "&e仔细搜索入口"
-          result: "&7你在入口发现了前人留下的物资！"
-      mystic_fountain:
-        name: "&b神秘泉水"
-        desc1: "&7一个发光的泉水出现在你面前..."
-        desc2: "&7泉水散发着神秘的力量。"
-        choice1:
-          text: "&a喝下泉水"
-          result: "&7神秘的能量流入你的身体！"
-        choice2:
-          text: "&d投入金币许愿 (花费15金币)"
-          result: "&7泉水涌出治愈之力！"
-        choice3:
-          text: "&e收集泉水出售"
-          result: "&7你收集了泉水，但被泉水的守护者发现了！"
-      bandit_toll:
-        name: "&c山贼路障"
-        desc1: "&7一群山贼挡住了你的去路..."
-        desc2: "&7他们要求你付过路费。"
-        choice1:
-          text: "&a付过路费 (花费25金币)"
-          result: "&7山贼们让你通过了。"
-        choice2:
-          text: "&c尝试突围"
-          result: "&7你与山贼们发生了冲突！"
-        choice3:
-          text: "&e反击抢劫他们"
-          result: "&7你击败了山贼并抢走了他们的财物！"
-      # 新增商店事件
-      potion_shop:
-        name: "&d药水铺"
-        desc1: "&7一间散发着奇怪气味的药水铺。"
-        desc2: "&7店主是一位老巫师。"
-        choice1:
-          text: "&a浏览药水"
-          result: "&7欢迎来到我的药水铺！"
-      wandering_trader:
-        name: "&6流动商贩"
-        desc1: "&7一位背着大包袱的商贩。"
-        desc2: "&7他声称有稀有物品出售。"
-        choice1:
-          text: "&a查看商品"
-          result: "&7来看看我的好东西吧！"
-      # 固定阶段事件
-      starter_shop:
-        name: "&a新手补给站"
-        desc1: "&7欢迎来到冒险的起点！"
-        desc2: "&7这里有一些基本的补给品可以购买。"
-        choice1:
-          text: "&a查看商品"
-          result: "&7祝你冒险顺利！"
-      rest_station:
-        name: "&b旅途休息站"
-        desc1: "&7你来到一个宁静的休息站。"
-        desc2: "&7这里可以恢复体力，准备后续挑战。"
-        choice1:
-          text: "&a付费休息 (消耗15金币)"
-          result: "&7你得到了充分的休息，恢复了大量体力！"
-        choice2:
-          text: "&e简单休息"
-          result: "&7你稍作休息，恢复了一些体力。"
-        choice3:
-          text: "&c继续前进"
-          result: "&7你决定不浪费时间，继续前进。"
-      late_rest_station:
-        name: "&d勇者驿站"
-        desc1: "&7你来到了一个专为冒险者设立的驿站。"
-        desc2: "&7这里可以为即将到来的强敌做好准备。"
-        choice1:
-          text: "&a付费休息 (消耗20金币)"
-          result: "&7你得到了完整的休息，身心得到恢复！"
-        choice2:
-          text: "&e简单休息"
-          result: "&7你稍作休息，恢复了一些体力。"
-        choice3:
-          text: "&c继续前进"
-          result: "&7你决定争分夺秒，继续冒险。"
+          text: '&f对着龙巢立下誓言'
+          result: '&7你握紧神器立誓讨龙，攻守之心皆坚如磐石。'
       final_warning:
-        name: "&c⚠ 最终决战在即"
-        desc1: "&7你感受到前方传来强大的黑暗力量..."
-        desc2: "&7这是进入最终战场前的最后准备机会。"
-        desc3: "&c&l警告: 下一关将面对最终 Boss！"
+        name: '&c✦ 决战前夕'
+        desc1: '&7空气凝滞，连风都不敢作声。'
+        desc2: '&7洞口喷吐着灼热的气浪，终界龙就在里面。'
+        desc3: '&7深呼吸——这一战，将决定大陆的命运。'
         choice1:
-          text: "&a祈祷祝福 (恢复生命)"
-          result: "&7神圣的力量护佑着你，你感到充满力量！"
+          text: '&f闭目养神，恢复状态'
+          result: '&7你平复呼吸，伤势与心神都安定下来。'
         choice2:
-          text: "&c直接前进"
-          result: "&7你深吸一口气，准备迎接最终挑战。"
-      final_boss:
-        name: "&4&l⚔ 黑暗领主降临"
-        desc1: "&c天空变得漆黑，大地开始颤抖..."
-        desc2: "&4黑暗领主从虚空中现身，散发着恐怖气息！"
-        desc3: "&c这是拯救喵科利亚王国的最后一战！"
+          text: '&f默诵战技，临阵磨枪'
+          result: '&7你在脑中推演每一招式，攻守俱有精进。'
+      end_dragon:
+        name: '&5&l✦ 终界龙·决战'
+        desc1: '&7庞然黑影自深渊升起，双翼遮蔽了天光。'
+        desc2: '&7这便是引发终界灾厄的元凶——终界龙。'
+        desc3: '&7勇者啊，举起你的神器，终结这场噩梦吧！'
         choice1:
-          text: "&c&l迎接最终挑战"
-          result: "&4黑暗领主: 「愚蠢的冒险者...让我来终结你的旅程！」"
-    # Shop items
-    shop:
-      small_potion:
-        name: "&a小型治疗药水"
-        effect: "恢复 25 点生命值"
-      large_potion:
-        name: "&a大型治疗药水"
-        effect: "恢复 50 点生命值"
-      magic_potion:
-        name: "&d魔法药水"
-        effect: "恢复 15 点魔法值"
-      health_upgrade:
-        name: "&c生命强化"
-        effect: "永久增加 20 点最大生命值"
-      lucky_coin:
-        name: "&6幸运金币"
-        effect: "恢复 10 点生命值并带来好运"
-      healing_potion:
-        name: "&d治疗药水"
-        effect: "获得1个可在事件中使用的治疗药水"
-    # Equipment
-    equipment:
-      iron_sword:
-        name: "&f铁剑"
-      steel_sword:
-        name: "&b钢剑"
-      leather_armor:
-        name: "&6皮甲"
-      iron_armor:
-        name: "&f铁甲"
-      magic_ring:
-        name: "&d魔法戒指"
-      amulet_of_protection:
-        name: "&5守护护符"
-    # Enemies
+          text: '&c&l向终界龙发起最终决战！'
+          result: '&7你怒吼着冲向巨龙，传说在此刻谱写！'
+      starter_shop:
+        name: '&6✦ 村口杂货铺'
+        desc1: '&7村口的老板娘支起摊位，向你这位新晋勇者问好。'
+        desc2: '&7「出门在外，补给可得备齐哦！」'
+        choice1:
+          text: '&f查看商品'
+          result: '&7你走近摊位，挑选起趁手的物资。'
+      blacksmith_forge:
+        name: '&8✦ 铁匠铺'
+        desc1: '&7炉火熊熊，铁锤叮当。老铁匠抬眼打量你的兵器。'
+        desc2: '&7「想变强？把家伙交给我，外加一点诚意。」'
+        choice1:
+          text: '&f开锋武器（-40金币，攻击+4）'
+          result: '&7火星四溅，刃口寒光大盛，攻击力提升了！'
+          result_alt: '&7你囊中羞涩，铁匠摆摆手让你下次再来。'
+        choice2:
+          text: '&f加固护甲（-40金币，防御+4）'
+          result: '&7甲片被重新铆合，防御更为坚实！'
+          result_alt: '&7金币不足，铁匠只是摇头。'
+        choice3:
+          text: '&f以龙鳞觉醒神器（-60金币＋龙鳞，攻+8防+4）'
+          result: '&7龙鳞熔入神器，迸发出耀眼的光辉——神器觉醒了！'
+          result_alt: '&7缺少龙鳞或金币，觉醒之事只能作罢。'
+        choice4:
+          text: '&f只是看看就走'
+          result: '&7你向铁匠道别，继续上路。'
+      village_inn:
+        name: '&e✦ 村庄旅店'
+        desc1: '&7一间温暖的小旅店，飘出炖肉与麦酒的香气。'
+        desc2: '&7老板热情地招呼你进门歇脚。'
+        choice1:
+          text: '&f开一间上房（-25金币）'
+          result: '&7一夜好眠，生命与魔力彻底恢复！'
+          result_alt: '&7钱不够开房，你只好在门廊将就。'
+        choice2:
+          text: '&f在大厅火炉边小憩'
+          result: '&7炉火驱散疲惫，你恢复了些许生命。'
+        choice3:
+          text: '&f与旅人把酒言欢'
+          result: '&7谈天说地间，你的心神为之一振，魔力略有回复。'
+      herbalist_request:
+        name: '&2✦ 药师的委托'
+        desc1: '&7村中药师急需草药救治伤患。'
+        desc2: '&7「若你手上有三株草药，我愿以重金与药剂相谢。」'
+        choice1:
+          text: '&f交出 3 株草药'
+          result: '&7药师大喜，回赠你丰厚的金币与一瓶治疗药剂。'
+          result_alt: '&7你的草药不足三株，药师遗憾地摇了摇头。'
+        choice2:
+          text: '&f婉拒并指点伤患去处'
+          result: '&7你虽未帮上忙，却赢得了村民的好感。'
+      village_plea:
+        name: '&2✦ 村民求援'
+        desc1: '&7一名村民跪倒在你面前，恳求你出手。'
+        desc2: '&7「恶徒与野兽正在劫掠我们，求求勇者大人！」'
+        choice1:
+          text: '&f慨然应允，动身讨伐'
+          result: '&7你点头领命，村民含泪相谢，前方已有恶敌等候。'
+        choice2:
+          text: '&f索要报酬再做打算'
+          result: '&7村民凑出仅有的积蓄塞给你，你才勉强答应。'
+        choice3:
+          text: '&f先安抚村民情绪'
+          result: '&7你的宽慰让村民稍感安心。'
+      crossroad_choice:
+        name: '&3✦ 命运岔路'
+        desc1: '&7道路在此分作三岔，每条都通向未知。'
+        desc2: '&7林深雾重，你必须做出选择。'
+        choice1:
+          text: '&f走入草木茂盛的小径'
+          result: '&7沿途你采得草药，也捡到些散落的银币。'
+        choice2:
+          text: '&f取道静谧的溪谷'
+          result: '&7溪水清凉，你饮后神清气爽，魔力为之充盈。'
+        choice3:
+          text: '&f穿越险峻的峭壁捷径'
+          result: '&7你抄了近路寻得财宝，却也在攀爬中挂了彩。'
+      training_grounds:
+        name: '&9✦ 佣兵训练场'
+        desc1: '&7一群佣兵正在校场操练，教官向你招手。'
+        desc2: '&7「想学两手？拿钱来，我教你保命的真本事。」'
+        choice1:
+          text: '&f参加剑术特训（-20金币，攻击+3）'
+          result: '&7一番苦练后，你的剑法更为凌厉。'
+          result_alt: '&7学费不够，教官只丢给你一句「下次再来」。'
+        choice2:
+          text: '&f修习冥想吐纳（-20金币，魔力上限+8）'
+          result: '&7你领悟了引导灵力之法，魔力上限提升了。'
+          result_alt: '&7没有束脩，导师婉拒了你。'
+        choice3:
+          text: '&f在一旁观摩就好'
+          result: '&7你看了一会儿，略有心得便离开了。'
+      forest_crossroads:
+        name: '&2✦ 森林岔口'
+        desc1: '&7茂密的森林中出现一个岔口。'
+        desc2: '&7不同的道路或许通向不同的机遇。'
+        choice1:
+          text: '&f走光明大道'
+          result: '&7你稳妥前行，途中拾得草药与少许金币。'
+        choice2:
+          text: '&f抄阴暗捷径'
+          result: '&7凭着村庄信物的庇佑，你安然取得丰厚财物。'
+          result_alt: '&7没有信物护身，捷径暗藏陷阱，你受了伤才脱身。'
+        choice3:
+          text: '&f原地扎营休息'
+          result: '&7你稍作休整，恢复了些许体力。'
+      mysterious_merchant:
+        name: '&6✦ 神秘商人'
+        desc1: '&7一位披斗篷的商人拦住你的去路。'
+        desc2: '&7「客官，看看我的好东西？包你不虚此行。」'
+        choice1:
+          text: '&f买下信物以备日后'
+          result: '&7你收下一枚商会信物，据说能在流动商队处兑换好货。'
+        choice2:
+          text: '&f礼貌地谢绝'
+          result: '&7你婉拒了商人，继续赶路。'
+        choice3:
+          text: '&f豪赌一把神秘箱'
+          result: '&7箱中之物令你大失所望，还亏了金币、伤了元气。'
+      wandering_minstrel:
+        name: '&d✦ 流浪吟游诗人'
+        desc1: '&7一位诗人拨动琴弦，唱起远古的英雄史诗。'
+        desc2: '&7歌声悠扬，抚慰着旅人的疲惫。'
+        choice1:
+          text: '&f打赏并聆听（-10金币）'
+          result: '&7动人的旋律让你身心舒畅，恢复了生命。'
+        choice2:
+          text: '&f请教战歌的奥义'
+          result: '&7诗人传你一段激励心神的古调，魔力为之充盈。'
+        choice3:
+          text: '&f献艺合奏赚取赏钱'
+          result: '&7你与诗人合奏一曲，赚得赏钱，却也累得够呛。'
+      mystic_fountain:
+        name: '&b✦ 神秘泉水'
+        desc1: '&7林间有一汪泛着灵光的泉水。'
+        desc2: '&7传说饮之能洗涤伤痛、淬炼心神。'
+        choice1:
+          text: '&f畅饮泉水'
+          result: '&7清泉入喉，伤势竟迅速愈合！'
+        choice2:
+          text: '&f以泉水淬炼灵魂（-15金币）'
+          result: '&7你按古法淬炼，魔力上限有所提升。'
+        choice3:
+          text: '&f采集泉边的草药'
+          result: '&7你在泉畔采得数株珍贵草药。'
+      abandoned_mine:
+        name: '&8✦ 废弃矿坑'
+        desc1: '&7一座坍塌的旧矿坑张着黑口。'
+        desc2: '&7坑道深处似乎还埋着未被取尽的矿藏。'
+        choice1:
+          text: '&f深入挖掘矿石'
+          result: '&7你掘得不少矿石换成金币，但落石砸伤了你。'
+        choice2:
+          text: '&f谨慎地浅尝辄止'
+          result: '&7你只在坑口转了转，平安无事却一无所获。'
+        choice3:
+          text: '&f搜寻矿工遗留之物'
+          result: '&7你在矿工遗物中翻出金币，还捡到一片龙鳞！'
+      ancient_shrine:
+        name: '&e✦ 古老神龛'
+        desc1: '&7荒野中伫立着一座斑驳的神龛。'
+        desc2: '&7若无诚意（金币）供奉，神明恐不会回应。'
+        choice1:
+          text: '&f虔诚供奉（-20金币）'
+          result: '&7神光笼罩，你的伤势痊愈，还获赠一枚祝福护符。'
+        choice2:
+          text: '&f取走供桌上的香火钱'
+          result: '&7你拿走了金币，却似乎触怒了某种存在，隐隐作痛。'
+        choice3:
+          text: '&f简单参拜后离去'
+          result: '&7你恭敬一拜，心绪稍宁。'
+        fail_text: '&c需要至少 20 金币才能供奉神龛。'
+      treasure_chest:
+        name: '&6✦ 神秘宝箱'
+        desc1: '&7岔路尽头摆着一只落尘的宝箱。'
+        desc2: '&7箱上挂着一把生锈的锁。'
+        choice1:
+          text: '&f小心撬开取财'
+          result: '&7你撬开宝箱取得金币，还找到一把神秘的钥匙。'
+        choice2:
+          text: '&f粗暴地砸开'
+          result: '&7你一斧劈开箱子，金币四散，飞溅的碎片却伤了你。'
+        choice3:
+          text: '&f谨慎起见，不去碰它'
+          result: '&7你提防有诈，绕箱而过。'
+      secret_vault:
+        name: '&5✦ 隐密宝库'
+        desc1: '&7宝箱中的钥匙，竟开启了一道隐密石门。'
+        desc2: '&7门后是堆满珍宝的古老宝库！'
+        choice1:
+          text: '&f用钥匙开启宝库'
+          result: '&7你满载而归，金币与一片珍稀龙鳞尽入囊中！'
+        choice2:
+          text: '&f感觉不妙，转身离开'
+          result: '&7你按捺住贪念，悄然退出了宝库。'
+        fail_text: '&c需要宝箱钥匙才能开启宝库。'
+      injured_traveler:
+        name: '&2✦ 受伤的旅人'
+        desc1: '&7路旁躺着一名受伤的旅人，气息微弱。'
+        desc2: '&7他向你投来求助的目光。'
+        choice1:
+          text: '&f以治疗药剂相救'
+          result: '&7旅人康复后感激不尽，回赠你一大笔金币！'
+          result_alt: '&7你没有药剂，只能简单包扎，旅人勉强撑住，给了你些散钱。'
+        choice2:
+          text: '&f背他到最近的村庄'
+          result: '&7你护送旅人就医，虽耽误了行程，却赢得村民的信任。'
+        choice3:
+          text: '&f爱莫能助，继续赶路'
+          result: '&7你叹了口气，留下旅人独自上路。'
+      bandit_toll:
+        name: '&c✦ 强盗过路费'
+        desc1: '&7一伙强盗拦住山道，龇笑着伸出手。'
+        desc2: '&7「此路是我开，留下买路财！」'
+        choice1:
+          text: '&f乖乖交钱消灾（-25金币）'
+          result: '&7你丢下金币，强盗哈哈大笑放你过去。'
+        choice2:
+          text: '&f徒手与之周旋'
+          result: '&7你硬闯关卡，挨了几拳，倒也练出几分胆气。'
+        choice3:
+          text: '&f反过来洗劫强盗'
+          result: '&7你出其不意制服强盗，夺走他们的不义之财，自己也挂了彩。'
+      traveling_merchant_shop:
+        name: '&6✦ 流动商队'
+        desc1: '&7凭着商会信物，你获准进入流动商队的私帐。'
+        desc2: '&7琳琅满目的稀有货品任你挑选。'
+        choice1:
+          text: '&f查看稀有商品'
+          result: '&7你在商队中寻觅着趁手的好货。'
+        fail_text: '&c需要商会信物才能进入流动商队。'
+      potion_shop:
+        name: '&d✦ 药水铺'
+        desc1: '&7一间弥漫着草药气味的药水铺。'
+        desc2: '&7架上摆满了各色瓶瓶罐罐。'
+        choice1:
+          text: '&f选购药水'
+          result: '&7你端详着架上的药剂。'
+      armory:
+        name: '&7✦ 武具店'
+        desc1: '&7一间挂满刀剑甲胄的武具店。'
+        desc2: '&7店主拍着胸脯保证货真价实。'
+        choice1:
+          text: '&f选购武器与护甲'
+          result: '&7你在琳琅的兵器间细细挑选。'
+      wandering_trader:
+        name: '&a✦ 行脚商人'
+        desc1: '&7一位牵着驼兽的行脚商人停在路边。'
+        desc2: '&7他的货箱里似乎藏着不少稀罕物。'
+        choice1:
+          text: '&f翻看货箱'
+          result: '&7你打开货箱，挑选感兴趣的商品。'
+      slime_swamp:
+        name: '&a⚔ 史莱姆沼泽'
+        desc1: '&7泥泞的沼泽里，黏滑的史莱姆蠕动逼近。'
+        desc2: '&7它们虽弱，数量却不少。'
+        choice1:
+          text: '&a迎战史莱姆'
+          result: '&7你摆开架势，准备清理这群黏液怪。'
+      goblin_raid:
+        name: '&2⚔ 哥布林劫掠'
+        desc1: '&7一群哥布林正在劫掠商旅。'
+        desc2: '&7是时候教训这些绿皮小鬼了。'
+        choice1:
+          text: '&2迎战哥布林'
+          result: '&7你拔出武器，冲向哥布林群。'
+      wolf_pack:
+        name: '&7⚔ 饿狼群袭'
+        desc1: '&7数道绿莹莹的眼睛在暗处逼近。'
+        desc2: '&7一群饿狼将你团团围住。'
+        choice1:
+          text: '&7迎战狼群'
+          result: '&7你背靠巨石，严阵以待。'
+      bandit_ambush:
+        name: '&c⚔ 强盗伏击'
+        desc1: '&7山道两侧杀出蒙面强盗。'
+        desc2: '&7他们显然是冲着你的性命而来。'
+        choice1:
+          text: '&c迎战强盗'
+          result: '&7你冷笑一声，迎上前去。'
+      skeleton_crypt:
+        name: '&f⚔ 骷髅地穴'
+        desc1: '&7地穴中，白骨森森的骷髅兵持械而立。'
+        desc2: '&7它们的空洞眼窝亮起幽火。'
+        choice1:
+          text: '&f迎战骷髅'
+          result: '&7你高举武器，踏入地穴。'
+      zombie_horde:
+        name: '&2⚔ 僵尸潮'
+        desc1: '&7腐臭扑鼻，成群的僵尸蹒跚而来。'
+        desc2: '&7它们皮糙肉厚，极为难缠。'
+        choice1:
+          text: '&2迎战僵尸'
+          result: '&7你掩住口鼻，准备硬撼尸潮。'
+      spider_nest:
+        name: '&8⚔ 蜘蛛巢穴'
+        desc1: '&7黏稠的蛛网布满洞穴，巨蛛自暗处垂下。'
+        desc2: '&7毒牙在微光中闪烁。'
+        choice1:
+          text: '&8迎战巨蛛'
+          result: '&7你斩断蛛丝，直面毒蛛。'
+      witch_hut:
+        name: '&5⚔ 女巫小屋'
+        desc1: '&7诡异的小屋中，女巫正搅动着冒泡的毒锅。'
+        desc2: '&7她抬起头，眼中闪过阴冷的光。'
+        choice1:
+          text: '&5迎战女巫'
+          result: '&7你提防着她的法术，步步逼近。'
+      dark_knight_duel:
+        name: '&8⚔ 黑暗骑士的挑战'
+        desc1: '&7一名通体漆黑的骑士横剑拦路。'
+        desc2: '&7「想过去，先过我这一关。」'
+        choice1:
+          text: '&8迎战黑暗骑士'
+          result: '&7你与黑骑士四目相对，杀气陡升。'
+      young_dragon:
+        name: '&c⚔ 幼龙'
+        desc1: '&7一头尚未成年的火龙盘踞于山巅。'
+        desc2: '&7即便是幼龙，亦有焚天之威。'
+        choice1:
+          text: '&c迎战幼龙'
+          result: '&7你顶住热浪，向幼龙发起挑战。'
+      monster_ambush:
+        name: '&4⚔ 怪物突袭'
+        desc1: '&7毫无预兆地，一头怪物自暗处扑出！'
+        desc2: '&7你来不及多想，只能拔剑应战。'
+        choice1:
+          text: '&4迎战怪物'
+          result: '&7你本能地举起武器格挡。'
     enemies:
       slime:
-        name: "&a史莱姆"
-        desc: "一个绿色的弹跳生物"
+        name: '&a史莱姆'
+        desc: '&7沼泽中常见的黏液怪，柔软却黏人。'
       goblin:
-        name: "&2哥布林"
-        desc: "一个狡猾的小型生物，喜欢偷东西"
+        name: '&2哥布林'
+        desc: '&7狡猾的绿皮小鬼，惯于偷袭与哄抢。'
         skill1:
-          name: "&e偷窃"
-          desc: "尝试偷取你的金币"
+          name: '&e偷袭'
+          desc: '&7冷不防地捞一把，造成额外伤害。'
       wolf:
-        name: "&7狂狼"
-        desc: "一只凶猛的野狼，行动迅速"
+        name: '&7野狼'
+        desc: '&7成群行动的猛兽，迅捷而凶悍。'
         skill1:
-          name: "&7狼嚎"
-          desc: "发出嚎叫增强攻击力"
+          name: '&f群嚎'
+          desc: '&7狼嚎振奋兽群，发动凶猛撕咬。'
       bandit:
-        name: "&8山贼"
-        desc: "一个危险的亡命之徒"
+        name: '&c强盗'
+        desc: '&7亡命之徒，下手又狠又准。'
         skill1:
-          name: "&c偷袭"
-          desc: "从暗处发动突袭造成额外伤害"
+          name: '&8背刺'
+          desc: '&7瞄准破绽刺出致命一击。'
       skeleton:
-        name: "&f骷髅弓箭手"
-        desc: "一个拿着弓的骷髅"
+        name: '&f骷髅兵'
+        desc: '&7被诅咒驱动的白骨战士，擅长远程射击。'
+        skill1:
+          name: '&f掷骨'
+          desc: '&7投掷尖锐的骨矛贯穿目标。'
       zombie:
-        name: "&2僵尸"
-        desc: "一个缓慢但强壮的不死生物"
+        name: '&2僵尸'
+        desc: '&7行动迟缓却皮厚血多，撕咬带有剧毒。'
+        skill1:
+          name: '&2腐蚀撕咬'
+          desc: '&7带有尸毒的撕咬，使目标中毒。'
       spider:
-        name: "&8巨型蜘蛛"
-        desc: "一只可怕的巨型蜘蛛"
+        name: '&8巨型蜘蛛'
+        desc: '&7敏捷的剧毒猎手，能吐丝束缚猎物。'
+        skill1:
+          name: '&8蛛网束缚'
+          desc: '&7喷吐黏网使目标晕眩无法行动。'
+        skill2:
+          name: '&2毒牙'
+          desc: '&7毒牙撕咬使目标中毒流血。'
       witch:
-        name: "&5女巫"
-        desc: "一个邪恶的魔法使用者"
+        name: '&5女巫'
+        desc: '&7操弄火焰与冰霜的施法者，极其阴险。'
+        skill1:
+          name: '&c火球术'
+          desc: '&7掷出灼热火球，使目标燃烧。'
+        skill2:
+          name: '&b寒霜诅咒'
+          desc: '&7凛冬之咒使目标冰冻。'
       dark_knight:
-        name: "&8黑暗骑士"
-        desc: "一个强大的黑暗战士"
+        name: '&8黑暗骑士'
+        desc: '&7堕落的精英战士，攻守俱佳。'
+        skill1:
+          name: '&8暗影斩'
+          desc: '&7缠绕暗影的重斩，造成大量伤害。'
+        skill2:
+          name: '&7盾击'
+          desc: '&7以盾猛撞使目标晕眩。'
       dragon:
-        name: "&4暗影龙"
-        desc: "最终的挑战，传说中的龙"
-      # 最终 Boss
-      dark_lord:
-        name: "&4&l黑暗领主"
-        desc: "喵科利亚王国的终极威胁，掌控黑暗力量的恐怖存在"
-    # End rewards
+        name: '&c火龙'
+        desc: '&7盘踞山巅的巨龙，吐息可焚毁一切。'
+        skill1:
+          name: '&c龙焰吐息'
+          desc: '&7喷吐烈焰，使目标长时间燃烧。'
+        skill2:
+          name: '&6尾扫'
+          desc: '&7横扫龙尾，造成沉重打击。'
+        skill3:
+          name: '&e威吓咆哮'
+          desc: '&7震天龙吼使目标晕眩。'
+      ender_dragon:
+        name: '&5&l终界龙'
+        desc: '&7引发终界灾厄的元凶，掌控虚空与烈焰的终极存在。'
+        skill1:
+          name: '&5虚空吐息'
+          desc: '&7喷吐炽烈的虚空之炎，造成剧烈燃烧。'
+        skill2:
+          name: '&d龙翼狂风'
+          desc: '&7振翅掀起毁灭性的风暴，造成巨额伤害。'
+        skill3:
+          name: '&8终界冲撞'
+          desc: '&7化作流光高速撞击，使目标长时间晕眩。'
+        skill4:
+          name: '&0虚空咆哮'
+          desc: '&7撕裂空间的咆哮，使目标陷入持久的虚空侵蚀。'
+    equipment:
+      iron_sword:
+        name: '&f铁剑'
+      steel_sword:
+        name: '&b精钢剑'
+      artifact_sword:
+        name: '&6圣剑·黎明'
+      artifact_bow:
+        name: '&a破晓之弓'
+      artifact_axe:
+        name: '&c裂地战斧'
+      leather_armor:
+        name: '&f皮甲'
+      iron_armor:
+        name: '&7铁甲'
+      knight_plate:
+        name: '&b骑士板甲'
+      magic_ring:
+        name: '&d魔力戒指'
+      amulet_of_protection:
+        name: '&a守护护符'
+      hero_emblem:
+        name: '&6英雄徽记'
+    shop:
+      small_potion:
+        name: '&f小型治疗药水'
+        effect: '&7恢复 25 点生命'
+      large_potion:
+        name: '&f大型治疗药水'
+        effect: '&7恢复 50 点生命'
+      magic_potion:
+        name: '&d魔力药水'
+        effect: '&7恢复 15 点魔力'
+      health_upgrade:
+        name: '&6生命强化苹果'
+        effect: '&7生命上限 +20'
+      lucky_coin:
+        name: '&e幸运金币'
+        effect: '&7恢复 10 点生命的小确幸'
+      healing_potion:
+        name: '&a治疗药剂（可携带）'
+        effect: '&7获得 1 瓶可在战斗中使用的治疗药剂'
     rewards:
       novice:
-        name: "&6冒险新手奖励"
+        name: '&f见习勇者奖励'
       adventurer:
-        name: "&a冒险者奖励"
+        name: '&a冒险者奖励'
       veteran:
-        name: "&b资深冒险者奖励"
+        name: '&b百战老兵奖励'
       legendary:
-        name: "&d传奇冒险者奖励"
-      king:
-        name: "&6&l王者奖励"
+        name: '&d传奇英雄奖励'
+      hero:
+        name: '&6救世勇者奖励'
+      dragonslayer:
+        name: '&5&l屠龙者奖励'
+
 
 
 # 物品翻译
@@ -1308,10 +1548,10 @@ games:
       - "&7查看状态或开局"
       - "&e点击打开菜单"
   sgame:
-    title: "&6✦ 猫咪王国冒险"
+    title: "&6✦ 勇者传说：终界之战"
     lore:
-      - "&7策略冒险游戏"
-      - "&7探索、战斗、交易！"
+      - "&7中世纪勇者冒险"
+      - "&7探索、战斗、屠龙！"
       - "&e点击开始游玩"
   fishing:
     title: "&b✦ 钓鱼大赛"
