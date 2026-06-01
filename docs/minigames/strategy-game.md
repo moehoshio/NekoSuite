@@ -71,6 +71,7 @@
   - `timeout`：戰鬥逾時秒數（`0` 表示永不逾時）；逾時視為怪物脫戰，戰鬥取消且不給獎勵。
   - `highlight`：是否讓戰鬥怪物發光以利辨識。
   - `scale_health`：是否將怪物最大生命值縮放為敵人配置的 `health`。
+  - `allow_griefing`：是否允許戰鬥怪物破壞地形（預設 `false`）；停用時會抑制生成怪物及其投射物（如 Creeper 爆炸、Wither 撞毀方塊、凋零頭顱爆炸）對方塊造成的破壞。
   - `default_entity_type`：敵人未指定 `entity_type` 時的預設怪物類型。
 - 每個敵人可加上 `entity_type`（Bukkit `EntityType` 名稱）指定要生成的怪物。
 - 行為說明：

@@ -3565,6 +3565,30 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplodeForBattle(org.bukkit.event.entity.EntityExplodeEvent event) {
+        // Strategy game real battle: prevent battle mobs (e.g. Creeper/Wither
+        // skulls) from damaging terrain when griefing is disabled.
+        if (strategyGameManager == null || strategyGameManager.isRealBattleGriefingAllowed()) {
+            return;
+        }
+        if (strategyGameManager.isBattleExplosionSource(event.getEntity())) {
+            event.blockList().clear();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityChangeBlockForBattle(org.bukkit.event.entity.EntityChangeBlockEvent event) {
+        // Strategy game real battle: prevent battle mobs (e.g. Wither) from
+        // breaking blocks when griefing is disabled.
+        if (strategyGameManager == null || strategyGameManager.isRealBattleGriefingAllowed()) {
+            return;
+        }
+        if (strategyGameManager.isBattleMob(event.getEntity().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler
     public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
         Player player = event.getEntity();

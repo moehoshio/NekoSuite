@@ -1103,6 +1103,9 @@ battles:
     timeout: 120
     # 是否讓戰鬥怪物發光以利辨識
     highlight: true
+    # 是否允許生成的戰鬥怪物破壞地形 (例如 Creeper 爆炸、Wither 撞毀方塊)；
+    # 停用時 (預設) 會抑制這些怪物及其投射物 (如凋零頭顱) 對方塊造成的破壞
+    allow_griefing: false
     # 將怪物的最大生命值縮放為敵人配置的 health 值
     scale_health: true
     # 當敵人未指定 entity_type 時採用的預設怪物類型

@@ -11,6 +11,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
@@ -107,6 +109,8 @@ public class StrategyGameManager {
     private boolean realBattleHighlight = true;
     private boolean realBattleScaleHealth = true;
     private EntityType realBattleDefaultEntityType = EntityType.ZOMBIE;
+    // Whether real-battle mobs may damage terrain (e.g. Creeper/Wither). Default off.
+    private boolean realBattleAllowGriefing = false;
 
     // Active real battles keyed by player name (runtime-only, not persisted).
     private final Map<String, RealBattleState> realBattles = new HashMap<String, RealBattleState>();
@@ -207,6 +211,7 @@ public class StrategyGameManager {
         realBattleTimeout = Math.max(0, config.getInt("battles.real_battle.timeout", 120));
         realBattleHighlight = config.getBoolean("battles.real_battle.highlight", true);
         realBattleScaleHealth = config.getBoolean("battles.real_battle.scale_health", true);
+        realBattleAllowGriefing = config.getBoolean("battles.real_battle.allow_griefing", false);
         realBattleDefaultEntityType = parseEntityType(
             config.getString("battles.real_battle.default_entity_type", "ZOMBIE"), EntityType.ZOMBIE);
 
@@ -2763,6 +2768,45 @@ public class StrategyGameManager {
             }
         }.runTaskTimer(plugin, 20L, 20L);
         state.setTask(task);
+    }
+
+    /** Whether real-battle mobs are allowed to damage terrain. */
+    public boolean isRealBattleGriefingAllowed() {
+        return realBattleAllowGriefing;
+    }
+
+    /** Whether the given entity UUID belongs to a tracked real-battle mob. */
+    public boolean isBattleMob(UUID id) {
+        if (id == null || realBattles.isEmpty()) {
+            return false;
+        }
+        for (RealBattleState state : realBattles.values()) {
+            if (id.equals(state.getMobId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the given entity is a tracked real-battle mob, or a projectile
+     * (e.g. a wither skull) launched by one. Used to suppress terrain damage
+     * from battle-mob explosions when griefing is disabled.
+     */
+    public boolean isBattleExplosionSource(Entity entity) {
+        if (entity == null || realBattles.isEmpty()) {
+            return false;
+        }
+        if (isBattleMob(entity.getUniqueId())) {
+            return true;
+        }
+        if (entity instanceof Projectile) {
+            ProjectileSource shooter = ((Projectile) entity).getShooter();
+            if (shooter instanceof Entity) {
+                return isBattleMob(((Entity) shooter).getUniqueId());
+            }
+        }
+        return false;
     }
 
     /**
