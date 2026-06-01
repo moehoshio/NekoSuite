@@ -78,6 +78,9 @@ public class StrategyGameManager {
     // Menu layout constants
     private static final int DEFAULT_NAV_SLOT = 17; // Default slot for navigation button if close slot is 0
 
+    // Real-battle mode constants
+    private static final double MAX_SCALED_MOB_HEALTH = 2048.0; // Upper bound for scaled battle-mob health
+
     // Game configuration
     private int startingGold = DEFAULT_STARTING_GOLD;
     private int startingHealth = DEFAULT_STARTING_HEALTH;
@@ -2663,9 +2666,12 @@ public class StrategyGameManager {
         org.bukkit.util.Vector dir = base.getDirection();
         dir.setY(0);
         if (dir.lengthSquared() < 1.0E-6) {
+            // Player looking straight up/down: default to facing +Z.
             dir = new org.bukkit.util.Vector(0, 0, 1);
+        } else {
+            dir.normalize();
         }
-        dir.normalize().multiply(realBattleSpawnDistance);
+        dir.multiply(realBattleSpawnDistance);
         spawnLoc.add(dir);
         spawnLoc.setY(base.getY());
 
@@ -2689,7 +2695,7 @@ public class StrategyGameManager {
 
         // Scale the mob's health to the configured enemy health.
         if (realBattleScaleHealth && enemy.getHealth() > 0) {
-            double newHealth = Math.min(2048.0, Math.max(1.0, enemy.getHealth()));
+            double newHealth = Math.min(MAX_SCALED_MOB_HEALTH, Math.max(1.0, enemy.getHealth()));
             living.setMaxHealth(newHealth);
             living.setHealth(newHealth);
         }
