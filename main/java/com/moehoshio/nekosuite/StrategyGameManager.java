@@ -2,16 +2,27 @@ package com.moehoshio.nekosuite;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Strategy Game Module - "Hero's Legend: Battle of the End"
@@ -68,6 +80,9 @@ public class StrategyGameManager {
     // Menu layout constants
     private static final int DEFAULT_NAV_SLOT = 17; // Default slot for navigation button if close slot is 0
 
+    // Real-battle mode constants
+    private static final double MAX_SCALED_MOB_HEALTH = 2048.0; // Upper bound for scaled battle-mob health
+
     // Game configuration
     private int startingGold = DEFAULT_STARTING_GOLD;
     private int startingHealth = DEFAULT_STARTING_HEALTH;
@@ -86,6 +101,19 @@ public class StrategyGameManager {
 
     // Active game sessions
     private final Map<String, GameSession> activeSessions = new HashMap<String, GameSession>();
+
+    // Real-battle mode configuration (spawn actual mobs in the world to fight).
+    private boolean realBattleEnabled = false;
+    private int realBattleSpawnDistance = 3;
+    private int realBattleTimeout = 120;
+    private boolean realBattleHighlight = true;
+    private boolean realBattleScaleHealth = true;
+    private EntityType realBattleDefaultEntityType = EntityType.ZOMBIE;
+    // Whether real-battle mobs may damage terrain (e.g. Creeper/Wither). Default off.
+    private boolean realBattleAllowGriefing = false;
+
+    // Active real battles keyed by player name (runtime-only, not persisted).
+    private final Map<String, RealBattleState> realBattles = new HashMap<String, RealBattleState>();
 
     public StrategyGameManager(JavaPlugin plugin, Messages messages, File configFile, MenuLayout menuLayout) {
         this.plugin = plugin;
@@ -176,6 +204,16 @@ public class StrategyGameManager {
                 enemies.add(enemy);
             }
         }
+
+        // Load real-battle mode settings
+        realBattleEnabled = config.getBoolean("battles.real_battle.enabled", false);
+        realBattleSpawnDistance = Math.max(1, config.getInt("battles.real_battle.spawn_distance", 3));
+        realBattleTimeout = Math.max(0, config.getInt("battles.real_battle.timeout", 120));
+        realBattleHighlight = config.getBoolean("battles.real_battle.highlight", true);
+        realBattleScaleHealth = config.getBoolean("battles.real_battle.scale_health", true);
+        realBattleAllowGriefing = config.getBoolean("battles.real_battle.allow_griefing", false);
+        realBattleDefaultEntityType = parseEntityType(
+            config.getString("battles.real_battle.default_entity_type", "ZOMBIE"), EntityType.ZOMBIE);
 
         // Load end rewards
         endRewards.clear();
@@ -366,6 +404,20 @@ public class StrategyGameManager {
         
         // 1. Check if in active battle (has enemy with HP)
         if (session.getCurrentEnemyId() != null && session.getCurrentEnemyHp() > 0) {
+            if (realBattleEnabled) {
+                // Resume a real battle: respawn the world mob if it is no longer alive.
+                if (!hasLiveRealBattle(player.getName())) {
+                    BattleEnemy enemy = findEnemy(session.getCurrentEnemyId());
+                    if (enemy != null) {
+                        player.sendMessage(messages.format(player, "sgame.real_battle_resume"));
+                        startRealBattle(player, session, enemy);
+                        return;
+                    }
+                }
+                // Mob is already alive in the world; just close any open menu.
+                player.closeInventory();
+                return;
+            }
             // Resume battle action selection
             openBattleActionMenu(player);
             return;
@@ -857,6 +909,12 @@ public class StrategyGameManager {
         session.setCurrentEnemyMaxHp(enemy.getHealth());
         session.setBattleRound(1);
         saveSession(session);
+
+        // Real-battle mode: spawn an actual mob in the world instead of the menu.
+        if (realBattleEnabled) {
+            startRealBattle(player, session, enemy);
+            return;
+        }
 
         MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
         String title = messages.format(player, "menu.sgame.battle_menu_title");
@@ -2545,6 +2603,389 @@ public class StrategyGameManager {
         openMainMenu(player); // Will show new random event selection
     }
 
+    // ============ Real Battle Mode ============
+
+    /**
+     * Begin a real battle: spawn an actual mob in the world for the player to
+     * fight. Victory is granted when the mob is killed; the same gold and
+     * progression rewards as the menu battle are applied.
+     */
+    private void startRealBattle(Player player, GameSession session, BattleEnemy enemy) {
+        // Clean up any previous battle mob for this player before spawning a new one.
+        cleanupRealBattle(player.getName(), true);
+
+        LivingEntity mob = spawnBattleMob(player, enemy);
+        if (mob == null) {
+            // Could not spawn the mob (e.g. invalid world); fall back to the menu battle.
+            player.sendMessage(messages.format(player, "sgame.real_battle_spawn_failed"));
+            MenuLayout.StrategyGameLayout layout = menuLayout.getStrategyGameLayout();
+            String title = messages.format(player, "menu.sgame.battle_menu_title");
+            Inventory inv = Bukkit.createInventory(new StrategyGameMenuHolder(MenuType.BATTLE), layout.getSize(), title);
+            ItemStack enemyItem = createItem(Material.ZOMBIE_HEAD,
+                messages.format(player, "menu.sgame.enemy_title",
+                    java.util.Collections.singletonMap("enemy", resolveI18n(player, enemy.getName()))),
+                new String[]{"&7" + resolveI18n(player, enemy.getDescription())});
+            safeSet(inv, 4, enemyItem);
+            ItemStack fightItem = createItem(Material.DIAMOND_SWORD,
+                messages.format(player, "menu.sgame.fight_button"),
+                new String[]{messages.format(player, "menu.sgame.fight_lore"), "ID:fight"});
+            safeSet(inv, 11, fightItem);
+            ItemStack fleeItem = createItem(Material.FEATHER,
+                messages.format(player, "menu.sgame.flee_button"),
+                new String[]{messages.format(player, "menu.sgame.flee_lore"), "ID:flee"});
+            safeSet(inv, 15, fleeItem);
+            player.openInventory(inv);
+            return;
+        }
+
+        RealBattleState state = new RealBattleState(enemy.getId(), mob.getUniqueId());
+        realBattles.put(player.getName(), state);
+
+        // Close any open game menu so the player can fight in the world.
+        player.closeInventory();
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("enemy", resolveI18n(player, enemy.getName()));
+        player.sendMessage(messages.format(player, "sgame.real_battle_start", map));
+
+        startRealBattleTask(player, state);
+    }
+
+    /**
+     * Spawn and configure the world mob representing the given enemy.
+     * Returns the spawned LivingEntity, or null if spawning failed.
+     */
+    private LivingEntity spawnBattleMob(Player player, BattleEnemy enemy) {
+        Location base = player.getLocation();
+        if (base == null || base.getWorld() == null) {
+            return null;
+        }
+
+        EntityType type = parseEntityType(enemy.getEntityType(), realBattleDefaultEntityType);
+        if (type == null || !type.isAlive() || !type.isSpawnable()) {
+            type = realBattleDefaultEntityType;
+        }
+
+        // Spawn in front of the player at the configured distance.
+        Location spawnLoc = base.clone();
+        org.bukkit.util.Vector dir = base.getDirection();
+        dir.setY(0);
+        if (dir.lengthSquared() < 1.0E-6) {
+            // Player looking straight up/down: default to facing +Z.
+            dir = new org.bukkit.util.Vector(0, 0, 1);
+        } else {
+            dir.normalize();
+        }
+        dir.multiply(realBattleSpawnDistance);
+        spawnLoc.add(dir);
+        spawnLoc.setY(base.getY());
+
+        Entity spawned;
+        try {
+            spawned = base.getWorld().spawnEntity(spawnLoc, type);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+        if (!(spawned instanceof LivingEntity)) {
+            spawned.remove();
+            return null;
+        }
+
+        LivingEntity living = (LivingEntity) spawned;
+        // Name the mob after the enemy.
+        living.setCustomName(messages.colorize(resolveI18n(player, enemy.getName())));
+        living.setCustomNameVisible(true);
+        // Keep the battle mob from despawning while the player fights it.
+        living.setRemoveWhenFarAway(false);
+
+        // Scale the mob's health to the configured enemy health.
+        if (realBattleScaleHealth && enemy.getHealth() > 0) {
+            double newHealth = Math.min(MAX_SCALED_MOB_HEALTH, Math.max(1.0, enemy.getHealth()));
+            living.setMaxHealth(newHealth);
+            living.setHealth(newHealth);
+        }
+
+        // Highlight the battle mob so it stands out.
+        if (realBattleHighlight) {
+            living.setGlowing(true);
+            living.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 24000, 0, false, false));
+        }
+
+        // Make the mob aggressive towards the player.
+        if (living instanceof Mob) {
+            ((Mob) living).setTarget(player);
+        }
+
+        return living;
+    }
+
+    /**
+     * Start the periodic task that watches a real battle for the mob dying off
+     * (e.g. environmental death/despawn) and for the battle timing out.
+     */
+    private void startRealBattleTask(final Player player, final RealBattleState state) {
+        final String playerName = player.getName();
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline()) {
+                    // The quit handler performs cleanup; just stop watching here.
+                    cancel();
+                    return;
+                }
+                RealBattleState current = realBattles.get(playerName);
+                if (current != state) {
+                    // Battle already resolved or replaced.
+                    cancel();
+                    return;
+                }
+                GameSession session = getOrLoadSession(playerName);
+                if (session == null || session.isEnded()) {
+                    cleanupRealBattle(playerName, true);
+                    cancel();
+                    return;
+                }
+
+                Entity mob = Bukkit.getEntity(state.getMobId());
+                if (mob == null || mob.isDead()) {
+                    // Mob despawned or was lost without the death event firing.
+                    cancel();
+                    resolveRealBattleEscape(player, session, "sgame.real_battle_lost");
+                    return;
+                }
+
+                // Re-assert aggression so the mob keeps engaging the player.
+                if (mob instanceof Mob && ((Mob) mob).getTarget() == null) {
+                    ((Mob) mob).setTarget(player);
+                }
+
+                // Handle battle timeout.
+                if (realBattleTimeout > 0
+                        && (System.currentTimeMillis() - state.getStartMillis()) >= realBattleTimeout * 1000L) {
+                    cancel();
+                    resolveRealBattleEscape(player, session, "sgame.real_battle_timeout");
+                }
+            }
+        }.runTaskTimer(plugin, 20L, 20L);
+        state.setTask(task);
+    }
+
+    /** Whether real-battle mobs are allowed to damage terrain. */
+    public boolean isRealBattleGriefingAllowed() {
+        return realBattleAllowGriefing;
+    }
+
+    /** Whether the given entity UUID belongs to a tracked real-battle mob. */
+    public boolean isBattleMob(UUID id) {
+        if (id == null || realBattles.isEmpty()) {
+            return false;
+        }
+        for (RealBattleState state : realBattles.values()) {
+            if (id.equals(state.getMobId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the given entity is a tracked real-battle mob, or a projectile
+     * (e.g. a wither skull) launched by one. Used to suppress terrain damage
+     * from battle-mob explosions when griefing is disabled.
+     */
+    public boolean isBattleExplosionSource(Entity entity) {
+        if (entity == null || realBattles.isEmpty()) {
+            return false;
+        }
+        if (isBattleMob(entity.getUniqueId())) {
+            return true;
+        }
+        if (entity instanceof Projectile) {
+            ProjectileSource shooter = ((Projectile) entity).getShooter();
+            if (shooter instanceof Entity) {
+                return isBattleMob(((Entity) shooter).getUniqueId());
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Called when any entity dies. If the entity is a tracked real-battle mob,
+     * resolve the battle as a victory. Returns true if it was a battle mob.
+     */
+    public boolean onBattleEntityDeath(Entity entity) {
+        if (entity == null || realBattles.isEmpty()) {
+            return false;
+        }
+        UUID id = entity.getUniqueId();
+        // Find the matching battle first to avoid modifying the map while iterating.
+        String matchedPlayer = null;
+        String matchedEnemyId = null;
+        for (Map.Entry<String, RealBattleState> e : realBattles.entrySet()) {
+            if (id.equals(e.getValue().getMobId())) {
+                matchedPlayer = e.getKey();
+                matchedEnemyId = e.getValue().getEnemyId();
+                break;
+            }
+        }
+        if (matchedPlayer == null) {
+            return false;
+        }
+
+        Player player = Bukkit.getPlayerExact(matchedPlayer);
+        GameSession session = getOrLoadSession(matchedPlayer);
+        if (player != null && session != null && !session.isEnded()) {
+            BattleEnemy enemy = findEnemy(matchedEnemyId);
+            if (enemy != null) {
+                resolveRealBattleVictory(player, session, enemy);
+                return true;
+            }
+        }
+        // Session gone or invalid: just clean up the tracking state.
+        cleanupRealBattle(matchedPlayer, false);
+        return true;
+    }
+
+    /**
+     * Called when a player dies. If they are in a real battle, the run ends.
+     */
+    public void onPlayerDeath(Player player) {
+        if (player == null || !realBattles.containsKey(player.getName())) {
+            return;
+        }
+        cleanupRealBattle(player.getName(), true);
+        GameSession session = getOrLoadSession(player.getName());
+        if (session != null && !session.isEnded()) {
+            handleGameOverDeath(player, session);
+        }
+    }
+
+    /**
+     * Called when a player quits. Remove their battle mob but keep the pending
+     * battle in the session so it can be resumed on rejoin.
+     */
+    public void onPlayerQuit(Player player) {
+        if (player == null) {
+            return;
+        }
+        cleanupRealBattle(player.getName(), true);
+    }
+
+    /**
+     * Resolve a real battle as a victory, applying the same rewards as the
+     * menu-based battle victory.
+     */
+    private void resolveRealBattleVictory(Player player, GameSession session, BattleEnemy enemy) {
+        RealBattleState state = realBattles.remove(player.getName());
+        if (state == null) {
+            return; // Already resolved.
+        }
+        if (state.getTask() != null) {
+            state.getTask().cancel();
+        }
+
+        session.clearStatusEffects();
+        session.resetCombo();
+        int goldReward = enemy.getGoldReward();
+        session.addGold(goldReward);
+        session.incrementBattleVictories();
+        session.recordEventCompletion("battle");
+        session.incrementStage();
+        session.setCurrentEnemyId(null);
+        session.setCurrentEnemyHp(0);
+        session.setCurrentEventId(null);
+        saveSession(session);
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("enemy", resolveI18n(player, enemy.getName()));
+        map.put("gold", String.valueOf(goldReward));
+        player.sendMessage(messages.format(player, "sgame.real_battle_victory", map));
+
+        openMainMenu(player);
+    }
+
+    /**
+     * Resolve a real battle that ended without a kill (timeout or the mob being
+     * lost). The battle event is cleared without rewards and without advancing
+     * the stage, mirroring a failed escape.
+     */
+    private void resolveRealBattleEscape(Player player, GameSession session, String messageKey) {
+        RealBattleState state = realBattles.remove(player.getName());
+        if (state == null) {
+            return; // Already resolved.
+        }
+        if (state.getTask() != null) {
+            state.getTask().cancel();
+        }
+        // Despawn the lingering mob if it is still around (e.g. on timeout).
+        Entity mob = Bukkit.getEntity(state.getMobId());
+        if (mob != null && !mob.isDead()) {
+            mob.remove();
+        }
+
+        session.clearStatusEffects();
+        session.setCurrentEnemyId(null);
+        session.setCurrentEnemyHp(0);
+        session.setCurrentEventId(null);
+        saveSession(session);
+
+        player.sendMessage(messages.format(player, messageKey));
+        openMainMenu(player);
+    }
+
+    /** Whether the given player has an active battle mob alive in the world. */
+    private boolean hasLiveRealBattle(String playerName) {
+        RealBattleState state = realBattles.get(playerName);
+        if (state == null) {
+            return false;
+        }
+        Entity mob = Bukkit.getEntity(state.getMobId());
+        return mob != null && !mob.isDead();
+    }
+
+    /** Remove a player's tracked battle, optionally despawning the mob. */
+    private void cleanupRealBattle(String playerName, boolean removeMob) {
+        RealBattleState state = realBattles.remove(playerName);
+        if (state == null) {
+            return;
+        }
+        if (state.getTask() != null) {
+            state.getTask().cancel();
+        }
+        if (removeMob) {
+            Entity mob = Bukkit.getEntity(state.getMobId());
+            if (mob != null && !mob.isDead()) {
+                mob.remove();
+            }
+        }
+    }
+
+    /** Despawn all active battle mobs (used on plugin disable). */
+    public void shutdown() {
+        for (RealBattleState state : new ArrayList<RealBattleState>(realBattles.values())) {
+            if (state.getTask() != null) {
+                state.getTask().cancel();
+            }
+            Entity mob = Bukkit.getEntity(state.getMobId());
+            if (mob != null && !mob.isDead()) {
+                mob.remove();
+            }
+        }
+        realBattles.clear();
+    }
+
+    private EntityType parseEntityType(String name, EntityType fallback) {
+        if (name == null || name.trim().isEmpty()) {
+            return fallback;
+        }
+        try {
+            return EntityType.valueOf(name.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            plugin.getLogger().warning("[sgame] 未知的怪物實體類型: " + name + "，改用 " + fallback);
+            return fallback;
+        }
+    }
+
     private void applyShopItem(Player player, GameSession session, ShopItem item) {
         switch (item.getEffectType()) {
             case "heal":
@@ -3134,6 +3575,30 @@ public class StrategyGameManager {
         public Inventory getInventory() {
             return null;
         }
+    }
+
+    /**
+     * Runtime-only state tracking an active real (world-spawned) battle.
+     * This is never persisted; on rejoin the mob is respawned from the
+     * pending battle stored in the GameSession.
+     */
+    private static class RealBattleState {
+        private final String enemyId;
+        private final UUID mobId;
+        private final long startMillis;
+        private BukkitTask task;
+
+        RealBattleState(String enemyId, UUID mobId) {
+            this.enemyId = enemyId;
+            this.mobId = mobId;
+            this.startMillis = System.currentTimeMillis();
+        }
+
+        String getEnemyId() { return enemyId; }
+        UUID getMobId() { return mobId; }
+        long getStartMillis() { return startMillis; }
+        BukkitTask getTask() { return task; }
+        void setTask(BukkitTask task) { this.task = task; }
     }
 
     private static class GameSession {
@@ -3848,10 +4313,12 @@ public class StrategyGameManager {
         private final int critChance; // Percentage chance for critical hit
         private final double critMultiplier; // Damage multiplier on crit
         private final int dodgeChance; // Percentage chance to dodge
+        // Real-battle mode: the world entity type spawned for this enemy (may be null)
+        private final String entityType;
 
         BattleEnemy(String id, String name, String description, int power, int damage, int goldReward, int minStage,
                    int health, int attack, int defense, int magic,
-                   List<EnemySkill> skills, int critChance, double critMultiplier, int dodgeChance) {
+                   List<EnemySkill> skills, int critChance, double critMultiplier, int dodgeChance, String entityType) {
             this.id = id;
             this.name = name != null ? name : id;
             this.description = description != null ? description : "";
@@ -3867,6 +4334,7 @@ public class StrategyGameManager {
             this.critChance = Math.min(50, Math.max(0, critChance));
             this.critMultiplier = critMultiplier > 1.0 ? critMultiplier : 1.5;
             this.dodgeChance = Math.min(40, Math.max(0, dodgeChance));
+            this.entityType = (entityType != null && !entityType.trim().isEmpty()) ? entityType.trim() : null;
         }
 
         static BattleEnemy fromMap(Map<?, ?> raw) {
@@ -3887,6 +4355,7 @@ public class StrategyGameManager {
             int critChance = parseInt(raw.get("crit_chance"));
             double critMult = parseDouble(raw.get("crit_multiplier"));
             int dodgeChance = parseInt(raw.get("dodge_chance"));
+            String entityType = raw.get("entity_type") != null ? raw.get("entity_type").toString() : null;
             
             // Parse skills
             List<EnemySkill> skills = new ArrayList<EnemySkill>();
@@ -3903,7 +4372,7 @@ public class StrategyGameManager {
             }
             
             return new BattleEnemy(id, name, desc, power, damage, gold, minStage, health, attack, defense, magic,
-                                  skills, critChance, critMult, dodgeChance);
+                                  skills, critChance, critMult, dodgeChance, entityType);
         }
 
         String getId() { return id; }
@@ -3922,6 +4391,7 @@ public class StrategyGameManager {
         int getCritChance() { return critChance; }
         double getCritMultiplier() { return critMultiplier; }
         int getDodgeChance() { return dodgeChance; }
+        String getEntityType() { return entityType; }
     }
 
     /**

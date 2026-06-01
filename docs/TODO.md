@@ -42,7 +42,7 @@
 
 | 小遊戲 | 指令 | 狀態 | 文檔 |
 |--------|------|------|------|
-| 勇者傳說：終界之戰 | `/sgame` | ✅ 可玩（菜單戰鬥）；🔜 真實生怪戰鬥（plan-B） | [strategy-game.md](minigames/strategy-game.md) |
+| 勇者傳說：終界之戰 | `/sgame` | ✅ 可玩（菜單戰鬥）；✅ 真實生怪戰鬥（`battles.real_battle.enabled`） | [strategy-game.md](minigames/strategy-game.md) |
 | 隨機傳送挑戰 | `/ngame rtp` | ✅ 可玩；🔜 真實權限移除需 Vault | [random-teleport.md](minigames/random-teleport.md) |
 | 生存競技場 | `/ngame arena` | ✅ 可玩 | [survival-arena.md](minigames/survival-arena.md) |
 | 釣魚大賽 | `/ngame fishing` | ✅ 可玩 | [fishing-contest.md](minigames/fishing-contest.md) |
@@ -54,7 +54,7 @@
 ## 剩餘工作（跨模組）
 
 ### 小遊戲重點待辦
-- [ ] **策略遊戲**：實作「真實在世界中生成怪物」的戰鬥模式（plan-B，獨立 PR）。
+- [x] **策略遊戲**：實作「真實在世界中生成怪物」的戰鬥模式（由 `battles.real_battle.enabled` 切換）。
 - [ ] **隨機傳送**：以 Vault Permission API 完成遊戲期間的權限**實際移除與還原**（目前僅追蹤清單；替代方案為 `/ntpadmin lock`）。
 - [ ] 各小遊戲的排行榜 / 歷史紀錄（生存競技場、釣魚、卡牌、21 點、策略遊戲共通需求）。
 

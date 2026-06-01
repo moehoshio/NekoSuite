@@ -68,6 +68,14 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
     private CommandConfig commandConfig;
 
     @Override
+    public void onDisable() {
+        // Despawn any active strategy-game battle mobs so they don't linger.
+        if (strategyGameManager != null) {
+            strategyGameManager.shutdown();
+        }
+    }
+
+    @Override
     public void onEnable() {
         saveResource("language.yml", false);
         saveResource("lang/zh_tw.yml", false);
@@ -3533,17 +3541,51 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         if (cardBattleManager != null) {
             cardBattleManager.onPlayerQuit(player);
         }
+        if (strategyGameManager != null) {
+            strategyGameManager.onPlayerQuit(player);
+        }
     }
 
     @EventHandler
     public void onEntityDeath(org.bukkit.event.entity.EntityDeathEvent event) {
+        org.bukkit.entity.Entity entity = event.getEntity();
+        // Strategy game real battle: resolve victory when a battle mob dies.
+        if (strategyGameManager != null && strategyGameManager.onBattleEntityDeath(entity)) {
+            // Battle mob: suppress drops and experience to prevent farming.
+            event.getDrops().clear();
+            event.setDroppedExp(0);
+            return;
+        }
         if (survivalArenaManager == null) {
             return;
         }
-        org.bukkit.entity.Entity entity = event.getEntity();
         Player killer = event.getEntity().getKiller();
         if (killer != null) {
             survivalArenaManager.onMobKill(killer, entity);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplodeForBattle(org.bukkit.event.entity.EntityExplodeEvent event) {
+        // Strategy game real battle: prevent battle mobs (e.g. Creeper/Wither
+        // skulls) from damaging terrain when griefing is disabled.
+        if (strategyGameManager == null || strategyGameManager.isRealBattleGriefingAllowed()) {
+            return;
+        }
+        if (strategyGameManager.isBattleExplosionSource(event.getEntity())) {
+            event.blockList().clear();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityChangeBlockForBattle(org.bukkit.event.entity.EntityChangeBlockEvent event) {
+        // Strategy game real battle: prevent battle mobs (e.g. Wither) from
+        // breaking blocks when griefing is disabled.
+        if (strategyGameManager == null || strategyGameManager.isRealBattleGriefingAllowed()) {
+            return;
+        }
+        if (strategyGameManager.isBattleMob(event.getEntity().getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 
@@ -3554,6 +3596,11 @@ public class NekoSuitePlugin extends JavaPlugin implements CommandExecutor, TabC
         // Survival Arena death handling
         if (survivalArenaManager != null) {
             survivalArenaManager.onPlayerDeath(player);
+        }
+
+        // Strategy game real battle death handling
+        if (strategyGameManager != null) {
+            strategyGameManager.onPlayerDeath(player);
         }
         
         // Inventory Backup death handling
