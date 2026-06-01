@@ -237,6 +237,14 @@ menu:
     equip_slot_accessory: "&fAccessory Slot"
     equip_empty: "&7Empty"
     equip_click_to_change: "&eClick to change equipment"
+    # Event confirmation menu i18n
+    confirm_choices_preview: "&7Available choices:"
+    confirm_enter_event: "&a✔ Confirm Entry"
+    confirm_enter_lore: "&7Confirm and start this event"
+    back_to_selection: "&c✖ Back to Selection"
+    back_to_selection_lore: "&7Return to event selection list"
+    confirm_warning: "&e⚠ Notice"
+    confirm_warning_lore: "&7Once confirmed, you must complete the event"
     # Event selection i18n
     event_type_lore: "&7Type: {type}"
     type_story: "&aStory"
@@ -828,362 +836,574 @@ sgame:
   # Config texts - Events
   config:
     events:
-      mysterious_merchant:
-        name: "&6Mysterious Merchant"
-        desc1: "&7You encounter a mysterious merchant on the road..."
-        desc2: "&7He seems to have something to trade."
+      village_under_attack:
+        name: '&c✦ Village in Flames'
+        desc1: '&7At dawn, a monster tide surged from the Black Forest; Dawn Village was engulfed in fire.'
+        desc2: '&7Elders fell in the blaze, children''s cries tore through the morning mist.'
+        desc3: '&7As the only villager still able to hold a blade — you have no choice but to fight.'
         choice1:
-          text: "&aTrade with him"
-          result: "&7The merchant is pleased and gives you some gold in return!"
+          text: '&fStand and face the enemy head-on'
+          result: '&7You charge into the fire with a broken sword, wounded but awakened to killing intent. The villagers are saved.'
         choice2:
-          text: "&cIgnore and leave"
-          result: "&7You continue your journey, nothing happened."
+          text: '&fEscort the weak to safety first'
+          result: '&7You carry the wounded through burning alleys. Grateful villagers press a pouch of coin into your hand.'
         choice3:
-          text: "&eTry to rob him"
-          result: "&cThe merchant was a disguised bandit! You got attacked!"
-      injured_traveler:
-        name: "&bInjured Traveler"
-        desc1: "&7An injured traveler lies by the roadside..."
-        desc2: "&7He seems to need help."
+          text: '&fScavenge supplies from the chaos'
+          result: '&7You dig through the ruins for valuables and provisions — drawing scornful glances, yet your pack grows heavier.'
+      veteran_knight:
+        name: '&e✦ The Retired Knight'
+        desc1: '&7In a forest cabin dwells a one-armed old knight.'
+        desc2: '&7He studies you for a long moment, then slowly reveals a forgotten legend and a tattered map.'
         choice1:
-          text: "&aHelp him (use healing potion)"
-          result: "&7The traveler is very grateful and rewards you generously!"
-          result_alt: "&7You did your best to help him, he gave you some gold."
+          text: '&fListen to his teachings'
+          result: '&7The old knight teaches you self-defense and marks the artifact altar''s location. He bandages your wounds before you leave.'
         choice2:
-          text: "&eCheck his backpack"
-          result: "&7You found some gold, but feel uneasy..."
+          text: '&fJust take the map'
+          result: '&7You trade a few silver coins for the map. The old knight shakes his head with a sigh but does not stop you.'
+      artifact_altar:
+        name: '&6✦ Artifact Altar'
+        desc1: '&7The altar lies deep within ancient ruins; three beams of divine light rise from stone pedestals.'
+        desc2: '&7Relics of legend slumber here, awaiting a worthy hero.'
+        desc3: '&7You may take only one — your choice will define your path of battle.'
+        choice1:
+          text: '&bTake【Holy Sword: Dawn】'
+          result: '&7Sword-light erupts like sunrise, balanced in offense and defense. You become a true swordsman.'
+        choice2:
+          text: '&aTake【Dawnbreak Bow】'
+          result: '&7The bowstring thrums with spirit energy. You become a ranger skilled in archery and sorcery.'
         choice3:
-          text: "&cLeave"
-          result: "&7You continue on your way."
-      ancient_shrine:
-        name: "&dAncient Shrine"
-        desc1: "&7You discovered an ancient shrine..."
-        desc2: "&7There's an altar in the center."
-        fail_text: "&cYou need at least 20 gold to enter the shrine"
+          text: '&cTake【Earthsplitter Axe】'
+          result: '&7The war-axe crashes down with overwhelming fury. You become an unstoppable berserker.'
+      mid_rest_camp:
+        name: '&a✦ Roadside Camp'
+        desc1: '&7Midway through your journey, you set camp by a stream.'
+        desc2: '&7The campfire crackles — a rare moment to catch your breath.'
         choice1:
-          text: "&aOffer gold and pray (costs 20 gold)"
-          result: "&7The gods blessed you, restoring your vitality!"
+          text: '&fGet a proper sleep (-20 gold)'
+          result: '&7You buy hot food and a blanket from a passing caravan. Fully restored.'
         choice2:
-          text: "&eExplore the shrine"
-          result: "&7You found some treasure!"
+          text: '&fMeditate quietly'
+          result: '&7You sit in meditation; both health and magic recover somewhat.'
         choice3:
-          text: "&cLeave the shrine"
-          result: "&7You respect this place and move on."
-      forest_crossroads:
-        name: "&2Forest Crossroads"
-        desc1: "&7You've come to a fork in the road..."
-        desc2: "&7The left looks dark, the right is sunny."
+          text: '&fClean and maintain your gear'
+          result: '&7You carefully polish your armor; your defenses feel sturdier.'
+      blood_moon_omen:
+        name: '&4✦ Blood Moon Omen'
+        desc1: '&7The night sky turns crimson; a dragon''s growl echoes in the distance.'
+        desc2: '&7Monsters grow frenzied under the blood moon — a moment of decision.'
         choice1:
-          text: "&aTake the right path"
-          result: "&7A safe road, you found some gold."
+          text: '&fCharge against the moon, sharpen your killing intent'
+          result: '&7You fight monsters to exhaustion under the blood moon. Battered, yet your swordsmanship reaches new heights.'
         choice2:
-          text: "&cTake the left path (requires amulet)"
-          result: "&7The amulet protected you, you discovered great treasures!"
-          result_alt: "&7A dangerous path, you got hurt but found some treasure."
+          text: '&fHold high ground, play it safe'
+          result: '&7You choose to defend and conserve energy. Both defenses and resolve are steadied.'
         choice3:
-          text: "&eGo back"
-          result: "&7You decided to be cautious."
-      treasure_chest:
-        name: "&6Treasure Chest"
-        desc1: "&7You found a shiny treasure chest!"
-        desc2: "&7What will you do with it?"
+          text: '&fRaid an abandoned outpost in the chaos'
+          result: '&7You risk scavenging and return loaded with loot — at the cost of some blood.'
+      dragon_road:
+        name: '&5✦ Road to the Dragon''s Lair'
+        desc1: '&7The air of the End washes over you; this is the last stretch to the dragon''s lair.'
+        desc2: '&7Before stepping into the deadlands, you still have time for final preparations.'
         choice1:
-          text: "&aCarefully open it"
-          result: "&7You successfully avoided the trap and got a reward!"
+          text: '&fGather scattered dragon scales'
+          result: '&7You pick up a hard dragon scale — ideal material for forging a divine weapon.'
         choice2:
-          text: "&eOpen it directly"
-          result: "&cTriggered a trap! But the treasure inside is rich."
+          text: '&fRest at the outpost supply station (-15 gold)'
+          result: '&7You pay for a full rest, entering the final battle in peak condition.'
         choice3:
-          text: "&cDon't touch it and leave"
-          result: "&7Safety first."
-      village_festival:
-        name: "&eVillage Festival"
-        desc1: "&7You pass by a village holding a festival."
-        desc2: "&7The villagers warmly invite you to join."
-        choice1:
-          text: "&aJoin the festival (costs 10 gold)"
-          result: "&7You had a great time and recovered energy!"
-        choice2:
-          text: "&ePerform for money"
-          result: "&7The villagers loved your performance!"
-        choice3:
-          text: "&cContinue on your way"
-          result: "&7You don't have time to rest."
-      secret_vault:
-        name: "&5Secret Vault"
-        desc1: "&7You found a hidden vault entrance!"
-        desc2: "&7A key is needed to open it."
-        fail_text: "&cYou need a treasure key to enter"
-        choice1:
-          text: "&aUse the key to open"
-          result: "&7The vault is full of treasure! You got rich!"
-        choice2:
-          text: "&cLeave"
-          result: "&7You decided to keep the key for later."
-      traveling_merchant_shop:
-        name: "&6Traveling Merchant's Shop"
-        desc1: "&7A traveling merchant is willing to trade with you..."
-        desc2: "&7He has some special items for sale."
-        fail_text: "&cYou need a merchant token to enter the special shop"
-        choice1:
-          text: "&aBrowse goods"
-          result: "&7Welcome!"
-      monster_ambush:
-        name: "&cMonster Ambush"
-        desc1: "&7You walked into a dark area..."
-        desc2: "&7Suddenly, a monster jumps out from the shadows!"
-        choice1:
-          text: "&cPrepare for battle"
-          result: "&7You draw your weapon and prepare to fight!"
-      blacksmith_shop:
-        name: "&8Blacksmith Shop"
-        desc1: "&7You arrived at a blacksmith shop."
-        desc2: "&7Various equipment is available for purchase."
-        choice1:
-          text: "&aBrowse equipment"
-          result: "&7Welcome to my blacksmith shop!"
-      # New battle events
-      goblin_camp:
-        name: "&2Goblin Camp"
-        desc1: "&7You discovered a goblin camp..."
-        desc2: "&cSeveral goblins noticed your presence!"
-        choice1:
-          text: "&cPrepare for battle"
-          result: "&7The goblins charge at you!"
-      dungeon_entrance:
-        name: "&8Dungeon Entrance"
-        desc1: "&7You found a mysterious dungeon entrance..."
-        desc2: "&cEerie sounds echo from within!"
-        choice1:
-          text: "&cEnter and explore"
-          result: "&7You gather courage and step into the darkness..."
-      haunted_graveyard:
-        name: "&5Haunted Graveyard"
-        desc1: "&7A sinister graveyard appears before you..."
-        desc2: "&cUndead creatures wander among the tombstones!"
-        choice1:
-          text: "&cFight the undead"
-          result: "&7Skeletons rise from their graves!"
-      dragon_lair_entrance:
-        name: "&4Dragon Lair Entrance"
-        desc1: "&cAhead lies the legendary dragon's lair..."
-        desc2: "&4The air is thick with danger!"
-        choice1:
-          text: "&cChallenge the dragon"
-          result: "&4The dragon's roar shakes the entire cavern!"
-      # New story events
-      wandering_minstrel:
-        name: "&dWandering Minstrel"
-        desc1: "&7A traveling minstrel plays by the roadside..."
-        desc2: "&7Their music is soothing and peaceful."
-        choice1:
-          text: "&aTip them (costs 10 gold)"
-          result: "&7The minstrel plays a healing melody for you!"
-        choice2:
-          text: "&cContinue on your way"
-          result: "&7You nod and continue your journey."
-        choice3:
-          text: "&eAsk for fortune telling"
-          result: "&7The minstrel warns you of dangers ahead, you gain intel!"
-      abandoned_mine:
-        name: "&8Abandoned Mine"
-        desc1: "&7You found an abandoned mine..."
-        desc2: "&7There might be unmined ore inside."
-        choice1:
-          text: "&aRisk mining"
-          result: "&7You found some ore, but also encountered some danger!"
-        choice2:
-          text: "&cLeave"
-          result: "&7You decide not to take the risk."
-        choice3:
-          text: "&eSearch the entrance carefully"
-          result: "&7You found supplies left by previous miners!"
-      mystic_fountain:
-        name: "&bMystic Fountain"
-        desc1: "&7A glowing fountain appears before you..."
-        desc2: "&7The water emanates mysterious power."
-        choice1:
-          text: "&aDrink from the fountain"
-          result: "&7Mysterious energy flows into your body!"
-        choice2:
-          text: "&dToss in a coin (costs 15 gold)"
-          result: "&7Healing power bursts from the fountain!"
-        choice3:
-          text: "&eCollect water to sell"
-          result: "&7You collected some water but the fountain's guardian noticed!"
-      bandit_toll:
-        name: "&cBandit Roadblock"
-        desc1: "&7A group of bandits block your path..."
-        desc2: "&7They demand a toll to pass."
-        choice1:
-          text: "&aPay the toll (costs 25 gold)"
-          result: "&7The bandits let you pass."
-        choice2:
-          text: "&cTry to break through"
-          result: "&7You get into a fight with the bandits!"
-        choice3:
-          text: "&eFight back and rob them"
-          result: "&7You defeat the bandits and take their loot!"
-      # New shop events
-      potion_shop:
-        name: "&dPotion Shop"
-        desc1: "&7A shop with strange smells wafting from it."
-        desc2: "&7The owner is an old wizard."
-        choice1:
-          text: "&aBrowse potions"
-          result: "&7Welcome to my potion shop!"
-      wandering_trader:
-        name: "&6Wandering Trader"
-        desc1: "&7A merchant carrying a large backpack."
-        desc2: "&7They claim to have rare items for sale."
-        choice1:
-          text: "&aView goods"
-          result: "&7Come see my fine wares!"
-      # Fixed stage events
-      starter_shop:
-        name: "&aStarter Supply Station"
-        desc1: "&7Welcome to the start of your adventure!"
-        desc2: "&7Basic supplies are available here."
-        choice1:
-          text: "&aView goods"
-          result: "&7Good luck on your journey!"
-      rest_station:
-        name: "&bRoadside Rest Stop"
-        desc1: "&7You arrive at a peaceful resting spot."
-        desc2: "&7Recover your strength before the next challenges."
-        choice1:
-          text: "&aPaid rest (costs 15 gold)"
-          result: "&7You rested well and recovered a lot of health!"
-        choice2:
-          text: "&eQuick rest"
-          result: "&7You took a short break and recovered some health."
-        choice3:
-          text: "&cKeep moving"
-          result: "&7You decide not to waste time and move on."
-      late_rest_station:
-        name: "&dAdventurer's Inn"
-        desc1: "&7You arrive at an inn made for adventurers."
-        desc2: "&7Prepare for the powerful enemies ahead."
-        choice1:
-          text: "&aPaid rest (costs 20 gold)"
-          result: "&7You got a full rest and recovered body and mind!"
-        choice2:
-          text: "&eQuick rest"
-          result: "&7You took a short break and recovered some health."
-        choice3:
-          text: "&cKeep moving"
-          result: "&7You decide to save time and continue adventuring."
+          text: '&fSwear an oath before the lair'
+          result: '&7Gripping your relic, you vow to slay the dragon. Your resolve hardens like bedrock.'
       final_warning:
-        name: "&c⚠ Final Battle Approaches"
-        desc1: "&7You sense a powerful darkness ahead..."
-        desc2: "&7This is your last chance to prepare before the final battlefield."
-        desc3: "&c&lWarning: Next stage is the final Boss!"
+        name: '&c✦ Eve of the Final Battle'
+        desc1: '&7The air congeals; even the wind dares not whisper.'
+        desc2: '&7Scorching heat billows from the cavern mouth — the Ender Dragon waits within.'
+        desc3: '&7Take a deep breath — this battle decides the continent''s fate.'
         choice1:
-          text: "&aPray for blessing (restore health)"
-          result: "&7Holy power shields you; you feel empowered!"
+          text: '&fRest your eyes, recover your strength'
+          result: '&7You steady your breathing; wounds and nerves both settle.'
         choice2:
-          text: "&cAdvance immediately"
-          result: "&7You take a deep breath and march toward the final challenge."
-      final_boss:
-        name: "&4&l⚔ Dark Lord Descends"
-        desc1: "&cThe sky turns black, the ground trembles..."
-        desc2: "&4The Dark Lord emerges from the void, radiating terror!"
-        desc3: "&cThis is the final battle to save the kingdom of Meoceria!"
+          text: '&fRehearse battle techniques mentally'
+          result: '&7You run through every move in your mind. Both offense and defense improve.'
+      end_dragon:
+        name: '&5&l✦ Ender Dragon · Final Battle'
+        desc1: '&7A colossal shadow rises from the abyss; its wings blot out the sky.'
+        desc2: '&7This is the architect of the End''s calamity — the Ender Dragon.'
+        desc3: '&7Hero, raise your relic and end this nightmare!'
         choice1:
-          text: "&c&lFace the final challenge"
-          result: '&4Dark Lord: "Foolish adventurer... I will end your journey!"'
-    # Shop items
-    shop:
-      small_potion:
-        name: "&aSmall Healing Potion"
-        effect: "Restores 25 HP"
-      large_potion:
-        name: "&aLarge Healing Potion"
-        effect: "Restores 50 HP"
-      magic_potion:
-        name: "&dMagic Potion"
-        effect: "Restores 15 Magic"
-      health_upgrade:
-        name: "&cHealth Upgrade"
-        effect: "Permanently increases max HP by 20"
-      lucky_coin:
-        name: "&6Lucky Coin"
-        effect: "Restores 10 HP and brings good luck"
-      healing_potion:
-        name: "&dHealing Potion"
-        effect: "Get 1 healing potion for use in events"
-    # Equipment
-    equipment:
-      iron_sword:
-        name: "&fIron Sword"
-      steel_sword:
-        name: "&bSteel Sword"
-      leather_armor:
-        name: "&6Leather Armor"
-      iron_armor:
-        name: "&fIron Armor"
-      magic_ring:
-        name: "&dMagic Ring"
-      amulet_of_protection:
-        name: "&5Amulet of Protection"
-    # Enemies
+          text: '&c&lLaunch the final assault on the Ender Dragon!'
+          result: '&7With a roar you charge the dragon — legend is written this very moment!'
+      starter_shop:
+        name: '&6✦ Village Supply Stand'
+        desc1: '&7The shopkeeper by the village gate sets up her stall and greets you, the newly-minted hero.'
+        desc2: '&7"Stock up well before you head out!"'
+        choice1:
+          text: '&fBrowse wares'
+          result: '&7You approach the stall and pick through the supplies.'
+      blacksmith_forge:
+        name: '&8✦ Blacksmith Forge'
+        desc1: '&7The forge roars, hammers ring. The old smith eyes your weapon.'
+        desc2: '&7"Want to get stronger? Hand over your gear and a bit of coin."'
+        choice1:
+          text: '&fSharpen weapon (-40 gold, Attack +4)'
+          result: '&7Sparks fly; the blade gleams cold. Attack power increased!'
+          result_alt: '&7Your purse is too light. The smith waves you away.'
+        choice2:
+          text: '&fReinforce armor (-40 gold, Defense +4)'
+          result: '&7Plates are re-riveted; your armor feels much sturdier!'
+          result_alt: '&7Not enough gold. The smith just shakes his head.'
+        choice3:
+          text: '&fAwaken relic with dragon scale (-60 gold + scale, Atk +8 Def +4)'
+          result: '&7The dragon scale melts into your relic, erupting with brilliant light — relic awakened!'
+          result_alt: '&7Missing scale or gold. The awakening must wait.'
+        choice4:
+          text: '&fJust look around and leave'
+          result: '&7You bid the smith farewell and continue on.'
+      village_inn:
+        name: '&e✦ Village Inn'
+        desc1: '&7A cozy little inn, fragrant with stew and ale.'
+        desc2: '&7The innkeeper warmly invites you to rest your feet.'
+        choice1:
+          text: '&fRent a fine room (-25 gold)'
+          result: '&7A wonderful night''s sleep — health and magic fully restored!'
+          result_alt: '&7You can''t afford a room; you doze in the doorway instead.'
+        choice2:
+          text: '&fNap by the hearth'
+          result: '&7The hearth''s warmth eases your fatigue; you recover some health.'
+        choice3:
+          text: '&fDrink and chat with fellow travelers'
+          result: '&7Good conversation lifts your spirits; magic recovers slightly.'
+      herbalist_request:
+        name: '&2✦ Herbalist''s Request'
+        desc1: '&7The village herbalist urgently needs herbs to treat the wounded.'
+        desc2: '&7"If you have three herbs, I''ll repay you handsomely with gold and a potion."'
+        choice1:
+          text: '&fHand over 3 herbs'
+          result: '&7The herbalist is overjoyed and gives you a generous reward of gold and a healing potion.'
+          result_alt: '&7You don''t have three herbs. The herbalist shakes their head with regret.'
+        choice2:
+          text: '&fDecline but point the wounded elsewhere'
+          result: '&7Though you couldn''t help directly, you earn the villagers'' goodwill.'
+      village_plea:
+        name: '&2✦ Villagers'' Plea'
+        desc1: '&7A villager drops to their knees, begging for help.'
+        desc2: '&7"Thugs and beasts are plundering us — please, brave hero!"'
+        choice1:
+          text: '&fAccept without hesitation'
+          result: '&7You nod your agreement. The villager weeps with gratitude — foes await ahead.'
+        choice2:
+          text: '&fAsk for payment first'
+          result: '&7The villager scrapes together their meager savings before you agree.'
+        choice3:
+          text: '&fCalm the villager first'
+          result: '&7Your reassurance gives the villager some comfort.'
+      crossroad_choice:
+        name: '&3✦ Crossroads of Fate'
+        desc1: '&7The road splits three ways, each leading into the unknown.'
+        desc2: '&7Fog cloaks the forest; you must choose.'
+        choice1:
+          text: '&fTake the overgrown trail'
+          result: '&7You gather herbs along the way and find a few scattered silver coins.'
+        choice2:
+          text: '&fFollow the quiet valley stream'
+          result: '&7The cool water refreshes you; your magic is replenished.'
+        choice3:
+          text: '&fScale the treacherous cliff shortcut'
+          result: '&7You find treasure on the shortcut but scrape yourself climbing.'
+      training_grounds:
+        name: '&9✦ Mercenary Training Grounds'
+        desc1: '&7A band of mercenaries drills in the yard; the instructor beckons.'
+        desc2: '&7"Want to learn? Pay up and I''ll teach you how to survive."'
+        choice1:
+          text: '&fSwordsmanship training (-20 gold, Attack +3)'
+          result: '&7After grueling practice, your swordplay is sharper than ever.'
+          result_alt: '&7Tuition is short. The instructor just says, "Come back later."'
+        choice2:
+          text: '&fMeditation training (-20 gold, Magic cap +8)'
+          result: '&7You learn to channel spirit energy; your magic capacity increases.'
+          result_alt: '&7No payment, no lesson. The mentor politely refuses.'
+        choice3:
+          text: '&fJust watch from the side'
+          result: '&7You observe for a while, gain a small insight, then leave.'
+      forest_crossroads:
+        name: '&2✦ Forest Fork'
+        desc1: '&7A fork appears in the dense forest.'
+        desc2: '&7Different paths may lead to different fortunes.'
+        choice1:
+          text: '&fTake the well-lit road'
+          result: '&7A safe journey — you gather herbs and a few coins along the way.'
+        choice2:
+          text: '&fTake the shadowy shortcut'
+          result: '&7Protected by the village talisman, you collect rich plunder safely.'
+          result_alt: '&7Without a talisman, the shortcut hides traps — you''re hurt before escaping.'
+        choice3:
+          text: '&fCamp here and rest'
+          result: '&7You take a short break and recover some stamina.'
+      mysterious_merchant:
+        name: '&6✦ Mysterious Merchant'
+        desc1: '&7A cloaked merchant blocks your path.'
+        desc2: '&7"Have a look at my fine goods? You won''t regret it."'
+        choice1:
+          text: '&fBuy a talisman for later'
+          result: '&7You receive a merchant guild token — said to be redeemable for rare goods at traveling caravans.'
+        choice2:
+          text: '&fPolitely decline'
+          result: '&7You wave off the merchant and press on.'
+        choice3:
+          text: '&fGamble on a mystery box'
+          result: '&7The contents disappoint — you''ve lost gold and some vitality.'
+      wandering_minstrel:
+        name: '&d✦ Wandering Minstrel'
+        desc1: '&7A bard strums their lute, singing an ancient hero''s epic.'
+        desc2: '&7The melody soothes weary travelers.'
+        choice1:
+          text: '&fTip and listen (-10 gold)'
+          result: '&7The moving melody refreshes body and soul; health is restored.'
+        choice2:
+          text: '&fAsk about war-songs'
+          result: '&7The bard teaches you an ancient inspiring tune; magic is replenished.'
+        choice3:
+          text: '&fPerform a duet for tips'
+          result: '&7You and the bard play together, earning coin — though it''s exhausting.'
+      mystic_fountain:
+        name: '&b✦ Mystic Spring'
+        desc1: '&7A glowing spring hides among the trees.'
+        desc2: '&7Legend says its waters wash away pain and temper the spirit.'
+        choice1:
+          text: '&fDrink deeply'
+          result: '&7The clear water soothes you; wounds heal rapidly!'
+        choice2:
+          text: '&fTemper your spirit in the spring (-15 gold)'
+          result: '&7Following an ancient rite, your magic capacity increases.'
+        choice3:
+          text: '&fGather herbs by the spring'
+          result: '&7You harvest several precious herbs at the water''s edge.'
+      abandoned_mine:
+        name: '&8✦ Abandoned Mine'
+        desc1: '&7A collapsed old mine yawns open before you.'
+        desc2: '&7Unexhausted ore may still lie in the depths.'
+        choice1:
+          text: '&fDig deep for ore'
+          result: '&7You mine valuable ore to sell, but falling rocks wound you.'
+        choice2:
+          text: '&fExplore cautiously near the entrance'
+          result: '&7You poke around the entrance — safe, but find nothing.'
+        choice3:
+          text: '&fSearch for miners'' leftovers'
+          result: '&7Among old belongings you find gold and even a dragon scale!'
+      ancient_shrine:
+        name: '&e✦ Ancient Shrine'
+        desc1: '&7A weathered shrine stands in the wilderness.'
+        desc2: '&7Without a sincere offering (gold), the gods may not answer.'
+        choice1:
+          text: '&fMake a devout offering (-20 gold)'
+          result: '&7Divine light envelops you; wounds heal and you receive a blessed amulet.'
+        choice2:
+          text: '&fTake the offering money from the altar'
+          result: '&7You pocket the gold, but something seems displeased — a dull ache sets in.'
+        choice3:
+          text: '&fBow respectfully and leave'
+          result: '&7You offer a simple bow; your mind feels calmer.'
+        fail_text: '&cYou need at least 20 gold to make an offering at the shrine.'
+      treasure_chest:
+        name: '&6✦ Mysterious Chest'
+        desc1: '&7At the end of a side path sits a dusty treasure chest.'
+        desc2: '&7A rusty lock hangs from it.'
+        choice1:
+          text: '&fCarefully pick the lock'
+          result: '&7You pry the chest open for gold and even find a mysterious key.'
+        choice2:
+          text: '&fSmash it open'
+          result: '&7You crack the chest with your axe — gold scatters, but splinters wound you.'
+        choice3:
+          text: '&fLeave it alone — might be a trap'
+          result: '&7You suspect foul play and walk around the chest.'
+      secret_vault:
+        name: '&5✦ Hidden Vault'
+        desc1: '&7The key from the chest unlocks a hidden stone door.'
+        desc2: '&7Behind it lies an ancient vault piled high with treasure!'
+        choice1:
+          text: '&fUse the key to open the vault'
+          result: '&7You leave loaded with gold and a rare dragon scale!'
+        choice2:
+          text: '&fSomething feels wrong — walk away'
+          result: '&7You suppress your greed and quietly back out of the vault.'
+        fail_text: '&cYou need the chest key to open the vault.'
+      injured_traveler:
+        name: '&2✦ Injured Traveler'
+        desc1: '&7A wounded traveler lies by the road, barely breathing.'
+        desc2: '&7They look to you with pleading eyes.'
+        choice1:
+          text: '&fHeal them with a potion'
+          result: '&7The traveler recovers and gratefully gives you a generous sum of gold!'
+          result_alt: '&7You have no potion and can only bandage them. The traveler manages to give you a few coins.'
+        choice2:
+          text: '&fCarry them to the nearest village'
+          result: '&7You escort the traveler to safety. It costs time, but earns the villagers'' trust.'
+        choice3:
+          text: '&fCannot help — continue on'
+          result: '&7With a sigh, you leave the traveler behind.'
+      bandit_toll:
+        name: '&c✦ Bandit Toll'
+        desc1: '&7A gang of bandits blocks the mountain pass, grinning.'
+        desc2: '&7"This is our road — pay up or pay in blood!"'
+        choice1:
+          text: '&fPay the toll (-25 gold)'
+          result: '&7You toss the gold down. The bandits laugh and let you pass.'
+        choice2:
+          text: '&fFight your way through barehanded'
+          result: '&7You brawl through the blockade. A few bruises, but your courage grows.'
+        choice3:
+          text: '&fTurn the tables and rob them'
+          result: '&7You catch them off guard and take their ill-gotten loot — but take a hit yourself.'
+      traveling_merchant_shop:
+        name: '&6✦ Traveling Caravan'
+        desc1: '&7With the merchant guild token, you gain entry to the caravan''s private tent.'
+        desc2: '&7A dazzling array of rare goods awaits.'
+        choice1:
+          text: '&fBrowse rare goods'
+          result: '&7You search the caravan for something useful.'
+        fail_text: '&cYou need a merchant guild token to enter the caravan.'
+      potion_shop:
+        name: '&d✦ Potion Shop'
+        desc1: '&7A shop permeated with the smell of herbs.'
+        desc2: '&7The shelves are lined with bottles and jars of all colors.'
+        choice1:
+          text: '&fBrowse potions'
+          result: '&7You study the vials on the shelf.'
+      armory:
+        name: '&7✦ Armory'
+        desc1: '&7A shop hung with blades and plate armor.'
+        desc2: '&7The shopkeeper swears every piece is genuine.'
+        choice1:
+          text: '&fBrowse weapons and armor'
+          result: '&7You inspect the array of armaments carefully.'
+      wandering_trader:
+        name: '&a✦ Peddler'
+        desc1: '&7A merchant with a pack beast stops by the road.'
+        desc2: '&7Their crates seem to hold plenty of curiosities.'
+        choice1:
+          text: '&fRummage through the crates'
+          result: '&7You open the crates and browse the goods.'
+      slime_swamp:
+        name: '&a⚔ Slime Swamp'
+        desc1: '&7Slimy creatures ooze closer in the murky swamp.'
+        desc2: '&7They''re weak individually, but numerous.'
+        choice1:
+          text: '&aBattle the slimes'
+          result: '&7You take your stance, ready to clean out these blobs.'
+      goblin_raid:
+        name: '&2⚔ Goblin Raid'
+        desc1: '&7A pack of goblins is looting a trade caravan.'
+        desc2: '&7Time to teach these green pests a lesson.'
+        choice1:
+          text: '&2Fight the goblins'
+          result: '&7You draw your weapon and charge into the goblin mob.'
+      wolf_pack:
+        name: '&7⚔ Wolf Pack Attack'
+        desc1: '&7Pairs of glowing green eyes close in from the shadows.'
+        desc2: '&7A hungry wolf pack has you surrounded.'
+        choice1:
+          text: '&7Fight the wolves'
+          result: '&7You press your back to a boulder and brace for the onslaught.'
+      bandit_ambush:
+        name: '&c⚔ Bandit Ambush'
+        desc1: '&7Masked bandits leap from both sides of the mountain path.'
+        desc2: '&7They''re clearly after your life.'
+        choice1:
+          text: '&cFight the bandits'
+          result: '&7You smirk and step forward to meet them.'
+      skeleton_crypt:
+        name: '&f⚔ Skeleton Crypt'
+        desc1: '&7In the crypt, skeletal soldiers stand with weapons ready.'
+        desc2: '&7Their hollow eye-sockets glow with ghostly fire.'
+        choice1:
+          text: '&fFight the skeletons'
+          result: '&7You raise your weapon and stride into the crypt.'
+      zombie_horde:
+        name: '&2⚔ Zombie Horde'
+        desc1: '&7The stench of rot fills the air as a horde of zombies shambles toward you.'
+        desc2: '&7They''re tough and relentless.'
+        choice1:
+          text: '&2Fight the zombies'
+          result: '&7You cover your nose and prepare to hold the line.'
+      spider_nest:
+        name: '&8⚔ Spider Nest'
+        desc1: '&7Thick webs fill the cave; giant spiders descend from the darkness.'
+        desc2: '&7Venomous fangs glint in the dim light.'
+        choice1:
+          text: '&8Fight the spiders'
+          result: '&7You slash through the webbing and face the spiders head-on.'
+      witch_hut:
+        name: '&5⚔ Witch''s Hut'
+        desc1: '&7Inside a sinister hut, a witch stirs a bubbling cauldron.'
+        desc2: '&7She looks up, a cold gleam in her eyes.'
+        choice1:
+          text: '&5Fight the witch'
+          result: '&7You advance warily, watching for spells.'
+      dark_knight_duel:
+        name: '&8⚔ Dark Knight''s Challenge'
+        desc1: '&7A knight in pitch-black armor bars your path with drawn sword.'
+        desc2: '&7"Want to pass? Get through me first."'
+        choice1:
+          text: '&8Fight the dark knight'
+          result: '&7You lock eyes with the dark knight; killing intent surges.'
+      young_dragon:
+        name: '&c⚔ Young Dragon'
+        desc1: '&7An adolescent fire dragon perches atop a mountain peak.'
+        desc2: '&7Even young, its breath can incinerate.'
+        choice1:
+          text: '&cFight the young dragon'
+          result: '&7You push through the heat waves and challenge the dragon.'
+      monster_ambush:
+        name: '&4⚔ Monster Ambush'
+        desc1: '&7Without warning, a beast lunges from the darkness!'
+        desc2: '&7No time to think — you draw your blade.'
+        choice1:
+          text: '&4Fight the monster'
+          result: '&7You instinctively raise your weapon to block.'
     enemies:
       slime:
-        name: "&aSlime"
-        desc: "A green bouncing creature"
+        name: '&aSlime'
+        desc: '&7A common blob found in swamps — soft yet clingy.'
       goblin:
-        name: "&2Goblin"
-        desc: "A cunning small creature that likes to steal"
+        name: '&2Goblin'
+        desc: '&7A cunning green imp, fond of ambushes and looting.'
         skill1:
-          name: "&eSteal"
-          desc: "Attempts to steal your gold"
+          name: '&eAmbush'
+          desc: '&7A sudden strike from nowhere, dealing extra damage.'
       wolf:
-        name: "&7Dire Wolf"
-        desc: "A fierce wild wolf, swift and agile"
+        name: '&7Wild Wolf'
+        desc: '&7A pack predator — swift and ferocious.'
         skill1:
-          name: "&7Wolf Howl"
-          desc: "Howls to boost attack power"
+          name: '&fPack Howl'
+          desc: '&7A howl rallies the pack into a savage assault.'
       bandit:
-        name: "&8Bandit"
-        desc: "A dangerous outlaw"
+        name: '&cBandit'
+        desc: '&7A desperate outlaw — ruthless and precise.'
         skill1:
-          name: "&cSneak Attack"
-          desc: "Strikes from the shadows for extra damage"
+          name: '&8Backstab'
+          desc: '&7Aims for an opening to deliver a lethal blow.'
       skeleton:
-        name: "&fSkeleton Archer"
-        desc: "A skeleton with a bow"
+        name: '&fSkeleton Soldier'
+        desc: '&7A curse-driven bone warrior, skilled in ranged attacks.'
+        skill1:
+          name: '&fBone Javelin'
+          desc: '&7Hurls a sharpened bone spear to pierce its target.'
       zombie:
-        name: "&2Zombie"
-        desc: "A slow but strong undead creature"
+        name: '&2Zombie'
+        desc: '&7Slow but thick-skinned and venomous in its bite.'
+        skill1:
+          name: '&2Rotting Bite'
+          desc: '&7A toxic bite that poisons the target.'
       spider:
-        name: "&8Giant Spider"
-        desc: "A terrifying giant spider"
+        name: '&8Giant Spider'
+        desc: '&7An agile venomous hunter that can bind prey in silk.'
+        skill1:
+          name: '&8Web Bind'
+          desc: '&7Sprays sticky webbing to stun the target.'
+        skill2:
+          name: '&2Venom Fang'
+          desc: '&7Poisonous fangs that leave the target bleeding and poisoned.'
       witch:
-        name: "&5Witch"
-        desc: "An evil magic user"
+        name: '&5Witch'
+        desc: '&7A spellcaster wielding fire and frost — deeply treacherous.'
+        skill1:
+          name: '&cFireball'
+          desc: '&7Hurls a scorching fireball, inflicting burns.'
+        skill2:
+          name: '&bFrost Curse'
+          desc: '&7A winter hex that freezes the target.'
       dark_knight:
-        name: "&8Dark Knight"
-        desc: "A powerful dark warrior"
+        name: '&8Dark Knight'
+        desc: '&7A fallen elite warrior — strong in both offense and defense.'
+        skill1:
+          name: '&8Shadow Slash'
+          desc: '&7A heavy slash wreathed in shadow, dealing massive damage.'
+        skill2:
+          name: '&7Shield Bash'
+          desc: '&7A brutal shield slam that stuns the target.'
       dragon:
-        name: "&4Shadow Dragon"
-        desc: "The ultimate challenge, a legendary dragon"
-      # Final Boss
-      dark_lord:
-        name: "&4&lDark Lord"
-        desc: "The ultimate threat to Meoceria, a terrifying master of darkness"
-    # End rewards
+        name: '&cFire Dragon'
+        desc: '&7A great dragon atop the peaks; its breath annihilates all.'
+        skill1:
+          name: '&cDragon Breath'
+          desc: '&7Exhales raging flames, burning the target for extended time.'
+        skill2:
+          name: '&6Tail Sweep'
+          desc: '&7Swings its massive tail for a crushing blow.'
+        skill3:
+          name: '&eIntimidating Roar'
+          desc: '&7A thundering roar that stuns the target.'
+      ender_dragon:
+        name: '&5&lEnder Dragon'
+        desc: '&7Architect of the End''s calamity — master of void and flame, the ultimate existence.'
+        skill1:
+          name: '&5Void Breath'
+          desc: '&7Spews searing void-flames, inflicting severe burns.'
+        skill2:
+          name: '&dWing Storm'
+          desc: '&7Beats its wings to unleash a devastating gale, dealing massive damage.'
+        skill3:
+          name: '&8End Charge'
+          desc: '&7Streaks forward at blinding speed, stunning the target for an extended duration.'
+        skill4:
+          name: '&0Void Roar'
+          desc: '&7A space-rending howl that inflicts prolonged void erosion.'
+    equipment:
+      iron_sword:
+        name: '&fIron Sword'
+      steel_sword:
+        name: '&bSteel Sword'
+      artifact_sword:
+        name: '&6Holy Sword: Dawn'
+      artifact_bow:
+        name: '&aDawnbreak Bow'
+      artifact_axe:
+        name: '&cEarthsplitter Axe'
+      leather_armor:
+        name: '&fLeather Armor'
+      iron_armor:
+        name: '&7Iron Armor'
+      knight_plate:
+        name: '&bKnight''s Plate'
+      magic_ring:
+        name: '&dMagic Ring'
+      amulet_of_protection:
+        name: '&aAmulet of Protection'
+      hero_emblem:
+        name: '&6Hero Emblem'
+    shop:
+      small_potion:
+        name: '&fSmall Healing Potion'
+        effect: '&7Restores 25 HP'
+      large_potion:
+        name: '&fLarge Healing Potion'
+        effect: '&7Restores 50 HP'
+      magic_potion:
+        name: '&dMagic Potion'
+        effect: '&7Restores 15 Magic'
+      health_upgrade:
+        name: '&6Health Boost Apple'
+        effect: '&7Max HP +20'
+      lucky_coin:
+        name: '&eLucky Coin'
+        effect: '&7Restores 10 HP — a small blessing'
+      healing_potion:
+        name: '&aHealing Elixir (portable)'
+        effect: '&7Gain 1 potion usable in battle'
     rewards:
       novice:
-        name: "&6Novice Adventurer Reward"
+        name: '&fApprentice Hero Reward'
       adventurer:
-        name: "&aAdventurer Reward"
+        name: '&aAdventurer Reward'
       veteran:
-        name: "&bVeteran Adventurer Reward"
+        name: '&bVeteran Warrior Reward'
       legendary:
-        name: "&dLegendary Adventurer Reward"
-      king:
-        name: "&6&lKing's Reward"
-
+        name: '&dLegendary Hero Reward'
+      hero:
+        name: '&6World-Savior Reward'
+      dragonslayer:
+        name: '&5&lDragonslayer Reward'
 
 # Item translations
 items:
