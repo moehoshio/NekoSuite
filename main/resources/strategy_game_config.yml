@@ -1088,10 +1088,28 @@ equipment:
 # 屬性: attack/defense/magic 用於戰鬥計算
 # crit_chance(暴擊率%), crit_multiplier(暴擊倍率), dodge_chance(閃避率%)
 # skills: 敵人特殊技能 (type: damage/heal/buff/debuff/status)
+# entity_type: 真實對戰模式中生成的怪物實體類型 (Bukkit EntityType 名稱)
 # ============================================================
 battles:
+  # 真實對戰模式：啟用後，戰鬥事件會在世界中生成真實怪物，
+  # 由玩家親自擊殺；擊敗後給予與虛擬對戰相同的金幣與進度獎勵。
+  # 停用時 (預設) 則維持原本的菜單/數值制虛擬對戰。
+  real_battle:
+    # 是否啟用真實生怪戰鬥
+    enabled: false
+    # 怪物生成在玩家前方的格數
+    spawn_distance: 3
+    # 戰鬥逾時秒數 (0 表示永不逾時)；逾時視為怪物脫戰，戰鬥取消且不給獎勵
+    timeout: 120
+    # 是否讓戰鬥怪物發光以利辨識
+    highlight: true
+    # 將怪物的最大生命值縮放為敵人配置的 health 值
+    scale_health: true
+    # 當敵人未指定 entity_type 時採用的預設怪物類型
+    default_entity_type: ZOMBIE
   enemies:
     - id: slime
+      entity_type: SLIME
       name: "sgame.config.enemies.slime.name"
       description: "sgame.config.enemies.slime.desc"
       power: 20
@@ -1107,6 +1125,7 @@ battles:
       dodge_chance: 5
 
     - id: goblin
+      entity_type: ZOMBIE
       name: "sgame.config.enemies.goblin.name"
       description: "sgame.config.enemies.goblin.desc"
       power: 25
@@ -1129,6 +1148,7 @@ battles:
           chance: 15
 
     - id: wolf
+      entity_type: WOLF
       name: "sgame.config.enemies.wolf.name"
       description: "sgame.config.enemies.wolf.desc"
       power: 30
@@ -1151,6 +1171,7 @@ battles:
           chance: 20
 
     - id: bandit
+      entity_type: PILLAGER
       name: "sgame.config.enemies.bandit.name"
       description: "sgame.config.enemies.bandit.desc"
       power: 32
@@ -1173,6 +1194,7 @@ battles:
           chance: 25
 
     - id: skeleton
+      entity_type: SKELETON
       name: "sgame.config.enemies.skeleton.name"
       description: "sgame.config.enemies.skeleton.desc"
       power: 35
@@ -1195,6 +1217,7 @@ battles:
           chance: 20
 
     - id: zombie
+      entity_type: ZOMBIE
       name: "sgame.config.enemies.zombie.name"
       description: "sgame.config.enemies.zombie.desc"
       power: 40
@@ -1220,6 +1243,7 @@ battles:
           status_power: 4
 
     - id: spider
+      entity_type: SPIDER
       name: "sgame.config.enemies.spider.name"
       description: "sgame.config.enemies.spider.desc"
       power: 45
@@ -1254,6 +1278,7 @@ battles:
           status_power: 5
 
     - id: witch
+      entity_type: WITCH
       name: "sgame.config.enemies.witch.name"
       description: "sgame.config.enemies.witch.desc"
       power: 55
@@ -1288,6 +1313,7 @@ battles:
           status_power: 0
 
     - id: dark_knight
+      entity_type: WITHER_SKELETON
       name: "sgame.config.enemies.dark_knight.name"
       description: "sgame.config.enemies.dark_knight.desc"
       power: 70
@@ -1319,6 +1345,7 @@ battles:
           status_power: 0
 
     - id: dragon
+      entity_type: RAVAGER
       name: "sgame.config.enemies.dragon.name"
       description: "sgame.config.enemies.dragon.desc"
       power: 90
@@ -1360,6 +1387,7 @@ battles:
 
     # 最終 Boss - 終界龍
     - id: ender_dragon
+      entity_type: WITHER
       name: "sgame.config.enemies.ender_dragon.name"
       description: "sgame.config.enemies.ender_dragon.desc"
       power: 130
